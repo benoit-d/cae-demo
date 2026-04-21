@@ -1,0 +1,10 @@
+part_number,component_name,warehouse_location,quantity_on_hand,quantity_reserved,quantity_available,reorder_point,reorder_quantity,unit_cost_usd,last_count_date
+HYD-SV-100,Servo Valve Assembly,WH-A-12,18,6,12,10,20,4200,2026-04-15
+MP-LA-350K,Linear Actuator Assembly,WH-B-03,4,0,4,4,12,28500,2026-04-10
+VIS-PRJ-4K,LED Projector 4K Module,WH-C-01,2,0,2,2,6,125000,2026-04-12
+EL-PDU-200A,Power Distribution Unit,WH-A-08,3,1,2,3,6,12500,2026-04-15
+EL-UPS-20K,UPS System 20kVA,WH-A-09,2,0,2,2,4,18000,2026-04-15
+AV-PFD-15,Primary Flight Display Unit,WH-D-02,4,2,2,3,6,35000,2026-04-14
+HYD-HPU-3K,Hydraulic Power Unit 3000PSI,WH-A-01,1,0,1,1,2,67000,2026-04-08
+HYD-FLUID-46,Hydraulic Fluid ISO 46 (20L),WH-A-15,40,5,35,20,50,85,2026-04-15
+ENV-COOL-15K,Cooling System Assembly,WH-C-05,1,0,1,1,3,24000,2026-04-12

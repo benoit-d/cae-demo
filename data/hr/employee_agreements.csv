@@ -1,0 +1,11 @@
+agreement_id,employee_type,union_name,provision_category,provision_name,description,impacts_scheduling
+AGR-001,FullTime-Union,UNIFOR Local 2002,Overtime,Overtime Rules,"Overtime paid at 1.5x after 8 hours/day or 40 hours/week. Double time on statutory holidays.",Yes
+AGR-002,FullTime-Union,UNIFOR Local 2002,Shift Change,Shift Change Notice,"Minimum 72 hours notice required for shift changes. Emergency exceptions require union steward approval.",Yes
+AGR-003,FullTime-Union,UNIFOR Local 2002,Shift Premium,Night Shift Premium,"Night shift workers receive $2.50/hr premium. Weekend shifts receive $3.00/hr premium.",No
+AGR-004,FullTime-Union,UNIFOR Local 2002,Seniority,Task Assignment,"When multiple qualified workers available, senior employee has right of first refusal for preferred assignments.",Yes
+AGR-005,FullTime-Union,UNIFOR Local 2002,Break,Break Schedule,"Two 15-min paid breaks and one 30-min unpaid lunch per 8-hour shift.",Yes
+AGR-006,FullTime-Union,UNIFOR Local 2002,Safety,Safety Refusal,"Workers have right to refuse unsafe work per Quebec LSST.",Yes
+AGR-007,FullTime-Union,UNIFOR Local 2002,Limitation,Accommodation,"Employer must accommodate physical limitations per Quebec Human Rights Charter.",Yes
+AGR-008,FullTime-NonUnion,N/A,Flexibility,Schedule Flexibility,"Non-union engineering staff have flexible start times (7:00-9:00) with core hours 9:00-15:00.",Yes
+AGR-009,Contractor,N/A,Reassignment,Reassignment Policy,"Contractors with Full flexibility can be reassigned with notice period per contract. Day-only contractors cannot be assigned night shifts.",Yes
+AGR-010,Contractor,N/A,Overtime,Contractor Overtime,"Contractor overtime subject to individual contract terms. Some contracts prohibit OT entirely.",Yes

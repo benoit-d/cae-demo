@@ -1,0 +1,57 @@
+employee_id,skill_category,skill_name,certification_level,certification_date,expiry_date,certifying_body,is_current
+EMP-001,Motion Systems,6-DOF Platform Calibration,Expert,2024-06-15,2026-06-15,CAE Internal,Yes
+EMP-001,Motion Systems,Actuator Installation,Expert,2023-03-10,2025-03-10,CAE Internal,Yes
+EMP-001,Hydraulics,Hydraulic System Basics,Intermediate,2022-09-01,2024-09-01,CAE Internal,No
+EMP-001,Electrical,High Voltage Safety,Certified,2025-01-15,2027-01-15,CSA Group,Yes
+EMP-001,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-001,Safety,Working at Heights,Certified,2024-11-01,2026-11-01,CNESST,Yes
+EMP-002,Hydraulics,Hydraulic Power Unit Service,Advanced,2024-08-01,2026-08-01,Parker Hannifin,Yes
+EMP-002,Hydraulics,Servo Valve Replacement,Advanced,2024-08-01,2026-08-01,Moog Inc,Yes
+EMP-002,Hydraulics,Hydraulic Fluid Management,Intermediate,2023-05-15,2025-05-15,CAE Internal,Yes
+EMP-002,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-002,Safety,Confined Space,Certified,2025-03-01,2027-03-01,CNESST,Yes
+EMP-003,Electrical,Power Distribution Systems,Expert,2024-04-01,2026-04-01,CAE Internal,Yes
+EMP-003,Electrical,High Voltage Safety,Certified,2025-01-15,2027-01-15,CSA Group,Yes
+EMP-003,Electrical,UPS Systems,Advanced,2023-10-01,2025-10-01,APC/Schneider,Yes
+EMP-003,Avionics,Avionics Panel Wiring,Intermediate,2024-02-01,2026-02-01,CAE Internal,Yes
+EMP-003,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-004,Visual Systems,Projector Alignment,Advanced,2024-09-01,2026-09-01,Barco,Yes
+EMP-004,Visual Systems,Image Generator Setup,Intermediate,2024-09-01,2026-09-01,CAE Internal,Yes
+EMP-004,Visual Systems,Collimated Mirror Installation,Intermediate,2023-11-01,2025-11-01,CAE Internal,Yes
+EMP-004,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-005,Avionics,Flight Deck Integration,Expert,2024-01-15,2026-01-15,CAE Internal,Yes
+EMP-005,Avionics,Boeing 737 Systems,Expert,2023-06-01,2025-06-01,Boeing,Yes
+EMP-005,Avionics,Airbus A320 Systems,Advanced,2023-06-01,2025-06-01,Airbus,Yes
+EMP-005,Electrical,Avionics Wiring,Advanced,2022-03-15,2024-03-15,CAE Internal,No
+EMP-005,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-005,Safety,ESD Protection,Certified,2025-02-01,2027-02-01,CAE Internal,Yes
+EMP-006,Hydraulics,Hydraulic Power Unit Service,Expert,2024-08-01,2026-08-01,Parker Hannifin,Yes
+EMP-006,Hydraulics,Servo Valve Replacement,Expert,2023-05-01,2025-05-01,Moog Inc,Yes
+EMP-006,Hydraulics,System Pressure Testing,Expert,2024-02-15,2026-02-15,CAE Internal,Yes
+EMP-006,Motion Systems,Actuator Installation,Intermediate,2023-09-01,2025-09-01,CAE Internal,Yes
+EMP-006,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-006,Safety,Confined Space,Certified,2025-03-01,2027-03-01,CNESST,Yes
+EMP-007,Electrical,Power Distribution Systems,Advanced,2024-04-01,2026-04-01,CAE Internal,Yes
+EMP-007,Electrical,High Voltage Safety,Certified,2025-01-15,2027-01-15,CSA Group,Yes
+EMP-007,Electrical,Cable Termination,Advanced,2023-08-01,2025-08-01,CAE Internal,Yes
+EMP-007,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-008,Motion Systems,6-DOF Platform Calibration,Intermediate,2024-06-15,2026-06-15,CAE Internal,Yes
+EMP-008,Motion Systems,Actuator Installation,Advanced,2024-03-01,2026-03-01,CAE Internal,Yes
+EMP-008,Hydraulics,Hydraulic Basics,Beginner,2022-10-01,2024-10-01,CAE Internal,No
+EMP-008,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-008,Safety,Working at Heights,Certified,2024-11-01,2026-11-01,CNESST,Yes
+EMP-009,Test Engineering,QTG Execution,Expert,2024-10-01,2026-10-01,CAE Internal,Yes
+EMP-009,Test Engineering,Data Acquisition Systems,Advanced,2023-08-01,2025-08-01,CAE Internal,Yes
+EMP-009,Software,Test Automation Scripts,Advanced,2024-01-01,2026-01-01,CAE Internal,Yes
+EMP-009,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-010,Structures,Cockpit Shell Assembly,Advanced,2024-05-01,2026-05-01,CAE Internal,Yes
+EMP-010,Structures,Platform Frame Assembly,Advanced,2023-01-15,2025-01-15,CAE Internal,Yes
+EMP-010,Structures,Precision Alignment,Intermediate,2024-05-01,2026-05-01,CAE Internal,Yes
+EMP-010,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-010,Safety,Crane Operation,Certified,2025-04-01,2027-04-01,CNESST,Yes
+EMP-011,Hydraulics,Hydraulic System Service,Advanced,2025-02-01,2027-02-01,Parker Hannifin,Yes
+EMP-011,Hydraulics,Servo Valve Replacement,Intermediate,2025-02-01,2027-02-01,CAE Internal,Yes
+EMP-011,Safety,WHMIS,Certified,2026-02-01,2028-02-01,Workplace Safety,Yes
+EMP-012,Electrical,Power Distribution Systems,Intermediate,2025-01-15,2027-01-15,CAE Internal,Yes
+EMP-012,Electrical,Cable Termination,Intermediate,2025-01-15,2027-01-15,CAE Internal,Yes
+EMP-012,Safety,WHMIS,Certified,2026-01-15,2028-01-15,Workplace Safety,Yes

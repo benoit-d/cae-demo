@@ -1,0 +1,14 @@
+Task_Type,Task_Name,Standard_Duration,Required_Skill,Sequence_Order,Description
+Material_Readiness,Material Readiness Check,5,Structures,1,Verify all required materials and components are available before work begins
+Platform_Frame_Assembly,Platform Frame Assembly,25,Structures,2,Assemble the 6-DOF motion platform base frame and structural supports
+Hydraulic_Installation,Hydraulic System Installation,30,Hydraulics,3,Install hydraulic power unit and servo valves and actuator hydraulic lines
+Electrical_Harness,Electrical Harness & Power Distribution,30,Electrical,3,Route primary and secondary power distribution harnesses and UPS
+Cockpit_Integration,Cockpit Shell Integration,25,Structures,4,Mount aircraft-specific cockpit replica onto the motion platform
+Avionics_Installation,Avionics & Flight Deck Installation,22,Avionics,5,Install PFD and ND and MCP and FMC and all flight deck avionics panels
+Visual_System_Setup,Visual System & Projection Setup,18,Visual Systems,5,Install LED projectors and collimated mirrors and image generator rack
+Control_Loading_Setup,Control Loading System Setup,12,Motion Systems,5,Install force feedback actuators for yoke and rudder pedals
+Motion_Calibration,Motion System Calibration,15,Motion Systems,6,Full 6-DOF motion platform calibration and motion cueing tuning
+Integration_Test,Full System Integration Test,20,Test Engineering,7,End-to-end test of motion and visual and audio and control loading and IOS
+Burn_In,72-Hour Burn-In Run,5,Test Engineering,8,Mandatory 72-hour continuous run for reliability qualification
+Qualification_Test,Qualification Testing,25,Test Engineering,9,Execute Qualification Test Guide for FAA or EASA Level D certification
+Customer_Acceptance,Customer Acceptance Test,10,Test Engineering,10,Customer acceptance testing and training handover signoff

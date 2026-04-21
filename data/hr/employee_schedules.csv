@@ -1,0 +1,13 @@
+schedule_id,employee_id,week_start,shift_type,shift_start_time,shift_end_time,monday,tuesday,wednesday,thursday,friday,saturday,sunday,notes
+SCH-001,EMP-001,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-002,EMP-002,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-003,EMP-003,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-004,EMP-004,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-005,EMP-005,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-006,EMP-006,2026-04-21,Night,23:00,07:30,Working,Working,Working,Working,Off,Off,Off,4x10 compressed schedule
+SCH-007,EMP-007,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-008,EMP-008,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-009,EMP-009,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-010,EMP-010,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-011,EMP-011,2026-04-21,Flex,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,Contract — can be reassigned with 24h notice
+SCH-012,EMP-012,2026-04-21,Flex,07:00,15:30,Working,Working,Off,Working,Working,Off,Off,Contract — reduced schedule per agreement

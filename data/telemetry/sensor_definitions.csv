@@ -1,0 +1,61 @@
+sensor_id,simulator_id,sensor_category,sensor_name,unit,normal_min,normal_max,warning_min,warning_max,critical_min,critical_max
+SENS-001,SIM-001,Motion Platform,Pitch Actuator Position,degrees,-25.0,25.0,-28.0,28.0,-30.0,30.0
+SENS-002,SIM-001,Motion Platform,Roll Actuator Position,degrees,-22.0,22.0,-25.0,25.0,-27.0,27.0
+SENS-003,SIM-001,Motion Platform,Yaw Actuator Position,degrees,-30.0,30.0,-33.0,33.0,-35.0,35.0
+SENS-004,SIM-001,Hydraulics,Hydraulic Pressure,PSI,2800.0,3200.0,2600.0,3400.0,2400.0,3600.0
+SENS-005,SIM-001,Hydraulics,Hydraulic Fluid Temperature,Celsius,35.0,55.0,30.0,65.0,25.0,75.0
+SENS-006,SIM-001,Hydraulics,Hydraulic Flow Rate,LPM,40.0,80.0,35.0,90.0,30.0,100.0
+SENS-007,SIM-001,Thermal,Cockpit Display Temperature,Celsius,20.0,30.0,18.0,35.0,15.0,40.0
+SENS-008,SIM-001,Thermal,Motion Platform Temperature,Celsius,25.0,45.0,20.0,55.0,15.0,65.0
+SENS-009,SIM-001,Thermal,Power Supply Temperature,Celsius,30.0,50.0,25.0,60.0,20.0,70.0
+SENS-010,SIM-001,Electrical,Main Power Voltage AC,Volts,198.0,242.0,190.0,250.0,185.0,255.0
+SENS-011,SIM-001,Electrical,DC Bus Voltage 28V,Volts,27.0,29.0,26.5,29.5,26.0,30.0
+SENS-012,SIM-001,Electrical,Power Consumption,kW,45.0,120.0,40.0,140.0,35.0,160.0
+SENS-013,SIM-001,Visual System,Projector Brightness,Lumens,8000.0,12000.0,7000.0,13000.0,6000.0,14000.0
+SENS-014,SIM-001,Visual System,Image Generator GPU Temperature,Celsius,50.0,80.0,45.0,87.0,40.0,95.0
+SENS-015,SIM-001,Vibration,Motion Platform Vibration X,g,0.0,0.15,0.0,0.25,0.0,0.40
+SENS-016,SIM-001,Vibration,Motion Platform Vibration Y,g,0.0,0.15,0.0,0.25,0.0,0.40
+SENS-017,SIM-001,Vibration,Base Frame Vibration,g,0.0,0.05,0.0,0.10,0.0,0.20
+SENS-018,SIM-001,Control,Control Loading Torque Yoke,Nm,0.0,45.0,0.0,55.0,0.0,65.0
+SENS-019,SIM-001,Environmental,Cooling System Flow Rate,LPM,50.0,120.0,40.0,130.0,30.0,140.0
+SENS-020,SIM-001,Environmental,Ambient Temperature,Celsius,18.0,26.0,16.0,30.0,14.0,35.0
+SENS-021,SIM-002,Motion Platform,Pitch Actuator Position,degrees,-25.0,25.0,-28.0,28.0,-30.0,30.0
+SENS-022,SIM-002,Motion Platform,Roll Actuator Position,degrees,-22.0,22.0,-25.0,25.0,-27.0,27.0
+SENS-023,SIM-002,Motion Platform,Yaw Actuator Position,degrees,-30.0,30.0,-33.0,33.0,-35.0,35.0
+SENS-024,SIM-002,Hydraulics,Hydraulic Pressure,PSI,2800.0,3200.0,2600.0,3400.0,2400.0,3600.0
+SENS-025,SIM-002,Hydraulics,Hydraulic Fluid Temperature,Celsius,35.0,55.0,30.0,65.0,25.0,75.0
+SENS-026,SIM-002,Hydraulics,Hydraulic Flow Rate,LPM,40.0,80.0,35.0,90.0,30.0,100.0
+SENS-027,SIM-002,Thermal,Cockpit Display Temperature,Celsius,20.0,30.0,18.0,35.0,15.0,40.0
+SENS-028,SIM-002,Thermal,Motion Platform Temperature,Celsius,25.0,45.0,20.0,55.0,15.0,65.0
+SENS-029,SIM-002,Thermal,Power Supply Temperature,Celsius,30.0,50.0,25.0,60.0,20.0,70.0
+SENS-030,SIM-002,Electrical,Main Power Voltage AC,Volts,198.0,242.0,190.0,250.0,185.0,255.0
+SENS-031,SIM-002,Electrical,DC Bus Voltage 28V,Volts,27.0,29.0,26.5,29.5,26.0,30.0
+SENS-032,SIM-002,Electrical,Power Consumption,kW,45.0,120.0,40.0,140.0,35.0,160.0
+SENS-033,SIM-002,Visual System,Projector Brightness,Lumens,8000.0,12000.0,7000.0,13000.0,6000.0,14000.0
+SENS-034,SIM-002,Visual System,Image Generator GPU Temperature,Celsius,50.0,80.0,45.0,87.0,40.0,95.0
+SENS-035,SIM-002,Vibration,Motion Platform Vibration X,g,0.0,0.15,0.0,0.25,0.0,0.40
+SENS-036,SIM-002,Vibration,Motion Platform Vibration Y,g,0.0,0.15,0.0,0.25,0.0,0.40
+SENS-037,SIM-002,Vibration,Base Frame Vibration,g,0.0,0.05,0.0,0.10,0.0,0.20
+SENS-038,SIM-002,Control,Control Loading Torque Yoke,Nm,0.0,45.0,0.0,55.0,0.0,65.0
+SENS-039,SIM-002,Environmental,Cooling System Flow Rate,LPM,50.0,120.0,40.0,130.0,30.0,140.0
+SENS-040,SIM-002,Environmental,Ambient Temperature,Celsius,18.0,26.0,16.0,30.0,14.0,35.0
+SENS-041,SIM-003,Motion Platform,Pitch Actuator Position,degrees,-25.0,25.0,-28.0,28.0,-30.0,30.0
+SENS-042,SIM-003,Motion Platform,Roll Actuator Position,degrees,-22.0,22.0,-25.0,25.0,-27.0,27.0
+SENS-043,SIM-003,Motion Platform,Yaw Actuator Position,degrees,-30.0,30.0,-33.0,33.0,-35.0,35.0
+SENS-044,SIM-003,Hydraulics,Hydraulic Pressure,PSI,2800.0,3200.0,2600.0,3400.0,2400.0,3600.0
+SENS-045,SIM-003,Hydraulics,Hydraulic Fluid Temperature,Celsius,35.0,55.0,30.0,65.0,25.0,75.0
+SENS-046,SIM-003,Hydraulics,Hydraulic Flow Rate,LPM,40.0,80.0,35.0,90.0,30.0,100.0
+SENS-047,SIM-003,Thermal,Cockpit Display Temperature,Celsius,20.0,30.0,18.0,35.0,15.0,40.0
+SENS-048,SIM-003,Thermal,Motion Platform Temperature,Celsius,25.0,45.0,20.0,55.0,15.0,65.0
+SENS-049,SIM-003,Thermal,Power Supply Temperature,Celsius,30.0,50.0,25.0,60.0,20.0,70.0
+SENS-050,SIM-003,Electrical,Main Power Voltage AC,Volts,198.0,242.0,190.0,250.0,185.0,255.0
+SENS-051,SIM-003,Electrical,DC Bus Voltage 28V,Volts,27.0,29.0,26.5,29.5,26.0,30.0
+SENS-052,SIM-003,Electrical,Power Consumption,kW,45.0,120.0,40.0,140.0,35.0,160.0
+SENS-053,SIM-003,Visual System,Projector Brightness,Lumens,8000.0,12000.0,7000.0,13000.0,6000.0,14000.0
+SENS-054,SIM-003,Visual System,Image Generator GPU Temperature,Celsius,50.0,80.0,45.0,87.0,40.0,95.0
+SENS-055,SIM-003,Vibration,Motion Platform Vibration X,g,0.0,0.15,0.0,0.25,0.0,0.40
+SENS-056,SIM-003,Vibration,Motion Platform Vibration Y,g,0.0,0.15,0.0,0.25,0.0,0.40
+SENS-057,SIM-003,Vibration,Base Frame Vibration,g,0.0,0.05,0.0,0.10,0.0,0.20
+SENS-058,SIM-003,Control,Control Loading Torque Yoke,Nm,0.0,45.0,0.0,55.0,0.0,65.0
+SENS-059,SIM-003,Environmental,Cooling System Flow Rate,LPM,50.0,120.0,40.0,130.0,30.0,140.0
+SENS-060,SIM-003,Environmental,Ambient Temperature,Celsius,18.0,26.0,16.0,30.0,14.0,35.0

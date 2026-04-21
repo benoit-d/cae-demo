@@ -1,0 +1,16 @@
+bom_id,simulator_model,component_category,component_name,part_number,quantity_required,unit_cost_usd,supplier,lead_time_days,critical_path
+BOM-001,FFS-Level-D,Motion Platform,6-DOF Electric Motion System,MP-6DOF-ED2,1,485000,Moog Inc,120,Yes
+BOM-002,FFS-Level-D,Motion Platform,Linear Actuator Assembly,MP-LA-350K,6,28500,Moog Inc,90,Yes
+BOM-003,FFS-Level-D,Hydraulics,Hydraulic Power Unit 3000PSI,HYD-HPU-3K,1,67000,Parker Hannifin,60,Yes
+BOM-004,FFS-Level-D,Hydraulics,Servo Valve Assembly,HYD-SV-100,12,4200,Moog Inc,45,No
+BOM-005,FFS-Level-D,Visual System,LED Projector 4K Module,VIS-PRJ-4K,3,125000,Barco,90,Yes
+BOM-006,FFS-Level-D,Visual System,Collimated Mirror Assembly,VIS-CM-220,3,42000,CAE Custom,120,Yes
+BOM-007,FFS-Level-D,Visual System,Image Generator GPU Rack,VIS-IG-A100,1,185000,NVIDIA/Custom,60,Yes
+BOM-008,FFS-Level-D,Avionics,Primary Flight Display Unit,AV-PFD-15,2,35000,Collins Aerospace,60,No
+BOM-009,FFS-Level-D,Avionics,Mode Control Panel,AV-MCP-737,1,28000,CAE Custom,45,No
+BOM-010,FFS-Level-D,Cockpit,Cockpit Shell - B737,CS-B737-R4,1,310000,CAE Custom,150,Yes
+BOM-011,FFS-Level-D,Cockpit,Cockpit Shell - A320,CS-A320-R3,1,295000,CAE Custom,150,Yes
+BOM-012,FFS-Level-C,Cockpit,Cockpit Shell - B777,CS-B777-R2,1,340000,CAE Custom,150,Yes
+BOM-013,FFS-Level-D,Electrical,Power Distribution Unit,EL-PDU-200A,1,12500,Eaton,30,No
+BOM-014,FFS-Level-D,Electrical,UPS System 20kVA,EL-UPS-20K,1,18000,APC/Schneider,21,No
+BOM-015,FFS-Level-D,Environmental,Cooling System Assembly,ENV-COOL-15K,1,24000,Rittal,45,No

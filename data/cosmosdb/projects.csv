@@ -1,0 +1,9 @@
+Project_ID,Project_Name,Simulator_ID,Initial_Planned_Start,Modified_Planned_Start,Standard_Duration,Actual_End,Resource_Login,Complete_Percentage,Last_Modified_By,Last_Modified_On
+PRJ-001,SIM-001 Boeing 737 MAX — Air Canada,SIM-001,2025-11-15,2025-11-25,182,,daniel.fortin@caedemo.com,84,daniel.fortin@caedemo.com,2026-04-21
+PRJ-002,SIM-002 Airbus A320neo — Lufthansa,SIM-002,2026-01-10,2026-01-10,216,,daniel.fortin@caedemo.com,30,daniel.fortin@caedemo.com,2026-04-21
+PRJ-003,SIM-003 Boeing 777X — Emirates,SIM-003,2025-09-01,2025-09-01,182,2026-03-02,daniel.fortin@caedemo.com,100,daniel.fortin@caedemo.com,2026-04-21
+PRJ-004,SIM-004 Airbus A350 — Delta Airlines,SIM-004,2026-03-15,2026-07-03,222,,daniel.fortin@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-21
+PRJ-005,SIM-005 Boeing 787 — United Airlines,SIM-005,2026-04-01,2026-08-27,227,,daniel.fortin@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-21
+PRJ-006,SIM-006 Boeing 737 MAX — WestJet,SIM-006,2026-02-01,2026-03-15,212,,daniel.fortin@caedemo.com,15,daniel.fortin@caedemo.com,2026-04-21
+PRJ-007,SIM-007 Airbus A320neo — Air France,SIM-007,2026-03-01,2026-05-09,217,,daniel.fortin@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-21
+PRJ-008,SIM-008 Boeing 777X — Qatar Airways,SIM-008,2026-05-01,2026-10-21,232,,daniel.fortin@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-21

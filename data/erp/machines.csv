@@ -1,0 +1,9 @@
+simulator_id,simulator_model,bay_id,bay_name,status,customer,aircraft_type,serial_number,build_start_date,target_delivery_date
+SIM-001,FFS-Level-D,BAY-01,Assembly Bay Alpha,InTest,Air Canada,Boeing 737 MAX,FFS-2026-0142,2025-11-15,2026-06-30
+SIM-002,FFS-Level-D,BAY-02,Assembly Bay Bravo,Assembly,Lufthansa,Airbus A320neo,FFS-2026-0143,2026-01-10,2026-08-15
+SIM-003,FFS-Level-C,BAY-03,Assembly Bay Charlie,Delivered,Emirates,Boeing 777X,FFS-2026-0144,2025-09-01,2026-05-01
+SIM-004,FFS-Level-D,BAY-04,Integration Bay Delta,Planned,Delta Airlines,Airbus A350,FFS-2026-0145,2026-03-15,2027-02-10
+SIM-005,FTD-Level-7,BAY-05,Training Device Bay Echo,Planned,United Airlines,Boeing 787,FFS-2026-0146,2026-04-01,2027-04-11
+SIM-006,FFS-Level-D,BAY-06,Assembly Bay Foxtrot,Assembly,WestJet,Boeing 737 MAX,FFS-2026-0147,2026-02-01,2026-10-13
+SIM-007,FFS-Level-D,BAY-07,Assembly Bay Golf,Planned,Air France,Airbus A320neo,FFS-2026-0148,2026-03-01,2026-12-12
+SIM-008,FFS-Level-C,BAY-08,Assembly Bay Hotel,Planned,Qatar Airways,Boeing 777X,FFS-2026-0149,2026-05-01,2027-06-10

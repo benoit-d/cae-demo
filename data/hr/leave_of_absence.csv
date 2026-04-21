@@ -1,0 +1,7 @@
+leave_id,employee_id,leave_type,start_date,end_date,status,approved_by,reason,days_count
+LOA-001,EMP-002,Vacation,2026-04-28,2026-05-02,Approved,daniel.fortin@caedemo.com,Annual vacation,5
+LOA-002,EMP-005,Medical,2026-04-23,2026-04-25,Approved,daniel.fortin@caedemo.com,Audiology follow-up + recovery,3
+LOA-003,EMP-003,Training,2026-05-01,2026-05-02,Approved,daniel.fortin@caedemo.com,CSA recertification course,2
+LOA-004,EMP-008,Personal,2026-04-25,2026-04-25,Approved,daniel.fortin@caedemo.com,Personal day,1
+LOA-005,EMP-011,Contract_End,2026-06-30,2026-06-30,Confirmed,daniel.fortin@caedemo.com,Contract end date,0
+LOA-006,EMP-012,Contract_End,2026-05-15,2026-05-15,Confirmed,daniel.fortin@caedemo.com,Contract end date — possible extension,0

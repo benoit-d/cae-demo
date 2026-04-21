@@ -1,0 +1,105 @@
+Task_ID,Task_Name,Parent_Project_ID,FS_Task_ID,Task_Type,Milestone,Skill_Requirement,Initial_Planned_Start,Modified_Planned_Start,Actual_Start,Standard_Duration,Actual_End,Resource_Login,Complete_Percentage,Last_Modified_By,Last_Modified_On
+PRJ-001-TSK-001,Material Readiness Check,PRJ-001,,Material_Readiness,0,Structures,2025-11-15,2025-11-25,2025-11-25,5,2025-11-30,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2025-11-30
+PRJ-001-TSK-002,Platform Frame Assembly,PRJ-001,PRJ-001-TSK-001,Platform_Frame_Assembly,0,Structures,2025-11-20,2025-11-30,2025-11-30,25,2025-12-25,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2025-12-25
+PRJ-001-TSK-003,Hydraulic System Installation,PRJ-001,PRJ-001-TSK-002,Hydraulic_Installation,0,Hydraulics,2025-12-15,2025-12-25,2025-12-25,30,2026-01-24,ma.pelletier@caedemo.com,100,ma.pelletier@caedemo.com,2026-01-24
+PRJ-001-TSK-004,Electrical Harness & Power Distribution,PRJ-001,PRJ-001-TSK-002,Electrical_Harness,0,Electrical,2025-12-15,2025-12-25,2025-12-25,30,2026-01-24,cat.morin@caedemo.com,100,cat.morin@caedemo.com,2026-01-24
+PRJ-001-TSK-005,Cockpit Shell Integration,PRJ-001,PRJ-001-TSK-003,Cockpit_Integration,0,Structures,2026-01-14,2026-01-24,2026-01-24,25,2026-02-18,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2026-02-18
+PRJ-001-TSK-006,Avionics & Flight Deck Installation,PRJ-001,PRJ-001-TSK-005,Avionics_Installation,0,Avionics,2026-02-08,2026-02-18,2026-02-18,22,2026-03-12,phil.gagnon@caedemo.com,100,phil.gagnon@caedemo.com,2026-03-12
+PRJ-001-TSK-007,Visual System & Projection Setup,PRJ-001,PRJ-001-TSK-005,Visual_System_Setup,0,Visual Systems,2026-02-08,2026-02-18,2026-02-18,18,2026-03-08,sophie.lavoie@caedemo.com,100,sophie.lavoie@caedemo.com,2026-03-08
+PRJ-001-TSK-008,Control Loading System Setup,PRJ-001,PRJ-001-TSK-005,Control_Loading_Setup,0,Motion Systems,2026-02-08,2026-02-18,2026-02-18,12,2026-03-02,jp.tremblay@caedemo.com,100,jp.tremblay@caedemo.com,2026-03-02
+PRJ-001-TSK-009,Motion System Calibration,PRJ-001,PRJ-001-TSK-006,Motion_Calibration,0,Motion Systems,2026-03-02,2026-03-12,2026-03-12,15,2026-03-27,francois.cote@caedemo.com,100,francois.cote@caedemo.com,2026-03-27
+PRJ-001-TSK-010,Full System Integration Test,PRJ-001,PRJ-001-TSK-009,Integration_Test,0,Test Engineering,2026-03-17,2026-03-27,2026-03-27,20,2026-04-16,david.chen@caedemo.com,100,david.chen@caedemo.com,2026-04-16
+PRJ-001-TSK-011,72-Hour Burn-In Run,PRJ-001,PRJ-001-TSK-010,Burn_In,0,Test Engineering,2026-04-06,2026-04-16,2026-04-16,5,2026-04-21,david.chen@caedemo.com,100,david.chen@caedemo.com,2026-04-21
+PRJ-001-TSK-012,Qualification Testing,PRJ-001,PRJ-001-TSK-011,Qualification_Test,0,Test Engineering,2026-04-11,2026-04-21,2026-04-21,25,,david.chen@caedemo.com,5,david.chen@caedemo.com,2026-04-21
+PRJ-001-TSK-013,Customer Acceptance Test,PRJ-001,PRJ-001-TSK-012,Customer_Acceptance,1,Test Engineering,2026-05-06,2026-05-16,,10,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2025-11-15
+PRJ-002-TSK-001,Material Readiness Check,PRJ-002,,Material_Readiness,0,Structures,2026-01-10,2026-01-10,2026-01-10,5,2026-01-15,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2026-01-15
+PRJ-002-TSK-002,Platform Frame Assembly,PRJ-002,PRJ-002-TSK-001,Platform_Frame_Assembly,0,Structures,2026-01-15,2026-02-18,2026-02-18,25,2026-03-15,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2026-03-15
+PRJ-002-TSK-003,Hydraulic System Installation,PRJ-002,PRJ-002-TSK-002,Hydraulic_Installation,0,Hydraulics,2026-02-09,2026-03-15,2026-03-15,30,2026-04-14,james.taylor@contractco.com,100,james.taylor@contractco.com,2026-04-14
+PRJ-002-TSK-004,Electrical Harness & Power Distribution,PRJ-002,PRJ-002-TSK-002,Electrical_Harness,0,Electrical,2026-02-09,2026-03-15,2026-03-15,30,2026-04-14,maria.garcia@contractco.com,100,maria.garcia@contractco.com,2026-04-14
+PRJ-002-TSK-005,Cockpit Shell Integration,PRJ-002,PRJ-002-TSK-003,Cockpit_Integration,0,Structures,2026-03-11,2026-04-14,2026-04-14,25,,nat.bouchard@caedemo.com,28,nat.bouchard@caedemo.com,2026-04-21
+PRJ-002-TSK-006,Avionics & Flight Deck Installation,PRJ-002,PRJ-002-TSK-005,Avionics_Installation,0,Avionics,2026-04-05,2026-05-09,,22,,phil.gagnon@caedemo.com,0,daniel.fortin@caedemo.com,2026-01-10
+PRJ-002-TSK-007,Visual System & Projection Setup,PRJ-002,PRJ-002-TSK-005,Visual_System_Setup,0,Visual Systems,2026-04-05,2026-05-09,,18,,sophie.lavoie@caedemo.com,0,daniel.fortin@caedemo.com,2026-01-10
+PRJ-002-TSK-008,Control Loading System Setup,PRJ-002,PRJ-002-TSK-005,Control_Loading_Setup,0,Motion Systems,2026-04-05,2026-05-09,,12,,jp.tremblay@caedemo.com,0,daniel.fortin@caedemo.com,2026-01-10
+PRJ-002-TSK-009,Motion System Calibration,PRJ-002,PRJ-002-TSK-006,Motion_Calibration,0,Motion Systems,2026-04-27,2026-05-31,,15,,francois.cote@caedemo.com,0,daniel.fortin@caedemo.com,2026-01-10
+PRJ-002-TSK-010,Full System Integration Test,PRJ-002,PRJ-002-TSK-009,Integration_Test,0,Test Engineering,2026-05-12,2026-06-15,,20,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-01-10
+PRJ-002-TSK-011,72-Hour Burn-In Run,PRJ-002,PRJ-002-TSK-010,Burn_In,0,Test Engineering,2026-06-01,2026-07-05,,5,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-01-10
+PRJ-002-TSK-012,Qualification Testing,PRJ-002,PRJ-002-TSK-011,Qualification_Test,0,Test Engineering,2026-06-06,2026-07-10,,25,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-01-10
+PRJ-002-TSK-013,Customer Acceptance Test,PRJ-002,PRJ-002-TSK-012,Customer_Acceptance,1,Test Engineering,2026-07-01,2026-08-04,,10,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-01-10
+PRJ-003-TSK-001,Material Readiness Check,PRJ-003,,Material_Readiness,0,Structures,2025-09-01,2025-09-01,2025-09-01,5,2025-09-06,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2025-09-06
+PRJ-003-TSK-002,Platform Frame Assembly,PRJ-003,PRJ-003-TSK-001,Platform_Frame_Assembly,0,Structures,2025-09-06,2025-09-06,2025-09-06,25,2025-10-01,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2025-10-01
+PRJ-003-TSK-003,Hydraulic System Installation,PRJ-003,PRJ-003-TSK-002,Hydraulic_Installation,0,Hydraulics,2025-10-01,2025-10-01,2025-10-01,30,2025-10-31,mc.dubois@caedemo.com,100,mc.dubois@caedemo.com,2025-10-31
+PRJ-003-TSK-004,Electrical Harness & Power Distribution,PRJ-003,PRJ-003-TSK-002,Electrical_Harness,0,Electrical,2025-10-01,2025-10-01,2025-10-01,30,2025-10-31,luc.bergeron@caedemo.com,100,luc.bergeron@caedemo.com,2025-10-31
+PRJ-003-TSK-005,Cockpit Shell Integration,PRJ-003,PRJ-003-TSK-003,Cockpit_Integration,0,Structures,2025-10-31,2025-10-31,2025-10-31,25,2025-11-25,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2025-11-25
+PRJ-003-TSK-006,Avionics & Flight Deck Installation,PRJ-003,PRJ-003-TSK-005,Avionics_Installation,0,Avionics,2025-11-25,2025-11-25,2025-11-25,22,2025-12-17,phil.gagnon@caedemo.com,100,phil.gagnon@caedemo.com,2025-12-17
+PRJ-003-TSK-007,Visual System & Projection Setup,PRJ-003,PRJ-003-TSK-005,Visual_System_Setup,0,Visual Systems,2025-11-25,2025-11-25,2025-11-25,18,2025-12-13,sophie.lavoie@caedemo.com,100,sophie.lavoie@caedemo.com,2025-12-13
+PRJ-003-TSK-008,Control Loading System Setup,PRJ-003,PRJ-003-TSK-005,Control_Loading_Setup,0,Motion Systems,2025-11-25,2025-11-25,2025-11-25,12,2025-12-07,jp.tremblay@caedemo.com,100,jp.tremblay@caedemo.com,2025-12-07
+PRJ-003-TSK-009,Motion System Calibration,PRJ-003,PRJ-003-TSK-006,Motion_Calibration,0,Motion Systems,2025-12-17,2025-12-17,2025-12-17,15,2026-01-01,francois.cote@caedemo.com,100,francois.cote@caedemo.com,2026-01-01
+PRJ-003-TSK-010,Full System Integration Test,PRJ-003,PRJ-003-TSK-009,Integration_Test,0,Test Engineering,2026-01-01,2026-01-01,2026-01-01,20,2026-01-21,david.chen@caedemo.com,100,david.chen@caedemo.com,2026-01-21
+PRJ-003-TSK-011,72-Hour Burn-In Run,PRJ-003,PRJ-003-TSK-010,Burn_In,0,Test Engineering,2026-01-21,2026-01-21,2026-01-21,5,2026-01-26,david.chen@caedemo.com,100,david.chen@caedemo.com,2026-01-26
+PRJ-003-TSK-012,Qualification Testing,PRJ-003,PRJ-003-TSK-011,Qualification_Test,0,Test Engineering,2026-01-26,2026-01-26,2026-01-26,25,2026-02-20,david.chen@caedemo.com,100,david.chen@caedemo.com,2026-02-20
+PRJ-003-TSK-013,Customer Acceptance Test,PRJ-003,PRJ-003-TSK-012,Customer_Acceptance,1,Test Engineering,2026-02-20,2026-02-20,2026-02-20,10,2026-03-02,david.chen@caedemo.com,100,david.chen@caedemo.com,2026-03-02
+PRJ-004-TSK-001,Material Readiness Check,PRJ-004,,Material_Readiness,0,Structures,2026-03-15,2026-07-03,,5,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-002,Platform Frame Assembly,PRJ-004,PRJ-004-TSK-001,Platform_Frame_Assembly,0,Structures,2026-03-20,2026-07-08,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-003,Hydraulic System Installation,PRJ-004,PRJ-004-TSK-002,Hydraulic_Installation,0,Hydraulics,2026-04-14,2026-08-02,,30,,james.taylor@contractco.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-004,Electrical Harness & Power Distribution,PRJ-004,PRJ-004-TSK-002,Electrical_Harness,0,Electrical,2026-04-14,2026-08-02,,30,,maria.garcia@contractco.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-005,Cockpit Shell Integration,PRJ-004,PRJ-004-TSK-003,Cockpit_Integration,0,Structures,2026-05-14,2026-09-01,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-006,Avionics & Flight Deck Installation,PRJ-004,PRJ-004-TSK-005,Avionics_Installation,0,Avionics,2026-06-08,2026-09-26,,22,,phil.gagnon@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-007,Visual System & Projection Setup,PRJ-004,PRJ-004-TSK-005,Visual_System_Setup,0,Visual Systems,2026-06-08,2026-09-26,,18,,sophie.lavoie@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-008,Control Loading System Setup,PRJ-004,PRJ-004-TSK-005,Control_Loading_Setup,0,Motion Systems,2026-06-08,2026-09-26,,12,,jp.tremblay@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-009,Motion System Calibration,PRJ-004,PRJ-004-TSK-006,Motion_Calibration,0,Motion Systems,2026-06-30,2026-10-18,,15,,francois.cote@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-010,Full System Integration Test,PRJ-004,PRJ-004-TSK-009,Integration_Test,0,Test Engineering,2026-07-15,2026-12-12,,20,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-011,72-Hour Burn-In Run,PRJ-004,PRJ-004-TSK-010,Burn_In,0,Test Engineering,2026-08-04,2027-01-01,,5,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-012,Qualification Testing,PRJ-004,PRJ-004-TSK-011,Qualification_Test,0,Test Engineering,2026-08-09,2027-01-06,,25,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-004-TSK-013,Customer Acceptance Test,PRJ-004,PRJ-004-TSK-012,Customer_Acceptance,1,Test Engineering,2026-09-03,2027-01-31,,10,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-15
+PRJ-005-TSK-001,Material Readiness Check,PRJ-005,,Material_Readiness,0,Structures,2026-04-01,2026-08-27,,5,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-002,Platform Frame Assembly,PRJ-005,PRJ-005-TSK-001,Platform_Frame_Assembly,0,Structures,2026-04-06,2026-09-26,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-003,Hydraulic System Installation,PRJ-005,PRJ-005-TSK-002,Hydraulic_Installation,0,Hydraulics,2026-05-01,2026-10-21,,30,,mc.dubois@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-004,Electrical Harness & Power Distribution,PRJ-005,PRJ-005-TSK-002,Electrical_Harness,0,Electrical,2026-05-01,2026-10-21,,30,,luc.bergeron@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-005,Cockpit Shell Integration,PRJ-005,PRJ-005-TSK-003,Cockpit_Integration,0,Structures,2026-05-31,2026-11-20,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-006,Avionics & Flight Deck Installation,PRJ-005,PRJ-005-TSK-005,Avionics_Installation,0,Avionics,2026-06-25,2026-12-15,,22,,phil.gagnon@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-007,Visual System & Projection Setup,PRJ-005,PRJ-005-TSK-005,Visual_System_Setup,0,Visual Systems,2026-06-25,2026-12-15,,18,,sophie.lavoie@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-008,Control Loading System Setup,PRJ-005,PRJ-005-TSK-005,Control_Loading_Setup,0,Motion Systems,2026-06-25,2026-12-15,,12,,jp.tremblay@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-009,Motion System Calibration,PRJ-005,PRJ-005-TSK-006,Motion_Calibration,0,Motion Systems,2026-07-17,2027-01-06,,15,,francois.cote@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-010,Full System Integration Test,PRJ-005,PRJ-005-TSK-009,Integration_Test,0,Test Engineering,2026-08-01,2027-02-10,,20,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-011,72-Hour Burn-In Run,PRJ-005,PRJ-005-TSK-010,Burn_In,0,Test Engineering,2026-08-21,2027-03-02,,5,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-012,Qualification Testing,PRJ-005,PRJ-005-TSK-011,Qualification_Test,0,Test Engineering,2026-08-26,2027-03-07,,25,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-005-TSK-013,Customer Acceptance Test,PRJ-005,PRJ-005-TSK-012,Customer_Acceptance,1,Test Engineering,2026-09-20,2027-04-01,,10,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-04-01
+PRJ-006-TSK-001,Material Readiness Check,PRJ-006,,Material_Readiness,0,Structures,2026-02-01,2026-03-15,2026-03-15,5,2026-03-20,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2026-03-20
+PRJ-006-TSK-002,Platform Frame Assembly,PRJ-006,PRJ-006-TSK-001,Platform_Frame_Assembly,0,Structures,2026-02-06,2026-03-20,2026-03-20,25,2026-04-14,nat.bouchard@caedemo.com,100,nat.bouchard@caedemo.com,2026-04-14
+PRJ-006-TSK-003,Hydraulic System Installation,PRJ-006,PRJ-006-TSK-002,Hydraulic_Installation,0,Hydraulics,2026-03-03,2026-04-14,2026-04-14,30,,mc.dubois@caedemo.com,23,mc.dubois@caedemo.com,2026-04-21
+PRJ-006-TSK-004,Electrical Harness & Power Distribution,PRJ-006,PRJ-006-TSK-002,Electrical_Harness,0,Electrical,2026-03-03,2026-04-14,2026-04-14,30,,luc.bergeron@caedemo.com,23,luc.bergeron@caedemo.com,2026-04-21
+PRJ-006-TSK-005,Cockpit Shell Integration,PRJ-006,PRJ-006-TSK-003,Cockpit_Integration,0,Structures,2026-04-02,2026-05-14,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-006-TSK-006,Avionics & Flight Deck Installation,PRJ-006,PRJ-006-TSK-005,Avionics_Installation,0,Avionics,2026-04-27,2026-06-08,,22,,phil.gagnon@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-006-TSK-007,Visual System & Projection Setup,PRJ-006,PRJ-006-TSK-005,Visual_System_Setup,0,Visual Systems,2026-04-27,2026-06-08,,18,,sophie.lavoie@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-006-TSK-008,Control Loading System Setup,PRJ-006,PRJ-006-TSK-005,Control_Loading_Setup,0,Motion Systems,2026-04-27,2026-06-08,,12,,jp.tremblay@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-006-TSK-009,Motion System Calibration,PRJ-006,PRJ-006-TSK-006,Motion_Calibration,0,Motion Systems,2026-05-19,2026-06-30,,15,,francois.cote@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-006-TSK-010,Full System Integration Test,PRJ-006,PRJ-006-TSK-009,Integration_Test,0,Test Engineering,2026-06-03,2026-08-14,,20,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-006-TSK-011,72-Hour Burn-In Run,PRJ-006,PRJ-006-TSK-010,Burn_In,0,Test Engineering,2026-06-23,2026-09-03,,5,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-006-TSK-012,Qualification Testing,PRJ-006,PRJ-006-TSK-011,Qualification_Test,0,Test Engineering,2026-06-28,2026-09-08,,25,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-006-TSK-013,Customer Acceptance Test,PRJ-006,PRJ-006-TSK-012,Customer_Acceptance,1,Test Engineering,2026-07-23,2026-10-03,,10,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-02-01
+PRJ-007-TSK-001,Material Readiness Check,PRJ-007,,Material_Readiness,0,Structures,2026-03-01,2026-05-09,,5,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-002,Platform Frame Assembly,PRJ-007,PRJ-007-TSK-001,Platform_Frame_Assembly,0,Structures,2026-03-06,2026-06-08,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-003,Hydraulic System Installation,PRJ-007,PRJ-007-TSK-002,Hydraulic_Installation,0,Hydraulics,2026-03-31,2026-07-03,,30,,ma.pelletier@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-004,Electrical Harness & Power Distribution,PRJ-007,PRJ-007-TSK-002,Electrical_Harness,0,Electrical,2026-03-31,2026-07-03,,30,,cat.morin@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-005,Cockpit Shell Integration,PRJ-007,PRJ-007-TSK-003,Cockpit_Integration,0,Structures,2026-04-30,2026-08-02,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-006,Avionics & Flight Deck Installation,PRJ-007,PRJ-007-TSK-005,Avionics_Installation,0,Avionics,2026-05-25,2026-08-27,,22,,phil.gagnon@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-007,Visual System & Projection Setup,PRJ-007,PRJ-007-TSK-005,Visual_System_Setup,0,Visual Systems,2026-05-25,2026-08-27,,18,,sophie.lavoie@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-008,Control Loading System Setup,PRJ-007,PRJ-007-TSK-005,Control_Loading_Setup,0,Motion Systems,2026-05-25,2026-08-27,,12,,jp.tremblay@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-009,Motion System Calibration,PRJ-007,PRJ-007-TSK-006,Motion_Calibration,0,Motion Systems,2026-06-16,2026-09-18,,15,,francois.cote@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-010,Full System Integration Test,PRJ-007,PRJ-007-TSK-009,Integration_Test,0,Test Engineering,2026-07-01,2026-10-13,,20,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-011,72-Hour Burn-In Run,PRJ-007,PRJ-007-TSK-010,Burn_In,0,Test Engineering,2026-07-21,2026-11-02,,5,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-012,Qualification Testing,PRJ-007,PRJ-007-TSK-011,Qualification_Test,0,Test Engineering,2026-07-26,2026-11-07,,25,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-007-TSK-013,Customer Acceptance Test,PRJ-007,PRJ-007-TSK-012,Customer_Acceptance,1,Test Engineering,2026-08-20,2026-12-02,,10,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-03-01
+PRJ-008-TSK-001,Material Readiness Check,PRJ-008,,Material_Readiness,0,Structures,2026-05-01,2026-10-21,,5,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-002,Platform Frame Assembly,PRJ-008,PRJ-008-TSK-001,Platform_Frame_Assembly,0,Structures,2026-05-06,2026-10-26,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-003,Hydraulic System Installation,PRJ-008,PRJ-008-TSK-002,Hydraulic_Installation,0,Hydraulics,2026-05-31,2026-11-20,,30,,ma.pelletier@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-004,Electrical Harness & Power Distribution,PRJ-008,PRJ-008-TSK-002,Electrical_Harness,0,Electrical,2026-05-31,2026-11-20,,30,,cat.morin@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-005,Cockpit Shell Integration,PRJ-008,PRJ-008-TSK-003,Cockpit_Integration,0,Structures,2026-06-30,2026-12-20,,25,,nat.bouchard@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-006,Avionics & Flight Deck Installation,PRJ-008,PRJ-008-TSK-005,Avionics_Installation,0,Avionics,2026-07-25,2027-01-14,,22,,phil.gagnon@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-007,Visual System & Projection Setup,PRJ-008,PRJ-008-TSK-005,Visual_System_Setup,0,Visual Systems,2026-07-25,2027-01-14,,18,,sophie.lavoie@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-008,Control Loading System Setup,PRJ-008,PRJ-008-TSK-005,Control_Loading_Setup,0,Motion Systems,2026-07-25,2027-01-14,,12,,jp.tremblay@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-009,Motion System Calibration,PRJ-008,PRJ-008-TSK-006,Motion_Calibration,0,Motion Systems,2026-08-16,2027-02-05,,15,,francois.cote@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-010,Full System Integration Test,PRJ-008,PRJ-008-TSK-009,Integration_Test,0,Test Engineering,2026-08-31,2027-04-11,,20,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-011,72-Hour Burn-In Run,PRJ-008,PRJ-008-TSK-010,Burn_In,0,Test Engineering,2026-09-20,2027-05-01,,5,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-012,Qualification Testing,PRJ-008,PRJ-008-TSK-011,Qualification_Test,0,Test Engineering,2026-09-25,2027-05-06,,25,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01
+PRJ-008-TSK-013,Customer Acceptance Test,PRJ-008,PRJ-008-TSK-012,Customer_Acceptance,1,Test Engineering,2026-10-20,2027-05-31,,10,,david.chen@caedemo.com,0,daniel.fortin@caedemo.com,2026-05-01

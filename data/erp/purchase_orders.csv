@@ -1,0 +1,7 @@
+po_id,part_number,component_name,supplier,quantity_ordered,unit_cost_usd,order_date,expected_delivery,actual_delivery,status,destination_simulator,notes
+PO-5001,HYD-HPU-3K,Hydraulic Power Unit 3000PSI,Parker Hannifin,1,67000,2025-08-01,2025-10-01,2025-09-28,Delivered,SIM-003,For SIM-003 hydraulic install
+PO-5002,CS-B737-R4,Cockpit Shell - B737,CAE Custom,1,310000,2025-06-15,2025-11-15,2025-11-12,Delivered,SIM-001,For SIM-001 cockpit integration
+PO-5003,CS-A320-R3,Cockpit Shell - A320,CAE Custom,1,295000,2025-08-10,2026-01-10,2026-01-08,Delivered,SIM-002,For SIM-002 cockpit integration
+PO-5004,VIS-PRJ-4K,LED Projector 4K Module,Barco,6,125000,2025-10-01,2026-01-01,2025-12-28,Delivered,SIM-001,3 for SIM-001 + 3 spare
+PO-5005,AV-MCP-737,Mode Control Panel B737,CAE Custom,1,28000,2025-12-01,2026-02-15,2026-02-14,Delivered,SIM-001,For SIM-001 avionics install
+PO-5006,HYD-SV-100,Servo Valve Assembly,Moog Inc,6,4200,2026-03-10,2026-04-24,,InTransit,SIM-001,Spares for potential SIM-001 maintenance
