@@ -30,6 +30,8 @@
 # | Telemetry (fault) | Manual notebook during demo | Eventstream to KQL DB |
 # | Clock-in events | Data Pipeline (1 min) calls notebook | Eventstream to KQL DB |
 # | Schedule changes | Agent / manual | SQL Database UPDATE |
+# | Anomaly detection | KQL materialized views | Composite scores per machine |
+# | Alerts | Activator on MachineHealthAlerts() | Teams / Power Automate |
 
 # METADATA ********************
 
@@ -43,11 +45,31 @@
 # ## Setup Steps
 # 
 # 1. **PostDeploymentConfig** - creates hr.* and erp.* schemas + 16 tables with PKs/FKs in SQL DB
-# 2. **Create Eventstreams** - SimulatorTelemetryStream + ClockInEventStream (manual in Fabric UI)
-# 3. **Create Data Pipelines** - TelemetryPipeline + ClockInPipeline, 1-min schedule
-# 4. **Paste connection strings** into the simulator notebook config cells
-# 5. **Demo: Inject fault** - run TelemetryFaultInjection manually
-# 6. **Power BI Gantt** - connect to SQL Database erp.tasks + erp.projects
+# 2. **KQL Database setup** - run commands from data/kql/machine_health_monitoring.kql in the Eventhouse
+# 3. **Create Eventstreams** - SimulatorTelemetryStream + ClockInEventStream (manual in Fabric UI)
+# 4. **Create Data Pipelines** - TelemetryPipeline + ClockInPipeline, 1-min schedule
+# 5. **Paste connection strings** into the simulator notebook config cells
+# 6. **Create Real-Time Dashboard** - use queries from data/kql/dashboard_spec.json
+# 7. **Configure Activator** - MachineHealthActivator monitors MachineHealthAlerts() function
+# 8. **Demo: Inject fault** - run TelemetryFaultInjection manually
+# 9. **Power BI Gantt** - connect to SQL Database erp.tasks + erp.projects
+# 
+# ## Anomaly Detection (10 rules)
+# 
+# Multivariate composite scores detect patterns that single thresholds miss:
+# 
+# | Rule | Machines | What it detects |
+# |---|---|---|
+# | CNC Bearing Wear | MCH-001/002 | Temp + vibration up while speed normal |
+# | CNC Coolant Failure | MCH-001/002/003 | Coolant flow down + temp rising |
+# | Laser Nozzle Degradation | MCH-004 | Nozzle temp + alignment drift + power compensating |
+# | Press Hydraulic Leak | MCH-005 | Pressure variance + oil temp + oil level drop |
+# | Welder Gas Contamination | MCH-006/007 | Arc voltage unstable + interpass temp rising |
+# | CMM Environmental Drift | MCH-008 | Enclosure temp off 20C + accuracy degrading |
+# | Reflow Profile Drift | MCH-011 | Zone deltas outside IPC-7530 profile |
+# | 3D Printer O2 Ingress | MCH-012 | O2 level rising in chamber |
+# | Crane Brake Wear | MCH-014 | Brake pads thinning + motor temp |
+# | Hydraulic Pump Cavitation | MCH-015 | Pump vibration + flow drop + pressure unstable |
 # 
 # ## The 8 Projects (April 21, 2026)
 # 
