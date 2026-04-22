@@ -128,10 +128,11 @@ cae-demo/
 │   └── Agent/
 │       └── CapacityManagementAgent.Notebook/      # AI agent querying SQL DB
 ├── data/
-│   ├── erp/          # simulators, machines, BOM, inventory, POs, maintenance, task types
+│   ├── erp/          # machines, inventory, purchase orders, maintenance history
 │   ├── hr/           # employees, skills, schedules, limitations, leave, contractors
-│   ├── sqldb/        # projects.csv, tasks.csv (Gantt-compatible)
-│   └── telemetry/    # sensor_definitions.csv (75 sensors × 15 machines)
+│   ├── plm/          # simulators, BOMs, projects, tasks, task type durations
+│   ├── kql/          # KQL queries, dashboard spec, anomaly scoring rules
+│   └── telemetry/    # sensor_definitions.csv (75 sensors x 15 machines)
 └── scripts/          # Local Python tools
     ├── generate_project_data.py    # Regenerate 8 projects with scheduling constraints
     ├── telemetry_normal.py         # Standalone telemetry generator
@@ -184,7 +185,7 @@ resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_
 items = resp.json().get("value", [])
 lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
 if lh:
-    for folder in ["erp", "hr", "telemetry", "sqldb"]:
+    for folder in ["erp", "hr", "telemetry", "plm"]:
         src = os.path.join(data_dir, folder)
         if not os.path.isdir(src): continue
         for f in sorted(glob.glob(os.path.join(src, "*"))):

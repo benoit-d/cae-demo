@@ -200,8 +200,8 @@ if __name__ == "__main__":
 
     employees = load_csv(os.path.join(base_dir, "data", "hr", "employees.csv"))
     projects = load_projects_with_tasks(
-        os.path.join(base_dir, "data", "sqldb", "projects.csv"),
-        os.path.join(base_dir, "data", "sqldb", "tasks.csv"),
+        os.path.join(base_dir, "data", "plm", "projects.csv"),
+        os.path.join(base_dir, "data", "plm", "tasks.csv"),
     )
 
     conn_str = os.environ.get("EVENTHUB_CONNECTION_STRING", "")

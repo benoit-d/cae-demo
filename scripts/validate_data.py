@@ -12,9 +12,9 @@ def lcsv(p):
 
 emps = lcsv(f"{BASE}/hr/employees.csv")
 skills = lcsv(f"{BASE}/hr/skills_certifications.csv")
-tasks = lcsv(f"{BASE}/sqldb/tasks.csv")
-projs = lcsv(f"{BASE}/sqldb/projects.csv")
-simulators = lcsv(f"{BASE}/erp/simulators.csv")
+tasks = lcsv(f"{BASE}/plm/tasks.csv")
+projs = lcsv(f"{BASE}/plm/projects.csv")
+simulators = lcsv(f"{BASE}/plm/simulators.csv")
 machines = lcsv(f"{BASE}/erp/machines.csv")
 
 emp_emails = {e["email"] for e in emps}
