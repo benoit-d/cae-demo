@@ -123,93 +123,99 @@ print("\nLakehouse tables loaded.")
 # CELL ********************
 
 # Step 3 - Create SQL Database tables for project management (write-back)
+SQL_ENDPOINT = ""
+SQL_DBNAME = ""
+
 if SQLDB_NAME:
     import pyodbc
-
     TOKEN_SQL = notebookutils.credentials.getToken("https://database.windows.net/")
 
-    # Build the pyodbc connection with AAD token
-    SQL_ENDPOINT = f"{SQLDB_NAME}.database.fabric.microsoft.com"
+    # Discover the SQL endpoint from the Fabric API
+    sql_db_id = sql_db["id"]
+    detail_resp = requests.get(
+        f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/sqlDatabases/{sql_db_id}",
+        headers=headers,
+    )
+    print(f"SQL DB API response: {detail_resp.status_code}")
+    if detail_resp.status_code == 200:
+        db_info = detail_resp.json()
+        props = db_info.get("properties", {})
+        SQL_ENDPOINT = props.get("serverFqdn", "") or props.get("connectionString", "")
+        SQL_DBNAME = props.get("databaseName", SQLDB_NAME)
+        print(f"  Properties found: {list(props.keys())}")
+        print(f"  serverFqdn: {props.get('serverFqdn', 'N/A')}")
+        print(f"  databaseName: {props.get('databaseName', 'N/A')}")
+        print(f"  connectionString: {str(props.get('connectionString', 'N/A'))[:80]}")
+
+    if not SQL_ENDPOINT:
+        print("\nCould not auto-discover SQL endpoint.")
+        print("Open your SQL Database in Fabric > copy the Server from the connection string.")
+        print("It looks like: xxxx.datawarehouse.fabric.microsoft.com")
+        print("Paste it below and re-run:")
+        # SQL_ENDPOINT = "PASTE_HERE.datawarehouse.fabric.microsoft.com"
+        # SQL_DBNAME = "CAEManufacturing_SQLDB"
+
+if SQLDB_NAME and SQL_ENDPOINT:
+    print(f"\nConnecting to: {SQL_ENDPOINT} / {SQL_DBNAME}")
+
     conn_str = (
         f"Driver={{ODBC Driver 18 for SQL Server}};"
         f"Server={SQL_ENDPOINT};"
-        f"Database={SQLDB_NAME};"
+        f"Database={SQL_DBNAME};"
         f"Encrypt=yes;TrustServerCertificate=no;"
     )
-
-    # Encode token for pyodbc AAD auth
     token_bytes = TOKEN_SQL.encode("utf-16-le")
     token_struct = struct.pack(f"<I{len(token_bytes)}s", len(token_bytes), token_bytes)
+
     conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
     conn.autocommit = True
     cursor = conn.cursor()
 
-    DDL = """
-    IF OBJECT_ID('dbo.tasks', 'U') IS NOT NULL DROP TABLE dbo.tasks;
-    IF OBJECT_ID('dbo.projects', 'U') IS NOT NULL DROP TABLE dbo.projects;
-    IF OBJECT_ID('dbo.task_type_durations', 'U') IS NOT NULL DROP TABLE dbo.task_type_durations;
+    DDL_STATEMENTS = [
+        "IF OBJECT_ID('dbo.tasks', 'U') IS NOT NULL DROP TABLE dbo.tasks",
+        "IF OBJECT_ID('dbo.projects', 'U') IS NOT NULL DROP TABLE dbo.projects",
+        "IF OBJECT_ID('dbo.task_type_durations', 'U') IS NOT NULL DROP TABLE dbo.task_type_durations",
+        """CREATE TABLE dbo.task_type_durations (
+            Task_Type NVARCHAR(50) PRIMARY KEY, Task_Name NVARCHAR(100),
+            Standard_Duration INT, Required_Skill NVARCHAR(50),
+            Sequence_Order INT, Description NVARCHAR(500))""",
+        """CREATE TABLE dbo.projects (
+            Project_ID NVARCHAR(10) PRIMARY KEY, Project_Name NVARCHAR(100),
+            Simulator_ID NVARCHAR(10), Initial_Planned_Start DATE,
+            Modified_Planned_Start DATE, Standard_Duration INT,
+            Actual_End DATE, Resource_Login NVARCHAR(100),
+            Complete_Percentage INT, Last_Modified_By NVARCHAR(100),
+            Last_Modified_On DATE)""",
+        """CREATE TABLE dbo.tasks (
+            Task_ID NVARCHAR(20) PRIMARY KEY, Task_Name NVARCHAR(100),
+            Parent_Project_ID NVARCHAR(10) NOT NULL REFERENCES dbo.projects(Project_ID),
+            FS_Task_ID NVARCHAR(20),
+            Task_Type NVARCHAR(50) REFERENCES dbo.task_type_durations(Task_Type),
+            Milestone INT, Skill_Requirement NVARCHAR(50),
+            Initial_Planned_Start DATE, Modified_Planned_Start DATE,
+            Actual_Start DATE, Standard_Duration INT, Actual_End DATE,
+            Resource_Login NVARCHAR(100), Complete_Percentage INT,
+            Last_Modified_By NVARCHAR(100), Last_Modified_On DATE)""",
+    ]
 
-    CREATE TABLE dbo.task_type_durations (
-        Task_Type         NVARCHAR(50) PRIMARY KEY,
-        Task_Name         NVARCHAR(100),
-        Standard_Duration INT,
-        Required_Skill    NVARCHAR(50),
-        Sequence_Order    INT,
-        Description       NVARCHAR(500)
-    );
+    print("Creating SQL tables...")
+    for ddl in DDL_STATEMENTS:
+        try:
+            cursor.execute(ddl)
+            if "CREATE" in ddl:
+                tbl = ddl.split("dbo.")[1].split(" ")[0].split("(")[0]
+                print(f"  Created dbo.{tbl}")
+        except Exception as e:
+            print(f"  Warning: {e}")
 
-    CREATE TABLE dbo.projects (
-        Project_ID             NVARCHAR(10) PRIMARY KEY,
-        Project_Name           NVARCHAR(100),
-        Simulator_ID           NVARCHAR(10),
-        Initial_Planned_Start  DATE,
-        Modified_Planned_Start DATE,
-        Standard_Duration      INT,
-        Actual_End             DATE,
-        Resource_Login         NVARCHAR(100),
-        Complete_Percentage    INT,
-        Last_Modified_By       NVARCHAR(100),
-        Last_Modified_On       DATE
-    );
-
-    CREATE TABLE dbo.tasks (
-        Task_ID                NVARCHAR(20) PRIMARY KEY,
-        Task_Name              NVARCHAR(100),
-        Parent_Project_ID      NVARCHAR(10) NOT NULL REFERENCES dbo.projects(Project_ID),
-        FS_Task_ID             NVARCHAR(20),
-        Task_Type              NVARCHAR(50) REFERENCES dbo.task_type_durations(Task_Type),
-        Milestone              INT,
-        Skill_Requirement      NVARCHAR(50),
-        Initial_Planned_Start  DATE,
-        Modified_Planned_Start DATE,
-        Actual_Start           DATE,
-        Standard_Duration      INT,
-        Actual_End             DATE,
-        Resource_Login         NVARCHAR(100),
-        Complete_Percentage    INT,
-        Last_Modified_By       NVARCHAR(100),
-        Last_Modified_On       DATE
-    );
-    """
-
-    print("Creating SQL Database tables...\n")
-    for stmt in DDL.split(";"):
-        stmt = stmt.strip()
-        if stmt and not stmt.startswith("--"):
-            try:
-                cursor.execute(stmt)
-            except Exception as e:
-                print(f"  DDL warning: {e}")
-
-    print("  task_type_durations  created")
-    print("  projects             created")
-    print("  tasks                created (FK to projects, task_type_durations)")
     cursor.close()
     conn.close()
-    print("\nSQL tables ready.")
+    print("SQL tables ready.")
 else:
-    print("Skipping SQL Database setup (not found).")
-    print("Project data will still be available in Lakehouse Delta tables.")
+    if SQLDB_NAME:
+        print("SQL endpoint not resolved. See instructions above.")
+    else:
+        print("No SQL Database found. Project data will go to Lakehouse only.")
 
 # METADATA ********************
 
@@ -221,10 +227,10 @@ else:
 # CELL ********************
 
 # Step 4 - Load project data into SQL Database
-if SQLDB_NAME:
+if SQLDB_NAME and SQL_ENDPOINT:
     JDBC_URL = (
         f"jdbc:sqlserver://{SQL_ENDPOINT}:1433;"
-        f"database={SQLDB_NAME};"
+        f"database={SQL_DBNAME};"
         f"encrypt=true;trustServerCertificate=false;"
         f"loginTimeout=30;"
     )
