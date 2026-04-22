@@ -176,7 +176,12 @@ class _Cred:
     def get_token(self, *s, **k): return AccessToken(TOKEN, 0)
 
 ws = FabricWorkspace(workspace_id=WORKSPACE_ID, repository_directory=workspace_dir,
-    item_type_in_scope=["Notebook","Lakehouse","Eventhouse","SQLDatabase"], token_credential=_Cred())
+    item_type_in_scope=[
+        "Notebook", "Lakehouse", "Environment",
+        "Eventhouse", "Eventstream",
+        "KQLDatabase", "KQLDashboard", "KQLQueryset",
+        "Reflex", "SemanticModel", "Report", "SQLDatabase",
+    ], token_credential=_Cred())
 publish_all_items(ws)
 
 # Cell 3 — Upload seed data to Lakehouse
