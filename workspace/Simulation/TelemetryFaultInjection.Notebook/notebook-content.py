@@ -13,9 +13,11 @@
 
 # # Telemetry Fault Injection - SIM-001
 # 
-# Simulates a hydraulic pump failure on SIM-001 over 10 minutes.
-# Pressure drifts down, fluid temperature rises, vibration increases.
-# Run this after the normal telemetry emulator is already streaming.
+# Manually run during a demo to simulate a hydraulic pump failure on SIM-001.
+# Sends degrading readings over 10 minutes (one batch per minute).
+# 
+# This is the ONE notebook that runs as a loop since the fault injection
+# needs to be a continuous degradation visible in the dashboard.
 
 # METADATA ********************
 
@@ -26,11 +28,42 @@
 
 # CELL ********************
 
-import json, math, random, time
+EVENTHUB_CONNECTION_STRING = ""  # SimulatorTelemetryStream connection string
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+import json, math, random, time, os, requests
 from datetime import datetime, timezone
+import notebookutils
+
+TOKEN = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
+WORKSPACE_ID = os.environ.get("TRIDENT_WORKSPACE_ID", "")
+if not WORKSPACE_ID:
+    try:
+        ctx = notebookutils.runtime.context
+        WORKSPACE_ID = ctx.get("currentWorkspaceId", "") or ctx.get("workspaceId", "")
+    except Exception:
+        pass
+
+headers = {"Authorization": f"Bearer {TOKEN}"}
+resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=headers)
+items_list = resp.json().get("value", [])
+lh = next((i for i in items_list if i.get("displayName") == "CAEManufacturing_LH"), None)
+if not lh:
+    raise RuntimeError("Lakehouse not found")
+
+LH_ID = lh["id"]
+BASE = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{LH_ID}"
 
 sensor_defs = [row.asDict() for row in
-    spark.read.csv("Files/data/telemetry/sensor_definitions.csv", header=True, inferSchema=True)
+    spark.read.csv(f"{BASE}/Files/data/telemetry/sensor_definitions.csv", header=True, inferSchema=True)
     .filter("simulator_id = 'SIM-001'").collect()]
 print(f"{len(sensor_defs)} SIM-001 sensors loaded")
 
@@ -45,7 +78,7 @@ FAULTS = {
     "Power Consumption":           {"start": 3,  "rate":   5.0},
 }
 
-INTERVAL = 30
+INTERVAL = 60  # 1 minute between batches
 DURATION_MIN = 10.0
 
 # METADATA ********************
@@ -58,9 +91,9 @@ DURATION_MIN = 10.0
 # CELL ********************
 
 start = time.time()
-batch = 0
+batch_num = 0
 
-print(f"Injecting fault on SIM-001 for {DURATION_MIN} min...\n")
+print(f"Injecting fault on SIM-001 for {DURATION_MIN} min (1 batch/min)...\n")
 
 try:
     while True:
@@ -94,12 +127,21 @@ try:
                 "unit": s["unit"], "alert_level": lvl, "is_anomaly": lvl != "Normal",
             })
 
-        spark.createDataFrame(events).write.format("delta").mode("append").save("Tables/simulator_telemetry_raw")
+        if EVENTHUB_CONNECTION_STRING:
+            from azure.eventhub import EventHubProducerClient, EventData
+            p = EventHubProducerClient.from_connection_string(EVENTHUB_CONNECTION_STRING)
+            with p:
+                b = p.create_batch()
+                for e in events:
+                    b.add(EventData(json.dumps(e)))
+                p.send_batch(b)
+        else:
+            spark.createDataFrame(events).write.format("delta").mode("append").save(f"{BASE}/Tables/simulator_telemetry_raw")
 
         w = sum(1 for e in events if e["alert_level"] == "Warning")
         c = sum(1 for e in events if e["alert_level"] == "Critical")
-        batch += 1
-        print(f"  [{elapsed:5.1f} min] batch {batch}  Normal:{len(events)-w-c}  Warn:{w}  Crit:{c}")
+        batch_num += 1
+        print(f"  [{elapsed:5.1f} min] batch {batch_num}  Normal:{len(events)-w-c}  Warn:{w}  Crit:{c}")
         for e in events:
             if e["alert_level"] != "Normal":
                 print(f"      {e['sensor_name']}: {e['value']} {e['unit']} [{e['alert_level']}]")
@@ -108,7 +150,7 @@ try:
 except KeyboardInterrupt:
     pass
 
-print(f"\nFault injection complete. {batch} batches.")
+print(f"\nFault injection complete. {batch_num} batches over {DURATION_MIN} min.")
 
 # METADATA ********************
 

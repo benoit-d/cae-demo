@@ -13,17 +13,23 @@
 
 # # CAE Flight Simulator Manufacturing - Get Started
 # 
-# Welcome to the **CAE Flight Simulator Manufacturing** demo.
-# This solution shows how agentic AI workflows can optimise capacity
-# management in a flight-simulator factory using Microsoft Fabric and Azure AI Foundry.
+# ## Architecture
 # 
-# ## What is in the workspace
+# | Store | Data | Purpose |
+# |---|---|---|
+# | **Lakehouse** (Delta) | HR, ERP, BOM, inventory, sensor defs | Read-heavy reference data |
+# | **SQL Database** | Projects, Tasks, Task Type Durations | Write-back for scheduling (CRUD) |
+# | **Eventhouse** (KQL DB) | Telemetry events, Clock-in events | Real-time event queries |
+# | **Eventstreams** | SimulatorTelemetryStream, ClockInEventStream | Ingestion from pipelines |
 # 
-# | Category | Items |
-# |---|---|
-# | **SQL Database** | CAEManufacturing_SQLDB - 15 tables (projects, tasks, employees, ...) |
-# | **Lakehouse** | CAEManufacturing_LH - staging area (CSVs in Files/) |
-# | **Notebooks** | This guide + PostDeploymentConfig, 3 Simulators, Agent |
+# ## Data Flow
+# 
+# | Source | Mechanism | Destination |
+# |---|---|---|
+# | Telemetry (normal) | Data Pipeline (every 1 min) calls notebook | Eventstream to KQL DB |
+# | Telemetry (fault) | Manual notebook run during demo | Eventstream to KQL DB |
+# | Clock-in events | Data Pipeline (every 1 min) calls notebook | Eventstream to KQL DB |
+# | Schedule changes | Agent / manual | SQL Database UPDATE |
 
 # METADATA ********************
 
@@ -34,37 +40,49 @@
 
 # MARKDOWN ********************
 
-# ## The Story (April 21, 2026)
+# ## Setup Steps
 # 
-# You manage 8 flight-simulator builds for airlines worldwide:
+# ### 1. PostDeploymentConfig (already done if you see data)
+# Loads reference data into Lakehouse + project tables into SQL Database.
+# 
+# ### 2. Create Eventstreams (manual in Fabric UI)
+# - Create **SimulatorTelemetryStream** Eventstream
+# - Create **ClockInEventStream** Eventstream
+# - For each: add a **Custom App** source and copy the connection string
+# - Add a **KQL Database** destination routing to CAEManufacturingEH
+# 
+# ### 3. Create Data Pipelines (manual in Fabric UI)
+# - **TelemetryPipeline**: Notebook activity pointing to SimulatorTelemetryEmulator, schedule every 1 minute
+# - **ClockInPipeline**: Notebook activity pointing to ClockInEventEmulator, schedule every 1 minute
+# 
+# ### 4. Paste connection strings into the notebooks
+# Open each simulator notebook, paste the Eventstream connection string in the config cell.
+# 
+# ### 5. Demo: Inject a fault
+# Open **Simulation/TelemetryFaultInjection**, run manually. SIM-001 hydraulics degrade over 10 min.
+# 
+# ### 6. Power BI Gantt
+# Connect to SQL Database. Use Gantt visual (MAQ Software):
+# Task=Task_Name, Start=Modified_Planned_Start, Duration=Standard_Duration, %=Complete_Percentage, Resource=Resource_Login
+
+# METADATA ********************
+
+# META {
+# META   "language": "markdown",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# MARKDOWN ********************
+
+# ## The 8 Projects (as of April 21, 2026)
 # 
 # | Project | Simulator | Customer | Status |
 # |---|---|---|---|
 # | PRJ-003 | SIM-003 Boeing 777X | Emirates | 100% Delivered |
-# | PRJ-001 | SIM-001 Boeing 737 MAX | Air Canada | 84% Qualification Testing |
-# | PRJ-002 | SIM-002 Airbus A320neo | Lufthansa | 30% Cockpit Integration |
+# | PRJ-001 | SIM-001 Boeing 737 MAX | Air Canada | 84% Qualification |
+# | PRJ-002 | SIM-002 Airbus A320neo | Lufthansa | 30% Assembly |
 # | PRJ-006 | SIM-006 Boeing 737 MAX | WestJet | 15% Hydraulics |
 # | PRJ-004 to PRJ-008 | Various | Various | 0% Planned |
-# 
-# Your 12-person team: 10 FTEs + 2 contractors, 4 seniors with physical limitations.
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# MARKDOWN ********************
-
-# ## Step-by-Step Guide
-# 
-# 1. **Run PostDeploymentConfig** (if not done) - creates SQL tables, loads data
-# 2. **Start Simulation/SimulatorTelemetryEmulator** - streams 60 sensor readings every 30s
-# 3. **Start Simulation/TelemetryFaultInjection** - degrades SIM-001 hydraulics over 10 min
-# 4. **Start Simulation/ClockInEventEmulator** - badge-in/out and task events
-# 5. **Build Gantt chart** in Power BI (MAQ Software visual): Task=Task_Name, Start=Modified_Planned_Start, Duration=Standard_Duration, %Complete=Complete_Percentage, Resource=Resource_Login
-# 6. **Run Agent/CapacityManagementAgent** - reasons across all data sources
 
 # METADATA ********************
 
@@ -75,7 +93,7 @@
 
 # CELL ********************
 
-# Quick data check - list items in the workspace
+# Quick check - list workspace items
 import os, requests, notebookutils
 
 TOKEN = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
@@ -91,11 +109,9 @@ if WORKSPACE_ID:
     headers = {"Authorization": f"Bearer {TOKEN}"}
     resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=headers)
     items = resp.json().get("value", [])
-    print(f"Found {len(items)} items in workspace:\n")
-    for i in sorted(items, key=lambda x: x.get("type", "")):
+    print(f"Workspace has {len(items)} items:\n")
+    for i in sorted(items, key=lambda x: (x.get("type", ""), x.get("displayName", ""))):
         print(f"  {i['type']:20s}  {i['displayName']}")
-else:
-    print("Could not detect workspace ID.")
 
 # METADATA ********************
 
