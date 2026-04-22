@@ -96,7 +96,102 @@ else:
 
 # CELL ********************
 
-# Step 2 - Drop ALL existing tables and schemas, then recreate fresh
+# Step 2 - Create KQL Database with schema via Fabric API
+import base64, json, time
+
+# Find the Eventhouse
+eh = next((i for i in items if i.get("displayName") == "CAEManufacturingEH"), None)
+if not eh:
+    print("WARNING: CAEManufacturingEH Eventhouse not found. Skipping KQL setup.")
+    KQL_SETUP_OK = False
+else:
+    eventhouse_id = eh["id"]
+    print(f"Eventhouse: {eventhouse_id}")
+
+    # KQL schema: table creation + streaming ingestion
+    # (Materialized views must be created separately after tables have data)
+    kql_schema = """
+.create-merge table MachineTelemetry (
+    timestamp: datetime, machine_id: string, sensor_id: string,
+    sensor_category: string, sensor_name: string, value: real,
+    unit: string, alert_level: string, is_anomaly: bool)
+
+.create-merge table ClockInEvents (
+    timestamp: datetime, event_type: string, employee_email: string,
+    employee_name: string, employee_id: string, department: string,
+    project_id: string, task_id: string, simulator_id: string, details: string)
+
+.alter table MachineTelemetry policy streamingingestion enable
+.alter table ClockInEvents policy streamingingestion enable
+"""
+
+    # Build the KQL Database definition
+    db_name = "CAEManufacturingKQLDB"
+    db_properties = json.dumps({
+        "databaseType": "ReadWrite",
+        "parentEventhouseItemId": eventhouse_id,
+        "oneLakeCachingPeriod": "7d",
+        "oneLakeStandardStoragePeriod": "30d"
+    })
+    db_props_b64 = base64.b64encode(db_properties.encode("utf-8")).decode("utf-8")
+    db_schema_b64 = base64.b64encode(kql_schema.encode("utf-8")).decode("utf-8")
+
+    # Check if KQL DB already exists
+    existing_kqldb = next((i for i in items if i.get("displayName") == db_name), None)
+
+    if existing_kqldb:
+        print(f"KQL Database '{db_name}' already exists: {existing_kqldb['id']}")
+        KQL_SETUP_OK = True
+    else:
+        print(f"Creating KQL Database '{db_name}'...")
+        create_url = f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/kqlDatabases"
+        payload = {
+            "displayName": db_name,
+            "definition": {
+                "parts": [
+                    {"path": "DatabaseProperties.json", "payload": db_props_b64, "payloadType": "InlineBase64"},
+                    {"path": "DatabaseSchema.kql", "payload": db_schema_b64, "payloadType": "InlineBase64"}
+                ]
+            }
+        }
+        resp = requests.post(create_url, json=payload, headers=headers)
+        print(f"  Status: {resp.status_code}")
+
+        if resp.status_code in (200, 201, 202):
+            # Poll for completion
+            if "Location" in resp.headers:
+                poll_url = resp.headers["Location"]
+                for attempt in range(20):
+                    poll_resp = requests.get(poll_url, headers=headers)
+                    status = poll_resp.json().get("status", "").lower()
+                    print(f"  Polling: {status}")
+                    if status != "running":
+                        break
+                    time.sleep(5)
+
+                if status == "succeeded":
+                    print(f"  KQL Database created with schema.")
+                    KQL_SETUP_OK = True
+                else:
+                    print(f"  KQL Database creation ended with status: {status}")
+                    KQL_SETUP_OK = False
+            else:
+                print("  Created (no polling needed).")
+                KQL_SETUP_OK = True
+        else:
+            print(f"  Failed: {resp.text[:200]}")
+            KQL_SETUP_OK = False
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 3 - Drop ALL existing SQL tables and schemas, then recreate fresh
 import pyodbc
 
 TOKEN_SQL = notebookutils.credentials.getToken("https://database.windows.net/")
@@ -154,7 +249,7 @@ for schema in ['hr', 'erp', 'plm']:
 
 # CELL ********************
 
-# Step 3 - Create tables (PK columns are NOT NULL, everything else nullable)
+# Step 4 - Create SQL tables (PK columns are NOT NULL, everything else nullable)
 DDL = [
     # --- hr schema ---
     """CREATE TABLE hr.employees (
@@ -291,7 +386,7 @@ print("\nAll tables created.")
 
 # CELL ********************
 
-# Step 4 - Bulk insert all data
+# Step 5 - Bulk insert all data
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
 
@@ -352,7 +447,7 @@ print("\nAll data loaded.")
 
 # CELL ********************
 
-# Step 5 - Add primary keys and foreign keys
+# Step 6 - Add primary keys and foreign keys
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 conn.autocommit = True
 cursor = conn.cursor()
@@ -417,7 +512,7 @@ print(f"\n{ok}/{len(CONSTRAINTS)} constraints added.")
 
 # CELL ********************
 
-# Step 6 - Verify
+# Step 7 - Verify
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 cursor = conn.cursor()
 
@@ -448,3 +543,4 @@ print("\nNext: Open GetStarted notebook.")
 # META   "language": "python",
 # META   "language_group": "synapse_pyspark"
 # META }
+
