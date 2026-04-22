@@ -63,8 +63,8 @@ LH_ID = lh["id"]
 BASE = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{LH_ID}"
 
 employees = [r.asDict() for r in spark.read.csv(f"{BASE}/Files/data/hr/employees.csv", header=True).collect()]
-tasks = [r.asDict() for r in spark.read.csv(f"{BASE}/Files/data/cosmosdb/tasks.csv", header=True).collect()]
-projects = [r.asDict() for r in spark.read.csv(f"{BASE}/Files/data/cosmosdb/projects.csv", header=True).collect()]
+tasks = [r.asDict() for r in spark.read.csv(f"{BASE}/Files/data/sqldb/tasks.csv", header=True).collect()]
+projects = [r.asDict() for r in spark.read.csv(f"{BASE}/Files/data/sqldb/projects.csv", header=True).collect()]
 
 proj_map = {p["Project_ID"]: p for p in projects}
 workers = [e for e in employees if e["employee_id"] != "EMP-050"]

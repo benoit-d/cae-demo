@@ -237,8 +237,8 @@ if SQL_ENDPOINT and SQL_DBNAME:
 
     SQL_CSVS = [
         ("data/erp/task_type_durations.csv", "dbo.task_type_durations"),
-        ("data/cosmosdb/projects.csv", "dbo.projects"),
-        ("data/cosmosdb/tasks.csv", "dbo.tasks"),
+        ("data/sqldb/projects.csv", "dbo.projects"),
+        ("data/sqldb/tasks.csv", "dbo.tasks"),
     ]
 
     print("Loading project data into SQL Database...\n")
@@ -258,8 +258,8 @@ else:
     print("Loading project data into Lakehouse (SQL Database fallback)...\n")
     FALLBACK_CSVS = [
         ("data/erp/task_type_durations.csv", "task_type_durations"),
-        ("data/cosmosdb/projects.csv", "projects"),
-        ("data/cosmosdb/tasks.csv", "tasks"),
+        ("data/sqldb/projects.csv", "projects"),
+        ("data/sqldb/tasks.csv", "tasks"),
     ]
     for csv_rel, table_name in FALLBACK_CSVS:
         csv_path = f"{BASE_PATH}/{csv_rel}"

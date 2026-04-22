@@ -2,8 +2,8 @@
 """Generate project and task CSV data for the CAE Flight Simulator demo.
 
 Produces:
-    data/cosmosdb/projects.csv   – 8 projects (one per simulator build)
-    data/cosmosdb/tasks.csv      – 13 tasks per project, flat table
+    data/sqldb/projects.csv   – 8 projects (one per simulator build)
+    data/sqldb/tasks.csv      – 13 tasks per project, flat table
 
 Constraints enforced:
     - No employee is double-booked (including future planned tasks)
@@ -23,7 +23,7 @@ from datetime import date, timedelta
 TODAY = date(2026, 4, 21)
 PM_EMAIL = "daniel.fortin@caedemo.com"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_DIR = os.path.join(SCRIPT_DIR, "..", "data", "cosmosdb")
+OUT_DIR = os.path.join(SCRIPT_DIR, "..", "data", "sqldb")
 
 # ── Task templates ───────────────────────────────────────────────────────
 #    Each simulator build follows this sequence.

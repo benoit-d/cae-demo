@@ -12,8 +12,8 @@ def lcsv(p):
 
 emps = lcsv(f"{BASE}/hr/employees.csv")
 skills = lcsv(f"{BASE}/hr/skills_certifications.csv")
-tasks = lcsv(f"{BASE}/cosmosdb/tasks.csv")
-projs = lcsv(f"{BASE}/cosmosdb/projects.csv")
+tasks = lcsv(f"{BASE}/sqldb/tasks.csv")
+projs = lcsv(f"{BASE}/sqldb/projects.csv")
 machines = lcsv(f"{BASE}/erp/machines.csv")
 
 emp_emails = {e["email"] for e in emps}

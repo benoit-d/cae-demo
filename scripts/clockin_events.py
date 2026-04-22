@@ -8,7 +8,7 @@ Generates workforce events and sends them to the ClockInEventStream Eventstream:
   - break_start / break_end
 
 Events carry referential keys (employee email, project_id, task_id, simulator_id)
-so the downstream agent/pipeline can update CosmosDB Actual dates.
+so the downstream agent/pipeline can update SQL Database Actual dates.
 
 Usage:
   python clockin_events.py                              # interactive demo, stdout
@@ -200,8 +200,8 @@ if __name__ == "__main__":
 
     employees = load_csv(os.path.join(base_dir, "data", "hr", "employees.csv"))
     projects = load_projects_with_tasks(
-        os.path.join(base_dir, "data", "cosmosdb", "projects.csv"),
-        os.path.join(base_dir, "data", "cosmosdb", "tasks.csv"),
+        os.path.join(base_dir, "data", "sqldb", "projects.csv"),
+        os.path.join(base_dir, "data", "sqldb", "tasks.csv"),
     )
 
     conn_str = os.environ.get("EVENTHUB_CONNECTION_STRING", "")
