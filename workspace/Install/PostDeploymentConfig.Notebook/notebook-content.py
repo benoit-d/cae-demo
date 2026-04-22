@@ -1,5 +1,4 @@
-# Fabric notebook source, currentl not applicable to synapse_pyspark kernel
-# Microsoft Fabric notebook source
+# Fabric notebook source
 # %% [markdown]
 # # Post-Deployment Configuration
 #
