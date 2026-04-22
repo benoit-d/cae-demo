@@ -37,12 +37,11 @@ EMP-007,Electrical,Cable Termination,Advanced,2023-08-01,2025-08-01,CAE Internal
 EMP-007,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
 EMP-008,Motion Systems,6-DOF Platform Calibration,Intermediate,2024-06-15,2026-06-15,CAE Internal,Yes
 EMP-008,Motion Systems,Actuator Installation,Advanced,2024-03-01,2026-03-01,CAE Internal,Yes
-EMP-008,Hydraulics,Hydraulic Basics,Beginner,2022-10-01,2024-10-01,CAE Internal,No
 EMP-008,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
 EMP-008,Safety,Working at Heights,Certified,2024-11-01,2026-11-01,CNESST,Yes
 EMP-009,Test Engineering,QTG Execution,Expert,2024-10-01,2026-10-01,CAE Internal,Yes
 EMP-009,Test Engineering,Data Acquisition Systems,Advanced,2023-08-01,2025-08-01,CAE Internal,Yes
-EMP-009,Software,Test Automation Scripts,Advanced,2024-01-01,2026-01-01,CAE Internal,Yes
+EMP-009,Test Engineering,Test Automation Scripts,Advanced,2024-01-01,2026-01-01,CAE Internal,Yes
 EMP-009,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
 EMP-010,Structures,Cockpit Shell Assembly,Advanced,2024-05-01,2026-05-01,CAE Internal,Yes
 EMP-010,Structures,Platform Frame Assembly,Advanced,2023-01-15,2025-01-15,CAE Internal,Yes
@@ -55,3 +54,66 @@ EMP-011,Safety,WHMIS,Certified,2026-02-01,2028-02-01,Workplace Safety,Yes
 EMP-012,Electrical,Power Distribution Systems,Intermediate,2025-01-15,2027-01-15,CAE Internal,Yes
 EMP-012,Electrical,Cable Termination,Intermediate,2025-01-15,2027-01-15,CAE Internal,Yes
 EMP-012,Safety,WHMIS,Certified,2026-01-15,2028-01-15,Workplace Safety,Yes
+EMP-013,CNC Machining,5-Axis CNC Operation,Advanced,2024-03-10,2026-03-10,DMG MORI,Yes
+EMP-013,CNC Machining,CNC Programming,Intermediate,2024-03-10,2026-03-10,CAE Internal,Yes
+EMP-013,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-014,CNC Machining,5-Axis CNC Operation,Expert,2023-05-20,2025-05-20,DMG MORI,Yes
+EMP-014,CNC Machining,CNC Programming,Expert,2022-01-10,2024-01-10,CAE Internal,No
+EMP-014,CNC Machining,Precision Measurement,Advanced,2024-06-01,2026-06-01,Mitutoyo,Yes
+EMP-014,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-015,Welding,TIG Welding - Structural,Advanced,2024-09-01,2026-09-01,CWB,Yes
+EMP-015,Welding,MIG Welding - Aluminum,Intermediate,2024-09-01,2026-09-01,CWB,Yes
+EMP-015,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-015,Safety,Hot Work Permit,Certified,2025-04-01,2027-04-01,CNESST,Yes
+EMP-016,Welding,MIG Welding - Structural,Advanced,2025-01-10,2027-01-10,CWB,Yes
+EMP-016,Welding,Robotic Welding Operation,Intermediate,2025-01-10,2027-01-10,Fanuc,Yes
+EMP-016,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-016,Safety,Hot Work Permit,Certified,2025-04-01,2027-04-01,CNESST,Yes
+EMP-017,Electronics,SMT Assembly,Advanced,2024-10-01,2026-10-01,IPC,Yes
+EMP-017,Electronics,PCB Rework,Intermediate,2024-10-01,2026-10-01,IPC,Yes
+EMP-017,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-017,Safety,ESD Protection,Certified,2025-02-01,2027-02-01,CAE Internal,Yes
+EMP-018,Electronics,SMT Assembly,Expert,2023-03-15,2025-03-15,IPC,Yes
+EMP-018,Electronics,Reflow Oven Operation,Expert,2023-03-15,2025-03-15,Heller,Yes
+EMP-018,Electronics,PCB Inspection,Advanced,2024-03-15,2026-03-15,IPC,Yes
+EMP-018,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-018,Safety,ESD Protection,Certified,2025-02-01,2027-02-01,CAE Internal,Yes
+EMP-019,Avionics,Flight Deck Wiring,Advanced,2024-07-01,2026-07-01,CAE Internal,Yes
+EMP-019,Avionics,Boeing 777 Systems,Intermediate,2025-01-01,2027-01-01,Boeing,Yes
+EMP-019,Electronics,Connector Assembly,Intermediate,2024-07-01,2026-07-01,CAE Internal,Yes
+EMP-019,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-019,Safety,ESD Protection,Certified,2025-02-01,2027-02-01,CAE Internal,Yes
+EMP-020,Sheet Metal,Laser Cutting Operation,Advanced,2024-08-15,2026-08-15,Trumpf,Yes
+EMP-020,Sheet Metal,Press Brake Operation,Intermediate,2024-08-15,2026-08-15,Amada,Yes
+EMP-020,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-021,Sheet Metal,Press Brake Operation,Advanced,2025-03-01,2027-03-01,Amada,Yes
+EMP-021,Sheet Metal,Laser Cutting Operation,Intermediate,2025-03-01,2027-03-01,Trumpf,Yes
+EMP-021,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-022,Painting,Industrial Paint Application,Advanced,2024-11-01,2026-11-01,CAE Internal,Yes
+EMP-022,Painting,Surface Preparation,Intermediate,2024-11-01,2026-11-01,CAE Internal,Yes
+EMP-022,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-022,Safety,Respirator Fit Test,Certified,2025-05-01,2027-05-01,CNESST,Yes
+EMP-023,Quality,CMM Operation,Advanced,2024-02-01,2026-02-01,Zeiss,Yes
+EMP-023,Quality,Dimensional Inspection,Advanced,2024-02-01,2026-02-01,CAE Internal,Yes
+EMP-023,Quality,GD&T Interpretation,Intermediate,2024-02-01,2026-02-01,ASME,Yes
+EMP-023,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-024,Welding,TIG Welding - Structural,Expert,2023-05-15,2025-05-15,CWB,Yes
+EMP-024,Welding,TIG Welding - Aluminum,Expert,2023-05-15,2025-05-15,CWB,Yes
+EMP-024,Welding,Welding Inspection,Advanced,2024-05-15,2026-05-15,CWB,Yes
+EMP-024,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-024,Safety,Hot Work Permit,Certified,2025-04-01,2027-04-01,CNESST,Yes
+EMP-025,CNC Machining,3-Axis CNC Operation,Advanced,2025-09-01,2027-09-01,Haas,Yes
+EMP-025,CNC Machining,Lathe Operation,Intermediate,2025-09-01,2027-09-01,Mazak,Yes
+EMP-025,Safety,WHMIS,Certified,2025-09-01,2027-09-01,Workplace Safety,Yes
+EMP-027,Additive Manufacturing,Metal 3D Printing,Advanced,2025-06-20,2027-06-20,EOS,Yes
+EMP-027,Additive Manufacturing,Powder Management,Intermediate,2025-06-20,2027-06-20,EOS,Yes
+EMP-027,CNC Machining,Post-Processing,Intermediate,2025-06-20,2027-06-20,CAE Internal,Yes
+EMP-027,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-028,Electronics,PCB Assembly,Advanced,2024-03-01,2026-03-01,IPC,Yes
+EMP-028,Electronics,Wire Harness Fabrication,Advanced,2024-03-01,2026-03-01,CAE Internal,Yes
+EMP-028,Avionics,Connector Assembly,Intermediate,2025-01-01,2027-01-01,CAE Internal,Yes
+EMP-028,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
+EMP-028,Safety,ESD Protection,Certified,2025-02-01,2027-02-01,CAE Internal,Yes
+EMP-029,CNC Machining,5-Axis CNC Operation,Intermediate,2026-03-01,2028-03-01,DMG MORI,Yes
+EMP-029,CNC Machining,Wire EDM Operation,Advanced,2026-03-01,2028-03-01,Sodick,Yes
+EMP-029,Safety,WHMIS,Certified,2026-03-01,2028-03-01,Workplace Safety,Yes

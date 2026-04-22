@@ -1,7 +1,11 @@
 leave_id,employee_id,leave_type,start_date,end_date,status,approved_by,reason,days_count
-LOA-001,EMP-002,Vacation,2026-04-28,2026-05-02,Approved,daniel.fortin@caedemo.com,Annual vacation,5
+LOA-001,EMP-002,Vacation,2026-04-28,2026-05-02,Approved,robert.lapointe@caedemo.com,Annual vacation,5
 LOA-002,EMP-005,Medical,2026-04-23,2026-04-25,Approved,daniel.fortin@caedemo.com,Audiology follow-up + recovery,3
 LOA-003,EMP-003,Training,2026-05-01,2026-05-02,Approved,daniel.fortin@caedemo.com,CSA recertification course,2
-LOA-004,EMP-008,Personal,2026-04-25,2026-04-25,Approved,daniel.fortin@caedemo.com,Personal day,1
-LOA-005,EMP-011,Contract_End,2026-06-30,2026-06-30,Confirmed,daniel.fortin@caedemo.com,Contract end date,0
-LOA-006,EMP-012,Contract_End,2026-05-15,2026-05-15,Confirmed,daniel.fortin@caedemo.com,Contract end date — possible extension,0
+LOA-004,EMP-008,Personal,2026-04-25,2026-04-25,Approved,sylvie.raymond@caedemo.com,Personal day,1
+LOA-005,EMP-011,Contract_End,2026-06-30,2026-06-30,Confirmed,robert.lapointe@caedemo.com,Contract end date,0
+LOA-006,EMP-012,Contract_End,2026-05-15,2026-05-15,Confirmed,daniel.fortin@caedemo.com,Contract end — possible extension,0
+LOA-007,EMP-015,Vacation,2026-05-05,2026-05-09,Approved,robert.lapointe@caedemo.com,Family vacation,5
+LOA-008,EMP-018,Training,2026-04-28,2026-04-29,Approved,daniel.fortin@caedemo.com,IPC recertification,2
+LOA-009,EMP-029,Contract_End,2026-08-31,2026-08-31,Confirmed,sylvie.raymond@caedemo.com,Contract end date,0
+LOA-011,EMP-022,Vacation,2026-05-19,2026-05-30,Approved,robert.lapointe@caedemo.com,Three-week annual leave,10

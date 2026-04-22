@@ -1,16 +1,16 @@
-machine_id,machine_type,machine_name,manufacturer,model,serial_number,location,zone,install_date,last_service_date,status,next_pm_date
-MCH-001,CNC_Mill,5-Axis CNC Milling Center,DMG MORI,DMU 80 eVo,DMG-2019-4471,Building A,Machining Zone,2019-06-15,2026-03-10,Operational,2026-05-10
-MCH-002,CNC_Mill,3-Axis CNC Milling Machine,Haas,VF-4SS,HAAS-2021-8823,Building A,Machining Zone,2021-02-20,2026-02-15,Operational,2026-05-15
-MCH-003,CNC_Lathe,CNC Turning Center,Mazak,QT-250MSY,MZK-2020-5512,Building A,Machining Zone,2020-08-10,2026-03-01,Operational,2026-06-01
-MCH-004,Laser_Cutter,Fiber Laser Cutting System,Trumpf,TruLaser 3030,TRP-2022-1105,Building A,Sheet Metal Zone,2022-01-15,2026-04-01,Operational,2026-07-01
-MCH-005,Press_Brake,CNC Hydraulic Press Brake,Amada,HG-1303,AMD-2018-3390,Building A,Sheet Metal Zone,2018-11-20,2026-01-20,Operational,2026-04-20
-MCH-006,TIG_Welder,Automated TIG Welding Cell,Lincoln Electric,Vantage 500 TIG,LNE-2021-7744,Building B,Welding Zone,2021-05-10,2026-03-15,Operational,2026-06-15
-MCH-007,MIG_Welder,Robotic MIG Welding Cell,Fanuc,ARC Mate 100iD,FNC-2020-6621,Building B,Welding Zone,2020-09-01,2026-02-28,Operational,2026-05-28
-MCH-008,CMM,Coordinate Measuring Machine,Zeiss,CONTURA G3,ZSS-2019-2208,Building B,Quality Zone,2019-04-15,2026-04-10,Operational,2026-07-10
-MCH-009,Wire_EDM,Wire EDM Machine,Sodick,ALC600G,SDK-2022-4401,Building A,Machining Zone,2022-06-01,2026-03-20,Operational,2026-06-20
-MCH-010,Elec_Assembly,Electronics Assembly Station,Juki,RS-1R,JKI-2023-1150,Building C,Electronics Zone,2023-01-10,2026-04-05,Operational,2026-07-05
-MCH-011,Reflow_Oven,SMT Reflow Oven,Heller,MK7,HLR-2022-0882,Building C,Electronics Zone,2022-09-15,2026-03-25,Operational,2026-06-25
-MCH-012,3D_Printer,Metal Additive Manufacturing,EOS,M 290,EOS-2023-3310,Building A,Additive Zone,2023-06-01,2026-04-08,Operational,2026-07-08
-MCH-013,Paint_Booth,Downdraft Paint Spray Booth,Global Finishing,EF-25-10,GFS-2019-8800,Building B,Finishing Zone,2019-10-01,2026-02-10,Operational,2026-05-10
-MCH-014,Overhead_Crane,50-Ton Overhead Bridge Crane,Konecranes,CXT 50,KCR-2017-5500,Building B,Assembly Zone,2017-03-15,2026-01-15,Operational,2026-04-15
-MCH-015,Hydraulic_Test,Hydraulic Test Bench,Parker Hannifin,HTS-3000,PHN-2021-2240,Building B,Test Zone,2021-07-20,2026-03-30,Operational,2026-06-30
+machine_id,machine_type,machine_name,manufacturer,model,serial_number,production_line_id,location,zone,install_date,last_service_date,status,next_pm_date
+MCH-001,CNC_Mill,5-Axis CNC Milling Center,DMG MORI,DMU 80 eVo,DMG-2019-4471,PL-01,Building A,Machining Zone,2019-06-15,2026-03-10,Operational,2026-05-10
+MCH-002,CNC_Mill,3-Axis CNC Milling Machine,Haas,VF-4SS,HAAS-2021-8823,PL-01,Building A,Machining Zone,2021-02-20,2026-02-15,Operational,2026-05-15
+MCH-003,CNC_Lathe,CNC Turning Center,Mazak,QT-250MSY,MZK-2020-5512,PL-01,Building A,Machining Zone,2020-08-10,2026-03-01,Operational,2026-06-01
+MCH-004,Laser_Cutter,Fiber Laser Cutting System,Trumpf,TruLaser 3030,TRP-2022-1105,PL-01,Building A,Sheet Metal Zone,2022-01-15,2026-04-01,Operational,2026-07-01
+MCH-005,Press_Brake,CNC Hydraulic Press Brake,Amada,HG-1303,AMD-2018-3390,PL-01,Building A,Sheet Metal Zone,2018-11-20,2026-01-20,Operational,2026-04-20
+MCH-006,TIG_Welder,Automated TIG Welding Cell,Lincoln Electric,Vantage 500 TIG,LNE-2021-7744,PL-02,Building B,Welding Zone,2021-05-10,2026-03-15,Operational,2026-06-15
+MCH-007,MIG_Welder,Robotic MIG Welding Cell,Fanuc,ARC Mate 100iD,FNC-2020-6621,PL-02,Building B,Welding Zone,2020-09-01,2026-02-28,Operational,2026-05-28
+MCH-008,CMM,Coordinate Measuring Machine,Zeiss,CONTURA G3,ZSS-2019-2208,PL-02,Building B,Quality Zone,2019-04-15,2026-04-10,Operational,2026-07-10
+MCH-009,Wire_EDM,Wire EDM Machine,Sodick,ALC600G,SDK-2022-4401,PL-01,Building A,Machining Zone,2022-06-01,2026-03-20,Operational,2026-06-20
+MCH-010,Elec_Assembly,Electronics Assembly Station,Juki,RS-1R,JKI-2023-1150,PL-03,Building C,Electronics Zone,2023-01-10,2026-04-05,Operational,2026-07-05
+MCH-011,Reflow_Oven,SMT Reflow Oven,Heller,MK7,HLR-2022-0882,PL-03,Building C,Electronics Zone,2022-09-15,2026-03-25,Operational,2026-06-25
+MCH-012,3D_Printer,Metal Additive Manufacturing,EOS,M 290,EOS-2023-3310,PL-01,Building A,Additive Zone,2023-06-01,2026-04-08,Operational,2026-07-08
+MCH-013,Paint_Booth,Downdraft Paint Spray Booth,Global Finishing,EF-25-10,GFS-2019-8800,PL-02,Building B,Finishing Zone,2019-10-01,2026-02-10,Operational,2026-05-10
+MCH-014,Overhead_Crane,50-Ton Overhead Bridge Crane,Konecranes,CXT 50,KCR-2017-5500,PL-02,Building B,Assembly Zone,2017-03-15,2026-01-15,Operational,2026-04-15
+MCH-015,Hydraulic_Test,Hydraulic Test Bench,Parker Hannifin,HTS-3000,PHN-2021-2240,PL-02,Building B,Test Zone,2021-07-20,2026-03-30,Operational,2026-06-30

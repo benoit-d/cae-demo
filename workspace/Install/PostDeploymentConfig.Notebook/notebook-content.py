@@ -131,6 +131,7 @@ DDL = [
     "IF OBJECT_ID('erp.inventory') IS NOT NULL DROP TABLE erp.inventory",
     "IF OBJECT_ID('erp.bill_of_materials') IS NOT NULL DROP TABLE erp.bill_of_materials",
     "IF OBJECT_ID('erp.machines') IS NOT NULL DROP TABLE erp.machines",
+    "IF OBJECT_ID('erp.production_lines') IS NOT NULL DROP TABLE erp.production_lines",
     "IF OBJECT_ID('erp.simulators') IS NOT NULL DROP TABLE erp.simulators",
     "IF OBJECT_ID('hr.employee_agreements') IS NOT NULL DROP TABLE hr.employee_agreements",
     "IF OBJECT_ID('hr.contractual_workforce') IS NOT NULL DROP TABLE hr.contractual_workforce",
@@ -149,7 +150,8 @@ DDL = [
         department NVARCHAR(50), employee_type NVARCHAR(20), hire_date DATE,
         shift_preference NVARCHAR(10), employment_status NVARCHAR(20),
         manager_email NVARCHAR(100), phone NVARCHAR(20), location NVARCHAR(50),
-        badge_number NVARCHAR(20), union_member NVARCHAR(5))""",
+        badge_number NVARCHAR(20), union_member NVARCHAR(5),
+        production_line_id NVARCHAR(10))""",
     """CREATE TABLE hr.skills_certifications (
         employee_id NVARCHAR(10), skill_category NVARCHAR(50),
         skill_name NVARCHAR(100), certification_level NVARCHAR(20),
@@ -184,6 +186,10 @@ DDL = [
         provision_name NVARCHAR(50), description NVARCHAR(500),
         impacts_scheduling NVARCHAR(5))""",
     # --- ERP tables (no constraints yet) ---
+    """CREATE TABLE erp.production_lines (
+        production_line_id NVARCHAR(10), line_name NVARCHAR(50),
+        building NVARCHAR(20), description NVARCHAR(200),
+        manager_email NVARCHAR(100))""",
     """CREATE TABLE erp.simulators (
         simulator_id NVARCHAR(10), simulator_model NVARCHAR(20),
         bay_id NVARCHAR(10), bay_name NVARCHAR(50), status NVARCHAR(20),
@@ -194,6 +200,7 @@ DDL = [
         machine_id NVARCHAR(10), machine_type NVARCHAR(20),
         machine_name NVARCHAR(100), manufacturer NVARCHAR(50),
         model NVARCHAR(50), serial_number NVARCHAR(20),
+        production_line_id NVARCHAR(10),
         location NVARCHAR(20), zone NVARCHAR(30),
         install_date DATE, last_service_date DATE,
         status NVARCHAR(20), next_pm_date DATE)""",
@@ -299,6 +306,7 @@ ALL_TABLES = [
     ("data/hr/contractual_workforce.csv",  "hr.contractual_workforce"),
     ("data/hr/employee_agreements.csv",    "hr.employee_agreements"),
     ("data/plm/simulators.csv",            "erp.simulators"),
+    ("data/erp/production_lines.csv",     "erp.production_lines"),
     ("data/erp/machines.csv",              "erp.machines"),
     ("data/plm/task_type_durations.csv",   "erp.task_type_durations"),
     ("data/plm/bill_of_materials.csv",     "erp.bill_of_materials"),
@@ -347,6 +355,7 @@ CONSTRAINTS = [
     "ALTER TABLE hr.contractual_workforce ADD CONSTRAINT PK_contractual_workforce PRIMARY KEY (contract_id)",
     "ALTER TABLE hr.employee_agreements ADD CONSTRAINT PK_employee_agreements PRIMARY KEY (agreement_id)",
     "ALTER TABLE erp.simulators ADD CONSTRAINT PK_simulators PRIMARY KEY (simulator_id)",
+    "ALTER TABLE erp.production_lines ADD CONSTRAINT PK_production_lines PRIMARY KEY (production_line_id)",
     "ALTER TABLE erp.machines ADD CONSTRAINT PK_machines PRIMARY KEY (machine_id)",
     "ALTER TABLE erp.task_type_durations ADD CONSTRAINT PK_task_type_durations PRIMARY KEY (Task_Type)",
     "ALTER TABLE erp.bill_of_materials ADD CONSTRAINT PK_bill_of_materials PRIMARY KEY (bom_id)",
@@ -363,6 +372,7 @@ CONSTRAINTS = [
     "ALTER TABLE hr.leave_of_absence ADD CONSTRAINT FK_leave_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     "ALTER TABLE hr.contractual_workforce ADD CONSTRAINT FK_contract_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     # --- Foreign Keys: ERP ---
+    "ALTER TABLE erp.machines ADD CONSTRAINT FK_machine_line FOREIGN KEY (production_line_id) REFERENCES erp.production_lines(production_line_id)",
     "ALTER TABLE erp.maintenance_history ADD CONSTRAINT FK_maint_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
     "ALTER TABLE erp.projects ADD CONSTRAINT FK_project_simulator FOREIGN KEY (Simulator_ID) REFERENCES erp.simulators(simulator_id)",
     "ALTER TABLE erp.tasks ADD CONSTRAINT FK_task_project FOREIGN KEY (Parent_Project_ID) REFERENCES erp.projects(Project_ID)",

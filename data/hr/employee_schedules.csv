@@ -4,10 +4,26 @@ SCH-002,EMP-002,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Worki
 SCH-003,EMP-003,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
 SCH-004,EMP-004,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
 SCH-005,EMP-005,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
-SCH-006,EMP-006,2026-04-21,Night,23:00,07:30,Working,Working,Working,Working,Off,Off,Off,4x10 compressed schedule
+SCH-006,EMP-006,2026-04-21,Night,23:00,07:30,Working,Working,Working,Working,Off,Off,Off,4x10 compressed
 SCH-007,EMP-007,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
 SCH-008,EMP-008,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
 SCH-009,EMP-009,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
 SCH-010,EMP-010,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
-SCH-011,EMP-011,2026-04-21,Flex,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,Contract — can be reassigned with 24h notice
-SCH-012,EMP-012,2026-04-21,Flex,07:00,15:30,Working,Working,Off,Working,Working,Off,Off,Contract — reduced schedule per agreement
+SCH-011,EMP-011,2026-04-21,Flex,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,Contract
+SCH-012,EMP-012,2026-04-21,Flex,07:00,15:30,Working,Working,Off,Working,Working,Off,Off,Contract reduced
+SCH-013,EMP-013,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-014,EMP-014,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-015,EMP-015,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-016,EMP-016,2026-04-21,Night,23:00,07:30,Working,Working,Working,Working,Off,Off,Off,4x10 compressed
+SCH-017,EMP-017,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-018,EMP-018,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-019,EMP-019,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-020,EMP-020,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-021,EMP-021,2026-04-21,Night,23:00,07:30,Working,Working,Working,Working,Off,Off,Off,4x10 compressed
+SCH-022,EMP-022,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-023,EMP-023,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-024,EMP-024,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-025,EMP-025,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-027,EMP-027,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-028,EMP-028,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
+SCH-029,EMP-029,2026-04-21,Flex,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,Contract

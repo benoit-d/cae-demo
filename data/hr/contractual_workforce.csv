@@ -1,3 +1,4 @@
 contract_id,employee_id,agency_name,contract_start,contract_end,hourly_rate_usd,max_weekly_hours,overtime_allowed,shift_flexibility,minimum_notice_hours,specialization,performance_rating,extension_option
 CTR-001,EMP-011,TechForce Staffing,2026-02-01,2026-06-30,55.00,40,Yes,Full — Any shift with 24h notice,24,Hydraulics,Excellent,Yes — 3 month increments
 CTR-002,EMP-012,TechForce Staffing,2026-01-15,2026-05-15,48.00,32,No,Limited — Day/Flex only,48,Electrical,Good,Yes — pending review
+CTR-004,EMP-029,PrecisionStaff Inc,2026-03-01,2026-08-31,52.00,40,Yes,Full — Any shift with 24h notice,24,CNC Machining,Good,Yes — 3 month increments
