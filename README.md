@@ -117,10 +117,9 @@ cae-demo/
 ├── workspace/                           # Published by fabric-cicd
 │   ├── CAEManufacturing_LH.Lakehouse/   # Staging Lakehouse
 │   ├── CAEManufacturingEH.Eventhouse/   # Real-time telemetry store
+│   ├── MachineHealthActivator.Reflex/   # Anomaly alert trigger
 │   ├── GetStarted.Notebook/             # Guided walkthrough
-│   ├── Install/
-│   │   ├── PostDeploymentConfig.Notebook/ # Creates SQL tables, loads data
-│   │   └── LoadData.Notebook/
+│   ├── PostDeploymentConfig.Notebook/   # Creates SQL tables, loads data
 │   ├── Simulation/
 │   │   ├── SimulatorTelemetryEmulator.Notebook/  # Single-shot, pipeline-scheduled
 │   │   ├── ClockInEventEmulator.Notebook/         # Single-shot, pipeline-scheduled
@@ -206,7 +205,7 @@ In the workspace, click **+ New item > SQL Database** and name it `CAEManufactur
 
 ### 3. Run PostDeploymentConfig
 
-Open the deployed `Install/PostDeploymentConfig` notebook. Paste the JDBC connection string (from SQL Database > Settings > Connection strings) in the config cell. Run All.
+Open the deployed `PostDeploymentConfig` notebook. Paste the JDBC connection string (from SQL Database > Settings > Connection strings) in the config cell. Run All.
 
 This creates `hr.*` and `erp.*` schemas with 17 tables, bulk inserts all data, then adds primary keys and foreign keys.
 

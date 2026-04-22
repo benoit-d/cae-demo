@@ -1,0 +1,5 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": { "type": "Notebook", "displayName": "PostDeploymentConfig" },
+  "config": { "version": "2.0", "logicalId": "7246bdf0-d76b-4ab6-ae21-29e66001e0db" }
+}
