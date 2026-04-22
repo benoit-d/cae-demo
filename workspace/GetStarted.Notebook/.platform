@@ -1,5 +1,12 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
-  "metadata": { "type": "Notebook", "displayName": "GetStarted" },
-  "config": { "type": "Notebook" }
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "GetStarted"
+  },
+  "config": {
+    "type": "Notebook",
+    "version": "2.0",
+    "logicalId": "2fd0fee3-86c3-44f2-aa13-1acb58c01ab8"
+  }
 }

@@ -1,5 +1,12 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
-  "metadata": { "type": "Notebook", "displayName": "SimulatorTelemetryEmulator" },
-  "config": { "type": "Notebook" }
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "SimulatorTelemetryEmulator"
+  },
+  "config": {
+    "type": "Notebook",
+    "version": "2.0",
+    "logicalId": "bb39651e-d517-492d-ba40-35098122e3ec"
+  }
 }
