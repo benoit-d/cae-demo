@@ -204,25 +204,51 @@ shutil.rmtree(clone_dir, ignore_errors=True)
 
 In the workspace, click **+ New item > SQL Database** and name it `CAEManufacturing_SQLDB`.
 
+![Create SQL Database](docs/screenshots/01-create-sql-database.png)
+
+Copy the **JDBC connection string** from SQL Database > Settings > Connection strings.
+
+![JDBC Connection String](docs/screenshots/02-sql-jdbc-connection-string.png)
+
 ### 3. Run PostDeploymentConfig
 
-Open the deployed `PostDeploymentConfig` notebook. Paste the JDBC connection string (from SQL Database > Settings > Connection strings) in the config cell. Run All.
+Open the deployed `PostDeploymentConfig` notebook. Paste the JDBC connection string in the config cell. Run All.
 
-This creates `hr.*` and `erp.*` schemas with 17 tables, bulk inserts all data, then adds primary keys and foreign keys.
+![PostDeploymentConfig](docs/screenshots/03-postdeployment-run-all.png)
 
-### 4. Set Up Eventstreams and Pipelines
+This creates 3 schemas (`hr`, `erp`, `plm`) with 18 tables, bulk inserts all data, then adds primary keys and foreign keys.
 
-1. Create **SimulatorTelemetryStream** Eventstream with Custom App source → KQL Database destination
-2. Create **ClockInEventStream** Eventstream with Custom App source → KQL Database destination
-3. Paste connection strings into the simulator notebook config cells
-4. Create Data Pipelines: Notebook activity → 1-minute schedule for each emulator
+### 4. KQL Database Setup
 
-### 5. Demo
+Open the **CAEManufacturingEH** Eventhouse, then open the KQL Database query editor. Run the commands from `data/kql/machine_health_monitoring.kql`:
+- Creates `MachineTelemetry` and `ClockInEvents` tables
+- Creates 10 materialized views for anomaly scoring
+- Creates the `MachineHealthAlerts()` function
 
-- Pipelines stream machine telemetry and clock-in events every minute
-- Run **TelemetryFaultInjection** manually to simulate a CNC mill spindle bearing failure
-- Open **CapacityManagementAgent** to see the AI reason across all sources
-- Build a **Power BI Gantt chart** from `erp.projects` + `erp.tasks`
+![KQL Setup](docs/screenshots/04-eventhouse-kql-setup.png)
+
+### 5. Paste Eventstream Connection Strings
+
+Open each Eventstream in the Fabric UI, go to **Custom App** source, and copy the connection string. Paste it into the config cell of the corresponding simulator notebook.
+
+![Eventstream Connection String](docs/screenshots/05-eventstream-connection-string.png)
+
+### 6. Configure the Activator (optional)
+
+Open `MachineHealthActivator` in the Fabric UI. Connect it to the KQL Database and set it to monitor the `MachineHealthAlerts()` function. Configure trigger: any row with `composite_score > threshold`. Add a Teams notification action.
+
+![Activator Setup](docs/screenshots/06-activator-setup.png)
+
+### 7. Demo
+
+- **Pipelines** stream machine telemetry and clock-in events every 1 minute (auto-scheduled)
+- Run **Simulation/TelemetryFaultInjection** manually to simulate a CNC mill spindle bearing failure
+- Open **Agent/CapacityManagementAgent** to see the AI reason across all sources
+- Build a **Power BI Gantt chart** from `plm.projects` + `plm.tasks`
+
+![Gantt Chart](docs/screenshots/07-gantt-powerbi.png)
+
+![Real-Time Dashboard](docs/screenshots/08-rt-dashboard.png)
 
 ## Referential Integrity
 
