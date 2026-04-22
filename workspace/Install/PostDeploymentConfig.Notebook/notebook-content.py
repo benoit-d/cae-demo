@@ -154,57 +154,57 @@ for schema in ['hr', 'erp', 'plm']:
 
 # CELL ********************
 
-# Step 3 - Create tables (no constraints)
+# Step 3 - Create tables (PK columns are NOT NULL, everything else nullable)
 DDL = [
     # --- hr schema ---
     """CREATE TABLE hr.employees (
-        employee_id NVARCHAR(10), first_name NVARCHAR(50), last_name NVARCHAR(50),
-        email NVARCHAR(100), teams_email NVARCHAR(100), role NVARCHAR(50),
+        employee_id NVARCHAR(10) NOT NULL, first_name NVARCHAR(50), last_name NVARCHAR(50),
+        email NVARCHAR(100) NOT NULL, teams_email NVARCHAR(100), role NVARCHAR(50),
         department NVARCHAR(50), employee_type NVARCHAR(20), hire_date DATE,
         shift_preference NVARCHAR(10), employment_status NVARCHAR(20),
         manager_email NVARCHAR(100), phone NVARCHAR(20), location NVARCHAR(50),
         badge_number NVARCHAR(20), union_member NVARCHAR(5),
         production_line_id NVARCHAR(10))""",
     """CREATE TABLE hr.skills_certifications (
-        employee_id NVARCHAR(10), skill_category NVARCHAR(50),
-        skill_name NVARCHAR(100), certification_level NVARCHAR(20),
+        employee_id NVARCHAR(10) NOT NULL, skill_category NVARCHAR(50) NOT NULL,
+        skill_name NVARCHAR(100) NOT NULL, certification_level NVARCHAR(20),
         certification_date DATE, expiry_date DATE,
         certifying_body NVARCHAR(50), is_current NVARCHAR(5))""",
     """CREATE TABLE hr.employee_schedules (
-        schedule_id NVARCHAR(10), employee_id NVARCHAR(10), week_start DATE,
+        schedule_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL, week_start DATE,
         shift_type NVARCHAR(10), shift_start_time NVARCHAR(10), shift_end_time NVARCHAR(10),
         monday NVARCHAR(10), tuesday NVARCHAR(10), wednesday NVARCHAR(10),
         thursday NVARCHAR(10), friday NVARCHAR(10), saturday NVARCHAR(10),
         sunday NVARCHAR(10), notes NVARCHAR(200))""",
     """CREATE TABLE hr.physical_limitations (
-        limitation_id NVARCHAR(10), employee_id NVARCHAR(10),
+        limitation_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL,
         limitation_type NVARCHAR(30), description NVARCHAR(500),
         effective_date DATE, review_date DATE,
         accommodations_required NVARCHAR(500), certified_by NVARCHAR(100),
         impacts_assignments NVARCHAR(5))""",
     """CREATE TABLE hr.leave_of_absence (
-        leave_id NVARCHAR(10), employee_id NVARCHAR(10), leave_type NVARCHAR(30),
+        leave_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL, leave_type NVARCHAR(30),
         start_date DATE, end_date DATE, status NVARCHAR(20),
         approved_by NVARCHAR(100), reason NVARCHAR(200), days_count FLOAT)""",
     """CREATE TABLE hr.contractual_workforce (
-        contract_id NVARCHAR(10), employee_id NVARCHAR(10),
+        contract_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL,
         agency_name NVARCHAR(50), contract_start DATE, contract_end DATE,
         hourly_rate_usd FLOAT, max_weekly_hours INT, overtime_allowed NVARCHAR(5),
         shift_flexibility NVARCHAR(100), minimum_notice_hours INT,
         specialization NVARCHAR(50), performance_rating NVARCHAR(20),
         extension_option NVARCHAR(100))""",
     """CREATE TABLE hr.employee_agreements (
-        agreement_id NVARCHAR(10), employee_type NVARCHAR(30),
+        agreement_id NVARCHAR(10) NOT NULL, employee_type NVARCHAR(30),
         union_name NVARCHAR(50), provision_category NVARCHAR(30),
         provision_name NVARCHAR(50), description NVARCHAR(500),
         impacts_scheduling NVARCHAR(5))""",
     # --- erp schema ---
     """CREATE TABLE erp.production_lines (
-        production_line_id NVARCHAR(10), line_name NVARCHAR(50),
+        production_line_id NVARCHAR(10) NOT NULL, line_name NVARCHAR(50),
         building NVARCHAR(20), description NVARCHAR(200),
         manager_email NVARCHAR(100))""",
     """CREATE TABLE erp.machines (
-        machine_id NVARCHAR(10), machine_type NVARCHAR(20),
+        machine_id NVARCHAR(10) NOT NULL, machine_type NVARCHAR(20),
         machine_name NVARCHAR(100), manufacturer NVARCHAR(50),
         model NVARCHAR(50), serial_number NVARCHAR(20),
         production_line_id NVARCHAR(10),
@@ -212,56 +212,56 @@ DDL = [
         install_date DATE, last_service_date DATE,
         status NVARCHAR(20), next_pm_date DATE)""",
     """CREATE TABLE erp.inventory (
-        part_number NVARCHAR(20), component_name NVARCHAR(100),
+        part_number NVARCHAR(20) NOT NULL, component_name NVARCHAR(100),
         warehouse_location NVARCHAR(20), quantity_on_hand INT,
         quantity_reserved INT, quantity_available INT,
         reorder_point INT, reorder_quantity INT,
         unit_cost_usd FLOAT, last_count_date DATE)""",
     """CREATE TABLE erp.purchase_orders (
-        po_id NVARCHAR(10), part_number NVARCHAR(20), component_name NVARCHAR(100),
+        po_id NVARCHAR(10) NOT NULL, part_number NVARCHAR(20), component_name NVARCHAR(100),
         supplier NVARCHAR(50), quantity_ordered INT, unit_cost_usd FLOAT,
         order_date DATE, expected_delivery DATE, actual_delivery DATE,
         status NVARCHAR(20), destination_simulator NVARCHAR(10),
         notes NVARCHAR(200))""",
     """CREATE TABLE erp.maintenance_history (
-        maintenance_id NVARCHAR(10), machine_id NVARCHAR(10),
+        maintenance_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10),
         maintenance_type NVARCHAR(20), system_affected NVARCHAR(30),
         description NVARCHAR(500), reported_date DATE, started_date DATE,
         completed_date DATE, downtime_hours FLOAT, root_cause NVARCHAR(200),
         technician_email NVARCHAR(100), parts_replaced NVARCHAR(100),
         cost_usd FLOAT)""",
     """CREATE TABLE erp.sensor_definitions (
-        sensor_id NVARCHAR(10), machine_id NVARCHAR(10),
+        sensor_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10),
         sensor_category NVARCHAR(30), sensor_name NVARCHAR(50),
         unit NVARCHAR(20), normal_min FLOAT, normal_max FLOAT,
         warning_min FLOAT, warning_max FLOAT,
         critical_min FLOAT, critical_max FLOAT)""",
     # --- plm schema ---
     """CREATE TABLE plm.simulators (
-        simulator_id NVARCHAR(10), simulator_model NVARCHAR(20),
+        simulator_id NVARCHAR(10) NOT NULL, simulator_model NVARCHAR(20),
         bay_id NVARCHAR(10), bay_name NVARCHAR(50), status NVARCHAR(20),
         customer NVARCHAR(50), aircraft_type NVARCHAR(50),
         serial_number NVARCHAR(20), build_start_date DATE,
         target_delivery_date DATE)""",
     """CREATE TABLE plm.bill_of_materials (
-        bom_id NVARCHAR(10), simulator_model NVARCHAR(20),
+        bom_id NVARCHAR(10) NOT NULL, simulator_model NVARCHAR(20),
         component_category NVARCHAR(30), component_name NVARCHAR(100),
         part_number NVARCHAR(20), quantity_required INT, unit_cost_usd FLOAT,
         supplier NVARCHAR(50), lead_time_days INT, critical_path NVARCHAR(5))""",
     """CREATE TABLE plm.task_type_durations (
-        Task_Type NVARCHAR(50), Task_Name NVARCHAR(100),
+        Task_Type NVARCHAR(50) NOT NULL, Task_Name NVARCHAR(100),
         Standard_Duration INT, Required_Skill NVARCHAR(50),
         Sequence_Order INT, Description NVARCHAR(500))""",
     """CREATE TABLE plm.projects (
-        Project_ID NVARCHAR(10), Project_Name NVARCHAR(100),
+        Project_ID NVARCHAR(10) NOT NULL, Project_Name NVARCHAR(100),
         Simulator_ID NVARCHAR(10), Initial_Planned_Start DATE,
         Modified_Planned_Start DATE, Standard_Duration INT,
         Actual_End DATE, Resource_Login NVARCHAR(100),
         Complete_Percentage INT, Last_Modified_By NVARCHAR(100),
         Last_Modified_On DATE)""",
     """CREATE TABLE plm.tasks (
-        Task_ID NVARCHAR(20), Task_Name NVARCHAR(100),
-        Parent_Project_ID NVARCHAR(10), FS_Task_ID NVARCHAR(20),
+        Task_ID NVARCHAR(20) NOT NULL, Task_Name NVARCHAR(100),
+        Parent_Project_ID NVARCHAR(10) NOT NULL, FS_Task_ID NVARCHAR(20),
         Task_Type NVARCHAR(50), Milestone INT, Skill_Requirement NVARCHAR(50),
         Initial_Planned_Start DATE, Modified_Planned_Start DATE,
         Actual_Start DATE, Standard_Duration INT, Actual_End DATE,
