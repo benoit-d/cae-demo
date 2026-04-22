@@ -1,15 +1,32 @@
 # Fabric notebook source
-# %% [markdown]
-# # Telemetry Fault Injection — SIM-001
-#
-# Simulates a **hydraulic pump failure** on SIM-001 over 10 minutes.
-# Hydraulic pressure drifts down, fluid temperature rises, vibration
-# increases — triggering Warning then Critical alerts.
-#
-# Run this **after** the normal telemetry emulator is already streaming.
 
-# %%
-import csv, json, math, os, random, time
+# METADATA ********************
+
+# META {
+# META   "kernel_info": {
+# META     "name": "synapse_pyspark"
+# META   },
+# META   "dependencies": {}
+# META }
+
+# MARKDOWN ********************
+
+# # Telemetry Fault Injection - SIM-001
+# 
+# Simulates a hydraulic pump failure on SIM-001 over 10 minutes.
+# Pressure drifts down, fluid temperature rises, vibration increases.
+# Run this after the normal telemetry emulator is already streaming.
+
+# METADATA ********************
+
+# META {
+# META   "language": "markdown",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+import json, math, random, time
 from datetime import datetime, timezone
 
 sensor_defs = [row.asDict() for row in
@@ -30,13 +47,20 @@ FAULTS = {
 
 INTERVAL = 30
 DURATION_MIN = 10.0
-CONN = spark.conf.get("spark.cae.telemetry.eventhub.connectionString", "")
 
-# %%
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 start = time.time()
 batch = 0
 
-print(f"Injecting fault on SIM-001 for {DURATION_MIN} min …\n")
+print(f"Injecting fault on SIM-001 for {DURATION_MIN} min...\n")
 
 try:
     while True:
@@ -51,7 +75,8 @@ try:
             nmin, nmax = float(s["normal_min"]), float(s["normal_max"])
             wmin, wmax = float(s["warning_min"]), float(s["warning_max"])
             cmin, cmax = float(s["critical_min"]), float(s["critical_max"])
-            mid = (nmin + nmax) / 2; amp = (nmax - nmin) / 2
+            mid = (nmin + nmax) / 2
+            amp = (nmax - nmin) / 2
             val = mid + amp * 0.5 * math.sin(time.time() / 120) + random.gauss(0, amp * 0.05)
 
             f = FAULTS.get(s["sensor_name"])
@@ -69,15 +94,7 @@ try:
                 "unit": s["unit"], "alert_level": lvl, "is_anomaly": lvl != "Normal",
             })
 
-        if CONN:
-            from azure.eventhub import EventHubProducerClient, EventData
-            p = EventHubProducerClient.from_connection_string(CONN)
-            with p:
-                b = p.create_batch()
-                for e in events: b.add(EventData(json.dumps(e)))
-                p.send_batch(b)
-        else:
-            spark.createDataFrame(events).write.format("delta").mode("append").save("Tables/simulator_telemetry_raw")
+        spark.createDataFrame(events).write.format("delta").mode("append").save("Tables/simulator_telemetry_raw")
 
         w = sum(1 for e in events if e["alert_level"] == "Warning")
         c = sum(1 for e in events if e["alert_level"] == "Critical")
@@ -92,3 +109,10 @@ except KeyboardInterrupt:
     pass
 
 print(f"\nFault injection complete. {batch} batches.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }

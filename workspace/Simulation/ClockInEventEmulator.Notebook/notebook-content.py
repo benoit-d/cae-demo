@@ -1,45 +1,51 @@
 # Fabric notebook source
-# %% [markdown]
-# # Clock-In / Task Event Emulator
-#
-# Generates workforce events and sends them to the `ClockInEventStream`:
-# - **badge_in / badge_out** — shift start / end
-# - **task_start / task_complete** — links to Project_ID, Task_ID
-# - **break_start / break_end**
-#
-# Events carry employee email + project/task IDs so downstream agents
-# can update Actual dates in the SQL Database.
 
-# %%
-import csv, json, random, time
+# METADATA ********************
+
+# META {
+# META   "kernel_info": {
+# META     "name": "synapse_pyspark"
+# META   },
+# META   "dependencies": {}
+# META }
+
+# MARKDOWN ********************
+
+# # Clock-In / Task Event Emulator
+# 
+# Generates workforce events: badge_in/badge_out, task_start/task_complete, breaks.
+# Events carry employee email + project/task IDs for downstream processing.
+
+# METADATA ********************
+
+# META {
+# META   "language": "markdown",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+import json, random, time
 from datetime import datetime, timezone
 
-# Load reference data from staging Lakehouse
 employees = [r.asDict() for r in spark.read.csv("Files/data/hr/employees.csv", header=True).collect()]
 tasks     = [r.asDict() for r in spark.read.csv("Files/data/cosmosdb/tasks.csv", header=True).collect()]
 projects  = [r.asDict() for r in spark.read.csv("Files/data/cosmosdb/projects.csv", header=True).collect()]
 
 proj_map = {p["Project_ID"]: p for p in projects}
 workers  = [e for e in employees if e["employee_id"] != "EMP-050"]
-
 in_progress = [t for t in tasks if t.get("Complete_Percentage") and 0 < int(t["Complete_Percentage"]) < 100]
 
 print(f"{len(workers)} workers, {len(in_progress)} in-progress tasks")
 
-# %%
-CONN = spark.conf.get("spark.cae.clockin.eventhub.connectionString", "")
+# METADATA ********************
 
-def send(events):
-    if CONN:
-        from azure.eventhub import EventHubProducerClient, EventData
-        p = EventHubProducerClient.from_connection_string(CONN)
-        with p:
-            b = p.create_batch()
-            for e in events: b.add(EventData(json.dumps(e)))
-            p.send_batch(b)
-    else:
-        for e in events:
-            spark.createDataFrame([e]).write.format("delta").mode("append").save("Tables/clockin_events_raw")
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
 
 def mk(etype, emp, **kw):
     return {
@@ -55,7 +61,6 @@ def mk(etype, emp, **kw):
         "details": kw.get("details", ""),
     }
 
-# %%
 # Generate a full-day scenario
 events = []
 
@@ -92,6 +97,14 @@ for t in in_progress:
 for w in workers:
     events.append(mk("badge_out", w, details="Shift end"))
 
-print(f"Generated {len(events)} events")
-send(events)
-print("Events sent.")
+# Write to Delta table
+df = spark.createDataFrame(events)
+df.write.format("delta").mode("append").save("Tables/clockin_events_raw")
+print(f"Generated and saved {len(events)} events.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }

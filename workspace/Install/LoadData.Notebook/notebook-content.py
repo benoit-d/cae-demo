@@ -1,15 +1,36 @@
 # Fabric notebook source
-# %% [markdown]
-# # Load Data (Manual)
-#
-# This notebook is a convenience wrapper. It is called by PostDeploymentConfig
-# and can also be run standalone to reload data into the SQL Database.
-#
-# It reads CSVs from the staging Lakehouse (`CAEManufacturing_LH/Files/data/`)
-# and inserts rows into the SQL Database tables.
-#
-# **Normally you don't need to run this directly.** PostDeploymentConfig does it.
 
-# %%
+# METADATA ********************
+
+# META {
+# META   "kernel_info": {
+# META     "name": "synapse_pyspark"
+# META   },
+# META   "dependencies": {}
+# META }
+
+# MARKDOWN ********************
+
+# # Load Data (Manual)
+# 
+# Convenience wrapper - called by PostDeploymentConfig.
+# Run PostDeploymentConfig instead of this notebook directly.
+
+# METADATA ********************
+
+# META {
+# META   "language": "markdown",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 print("This notebook is called by PostDeploymentConfig.")
-print("To reload data manually, copy the 'Step 3' cell from PostDeploymentConfig.")
+print("To reload data, run PostDeploymentConfig instead.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
