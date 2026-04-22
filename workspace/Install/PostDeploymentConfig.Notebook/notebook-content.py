@@ -13,15 +13,14 @@
 
 # # Post-Deployment Configuration
 # 
-# Loads all data into the **SQL Database** using two schemas:
-# - **hr** schema: employees, skills, schedules, limitations, leave, contractors, agreements
-# - **erp** schema: machines, projects, tasks, task types, BOM, inventory, POs, maintenance
-# 
-# Constraints (PKs, FKs) are added AFTER bulk insert to avoid insert-order issues.
+# Loads all data into the SQL Database using three schemas:
+# - **hr** - employees, skills, schedules, limitations, leave, contractors, agreements
+# - **erp** - production lines, machines, inventory, purchase orders, maintenance, sensor definitions
+# - **plm** - simulators, bill of materials, projects, tasks, task type durations
 # 
 # ## Prerequisites
 # 1. SolutionInstaller has run (Lakehouse has CSVs in Files/)
-# 2. A **Fabric SQL Database** exists in the workspace
+# 2. A Fabric SQL Database exists in the workspace
 # 3. Paste the JDBC connection string in the config cell below
 # 
 # **Run All to configure.**
@@ -36,9 +35,6 @@
 # CELL ********************
 
 # === CONFIGURATION ===
-# Paste your SQL Database JDBC connection string below
-# (SQL Database > Settings > Connection strings > JDBC)
-
 SQL_JDBC_CONNECTION_STRING = ""
 # Example: "jdbc:sqlserver://xxxxx.database.fabric.microsoft.com:1433;database={MyDB-guid};encrypt=true;trustServerCertificate=false;authentication=ActiveDirectoryInteractive"
 
@@ -51,7 +47,7 @@ SQL_JDBC_CONNECTION_STRING = ""
 
 # CELL ********************
 
-# Step 1 - Discover Lakehouse and parse SQL connection
+# Step 1 - Parse config and discover Lakehouse
 import os, re, requests, struct
 import notebookutils
 
@@ -89,7 +85,7 @@ if SQL_JDBC_CONNECTION_STRING:
     else:
         print("ERROR: Could not parse JDBC string.")
 else:
-    print("No SQL JDBC string. Paste it in the config cell above and re-run.")
+    raise RuntimeError("Set SQL_JDBC_CONNECTION_STRING in the config cell above.")
 
 # METADATA ********************
 
@@ -100,10 +96,7 @@ else:
 
 # CELL ********************
 
-# Step 2 - Create schemas and tables (NO constraints yet)
-if not SQL_ENDPOINT:
-    raise RuntimeError("SQL connection not configured. Set SQL_JDBC_CONNECTION_STRING above.")
-
+# Step 2 - Drop ALL existing tables and schemas, then recreate fresh
 import pyodbc
 
 TOKEN_SQL = notebookutils.credentials.getToken("https://database.windows.net/")
@@ -120,30 +113,50 @@ conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 conn.autocommit = True
 cursor = conn.cursor()
 
+# Nuclear drop: drop ALL user tables in dependency-safe order (FKs first)
+print("Dropping all existing tables and schemas...\n")
+cursor.execute("""
+    DECLARE @sql NVARCHAR(MAX) = '';
+    -- Drop all foreign keys first
+    SELECT @sql = @sql + 'ALTER TABLE ' + QUOTENAME(s.name) + '.' + QUOTENAME(t.name)
+        + ' DROP CONSTRAINT ' + QUOTENAME(f.name) + '; '
+    FROM sys.foreign_keys f
+    JOIN sys.tables t ON f.parent_object_id = t.object_id
+    JOIN sys.schemas s ON t.schema_id = s.schema_id
+    WHERE s.name IN ('hr', 'erp', 'plm');
+    EXEC sp_executesql @sql;
+""")
+cursor.execute("""
+    DECLARE @sql NVARCHAR(MAX) = '';
+    -- Drop all tables
+    SELECT @sql = @sql + 'DROP TABLE ' + QUOTENAME(s.name) + '.' + QUOTENAME(t.name) + '; '
+    FROM sys.tables t
+    JOIN sys.schemas s ON t.schema_id = s.schema_id
+    WHERE s.name IN ('hr', 'erp', 'plm');
+    EXEC sp_executesql @sql;
+""")
+print("  All existing tables dropped.")
+
+# Create schemas
+for schema in ['hr', 'erp', 'plm']:
+    try:
+        cursor.execute(f"IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='{schema}') EXEC('CREATE SCHEMA {schema}')")
+        print(f"  Schema: {schema}")
+    except Exception as e:
+        print(f"  Schema {schema}: {e}")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 3 - Create tables (no constraints)
 DDL = [
-    # --- Drop in reverse dependency order ---
-    "IF OBJECT_ID('erp.tasks') IS NOT NULL DROP TABLE erp.tasks",
-    "IF OBJECT_ID('erp.projects') IS NOT NULL DROP TABLE erp.projects",
-    "IF OBJECT_ID('erp.task_type_durations') IS NOT NULL DROP TABLE erp.task_type_durations",
-    "IF OBJECT_ID('erp.maintenance_history') IS NOT NULL DROP TABLE erp.maintenance_history",
-    "IF OBJECT_ID('erp.sensor_definitions') IS NOT NULL DROP TABLE erp.sensor_definitions",
-    "IF OBJECT_ID('erp.purchase_orders') IS NOT NULL DROP TABLE erp.purchase_orders",
-    "IF OBJECT_ID('erp.inventory') IS NOT NULL DROP TABLE erp.inventory",
-    "IF OBJECT_ID('erp.bill_of_materials') IS NOT NULL DROP TABLE erp.bill_of_materials",
-    "IF OBJECT_ID('erp.machines') IS NOT NULL DROP TABLE erp.machines",
-    "IF OBJECT_ID('erp.production_lines') IS NOT NULL DROP TABLE erp.production_lines",
-    "IF OBJECT_ID('erp.simulators') IS NOT NULL DROP TABLE erp.simulators",
-    "IF OBJECT_ID('hr.employee_agreements') IS NOT NULL DROP TABLE hr.employee_agreements",
-    "IF OBJECT_ID('hr.contractual_workforce') IS NOT NULL DROP TABLE hr.contractual_workforce",
-    "IF OBJECT_ID('hr.leave_of_absence') IS NOT NULL DROP TABLE hr.leave_of_absence",
-    "IF OBJECT_ID('hr.physical_limitations') IS NOT NULL DROP TABLE hr.physical_limitations",
-    "IF OBJECT_ID('hr.employee_schedules') IS NOT NULL DROP TABLE hr.employee_schedules",
-    "IF OBJECT_ID('hr.skills_certifications') IS NOT NULL DROP TABLE hr.skills_certifications",
-    "IF OBJECT_ID('hr.employees') IS NOT NULL DROP TABLE hr.employees",
-    # --- Create schemas ---
-    "IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='hr') EXEC('CREATE SCHEMA hr')",
-    "IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='erp') EXEC('CREATE SCHEMA erp')",
-    # --- HR tables (no constraints yet) ---
+    # --- hr schema ---
     """CREATE TABLE hr.employees (
         employee_id NVARCHAR(10), first_name NVARCHAR(50), last_name NVARCHAR(50),
         email NVARCHAR(100), teams_email NVARCHAR(100), role NVARCHAR(50),
@@ -185,17 +198,11 @@ DDL = [
         union_name NVARCHAR(50), provision_category NVARCHAR(30),
         provision_name NVARCHAR(50), description NVARCHAR(500),
         impacts_scheduling NVARCHAR(5))""",
-    # --- ERP tables (no constraints yet) ---
+    # --- erp schema ---
     """CREATE TABLE erp.production_lines (
         production_line_id NVARCHAR(10), line_name NVARCHAR(50),
         building NVARCHAR(20), description NVARCHAR(200),
         manager_email NVARCHAR(100))""",
-    """CREATE TABLE erp.simulators (
-        simulator_id NVARCHAR(10), simulator_model NVARCHAR(20),
-        bay_id NVARCHAR(10), bay_name NVARCHAR(50), status NVARCHAR(20),
-        customer NVARCHAR(50), aircraft_type NVARCHAR(50),
-        serial_number NVARCHAR(20), build_start_date DATE,
-        target_delivery_date DATE)""",
     """CREATE TABLE erp.machines (
         machine_id NVARCHAR(10), machine_type NVARCHAR(20),
         machine_name NVARCHAR(100), manufacturer NVARCHAR(50),
@@ -204,15 +211,6 @@ DDL = [
         location NVARCHAR(20), zone NVARCHAR(30),
         install_date DATE, last_service_date DATE,
         status NVARCHAR(20), next_pm_date DATE)""",
-    """CREATE TABLE erp.task_type_durations (
-        Task_Type NVARCHAR(50), Task_Name NVARCHAR(100),
-        Standard_Duration INT, Required_Skill NVARCHAR(50),
-        Sequence_Order INT, Description NVARCHAR(500))""",
-    """CREATE TABLE erp.bill_of_materials (
-        bom_id NVARCHAR(10), simulator_model NVARCHAR(20),
-        component_category NVARCHAR(30), component_name NVARCHAR(100),
-        part_number NVARCHAR(20), quantity_required INT, unit_cost_usd FLOAT,
-        supplier NVARCHAR(50), lead_time_days INT, critical_path NVARCHAR(5))""",
     """CREATE TABLE erp.inventory (
         part_number NVARCHAR(20), component_name NVARCHAR(100),
         warehouse_location NVARCHAR(20), quantity_on_hand INT,
@@ -232,14 +230,36 @@ DDL = [
         completed_date DATE, downtime_hours FLOAT, root_cause NVARCHAR(200),
         technician_email NVARCHAR(100), parts_replaced NVARCHAR(100),
         cost_usd FLOAT)""",
-    """CREATE TABLE erp.projects (
+    """CREATE TABLE erp.sensor_definitions (
+        sensor_id NVARCHAR(10), machine_id NVARCHAR(10),
+        sensor_category NVARCHAR(30), sensor_name NVARCHAR(50),
+        unit NVARCHAR(20), normal_min FLOAT, normal_max FLOAT,
+        warning_min FLOAT, warning_max FLOAT,
+        critical_min FLOAT, critical_max FLOAT)""",
+    # --- plm schema ---
+    """CREATE TABLE plm.simulators (
+        simulator_id NVARCHAR(10), simulator_model NVARCHAR(20),
+        bay_id NVARCHAR(10), bay_name NVARCHAR(50), status NVARCHAR(20),
+        customer NVARCHAR(50), aircraft_type NVARCHAR(50),
+        serial_number NVARCHAR(20), build_start_date DATE,
+        target_delivery_date DATE)""",
+    """CREATE TABLE plm.bill_of_materials (
+        bom_id NVARCHAR(10), simulator_model NVARCHAR(20),
+        component_category NVARCHAR(30), component_name NVARCHAR(100),
+        part_number NVARCHAR(20), quantity_required INT, unit_cost_usd FLOAT,
+        supplier NVARCHAR(50), lead_time_days INT, critical_path NVARCHAR(5))""",
+    """CREATE TABLE plm.task_type_durations (
+        Task_Type NVARCHAR(50), Task_Name NVARCHAR(100),
+        Standard_Duration INT, Required_Skill NVARCHAR(50),
+        Sequence_Order INT, Description NVARCHAR(500))""",
+    """CREATE TABLE plm.projects (
         Project_ID NVARCHAR(10), Project_Name NVARCHAR(100),
         Simulator_ID NVARCHAR(10), Initial_Planned_Start DATE,
         Modified_Planned_Start DATE, Standard_Duration INT,
         Actual_End DATE, Resource_Login NVARCHAR(100),
         Complete_Percentage INT, Last_Modified_By NVARCHAR(100),
         Last_Modified_On DATE)""",
-    """CREATE TABLE erp.tasks (
+    """CREATE TABLE plm.tasks (
         Task_ID NVARCHAR(20), Task_Name NVARCHAR(100),
         Parent_Project_ID NVARCHAR(10), FS_Task_ID NVARCHAR(20),
         Task_Type NVARCHAR(50), Milestone INT, Skill_Requirement NVARCHAR(50),
@@ -247,30 +267,20 @@ DDL = [
         Actual_Start DATE, Standard_Duration INT, Actual_End DATE,
         Resource_Login NVARCHAR(100), Complete_Percentage INT,
         Last_Modified_By NVARCHAR(100), Last_Modified_On DATE)""",
-    """CREATE TABLE erp.sensor_definitions (
-        sensor_id NVARCHAR(10), machine_id NVARCHAR(10),
-        sensor_category NVARCHAR(30), sensor_name NVARCHAR(50),
-        unit NVARCHAR(20), normal_min FLOAT, normal_max FLOAT,
-        warning_min FLOAT, warning_max FLOAT,
-        critical_min FLOAT, critical_max FLOAT)""",
 ]
 
-print("Creating schemas and tables (no constraints)...\n")
+print("Creating tables...\n")
 for ddl in DDL:
     try:
         cursor.execute(ddl)
-        if "CREATE TABLE" in ddl:
-            tbl = ddl.split("CREATE TABLE ")[1].split(" ")[0].split("(")[0]
-            print(f"  Created {tbl}")
-        elif "CREATE SCHEMA" in ddl:
-            schema = ddl.split("'")[1]
-            print(f"  Schema {schema}")
+        tbl = ddl.split("CREATE TABLE ")[1].split(" ")[0].split("(")[0]
+        print(f"  {tbl}")
     except Exception as e:
-        print(f"  Warning: {e}")
+        print(f"  Error: {e}")
 
 cursor.close()
 conn.close()
-print("\nAll tables created (no constraints yet).")
+print("\nAll tables created.")
 
 # METADATA ********************
 
@@ -281,7 +291,7 @@ print("\nAll tables created (no constraints yet).")
 
 # CELL ********************
 
-# Step 3 - Bulk insert all data via Spark JDBC
+# Step 4 - Bulk insert all data
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
 
@@ -296,8 +306,9 @@ jdbc_props = {
     "accessToken": TOKEN_SQL,
 }
 
-# CSV path -> SQL table (insertion order does not matter - no constraints yet)
+# CSV path -> SQL table (folder -> schema alignment)
 ALL_TABLES = [
+    # hr.*
     ("data/hr/employees.csv",              "hr.employees"),
     ("data/hr/skills_certifications.csv",  "hr.skills_certifications"),
     ("data/hr/employee_schedules.csv",     "hr.employee_schedules"),
@@ -305,21 +316,22 @@ ALL_TABLES = [
     ("data/hr/leave_of_absence.csv",       "hr.leave_of_absence"),
     ("data/hr/contractual_workforce.csv",  "hr.contractual_workforce"),
     ("data/hr/employee_agreements.csv",    "hr.employee_agreements"),
-    ("data/plm/simulators.csv",            "erp.simulators"),
-    ("data/erp/production_lines.csv",     "erp.production_lines"),
+    # erp.*
+    ("data/erp/production_lines.csv",      "erp.production_lines"),
     ("data/erp/machines.csv",              "erp.machines"),
-    ("data/plm/task_type_durations.csv",   "erp.task_type_durations"),
-    ("data/plm/bill_of_materials.csv",     "erp.bill_of_materials"),
     ("data/erp/inventory.csv",             "erp.inventory"),
     ("data/erp/purchase_orders.csv",       "erp.purchase_orders"),
     ("data/erp/maintenance_history.csv",   "erp.maintenance_history"),
-    ("data/plm/projects.csv",            "erp.projects"),
-    ("data/plm/tasks.csv",               "erp.tasks"),
     ("data/telemetry/sensor_definitions.csv", "erp.sensor_definitions"),
+    # plm.*
+    ("data/plm/simulators.csv",            "plm.simulators"),
+    ("data/plm/bill_of_materials.csv",     "plm.bill_of_materials"),
+    ("data/plm/task_type_durations.csv",   "plm.task_type_durations"),
+    ("data/plm/projects.csv",              "plm.projects"),
+    ("data/plm/tasks.csv",                 "plm.tasks"),
 ]
 
-print("Bulk inserting data into SQL Database...\n")
-
+print("Loading data...\n")
 for csv_rel, table_name in ALL_TABLES:
     csv_path = f"{BASE}/{csv_rel}"
     try:
@@ -329,7 +341,7 @@ for csv_rel, table_name in ALL_TABLES:
     except Exception as e:
         print(f"  {table_name:35s} FAILED: {e}")
 
-print("\nBulk insert complete.")
+print("\nAll data loaded.")
 
 # METADATA ********************
 
@@ -340,7 +352,7 @@ print("\nBulk insert complete.")
 
 # CELL ********************
 
-# Step 4 - Add primary keys, unique constraints, and foreign keys
+# Step 5 - Add primary keys and foreign keys
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 conn.autocommit = True
 cursor = conn.cursor()
@@ -354,33 +366,34 @@ CONSTRAINTS = [
     "ALTER TABLE hr.leave_of_absence ADD CONSTRAINT PK_leave_of_absence PRIMARY KEY (leave_id)",
     "ALTER TABLE hr.contractual_workforce ADD CONSTRAINT PK_contractual_workforce PRIMARY KEY (contract_id)",
     "ALTER TABLE hr.employee_agreements ADD CONSTRAINT PK_employee_agreements PRIMARY KEY (agreement_id)",
-    "ALTER TABLE erp.simulators ADD CONSTRAINT PK_simulators PRIMARY KEY (simulator_id)",
     "ALTER TABLE erp.production_lines ADD CONSTRAINT PK_production_lines PRIMARY KEY (production_line_id)",
     "ALTER TABLE erp.machines ADD CONSTRAINT PK_machines PRIMARY KEY (machine_id)",
-    "ALTER TABLE erp.task_type_durations ADD CONSTRAINT PK_task_type_durations PRIMARY KEY (Task_Type)",
-    "ALTER TABLE erp.bill_of_materials ADD CONSTRAINT PK_bill_of_materials PRIMARY KEY (bom_id)",
     "ALTER TABLE erp.inventory ADD CONSTRAINT PK_inventory PRIMARY KEY (part_number)",
     "ALTER TABLE erp.purchase_orders ADD CONSTRAINT PK_purchase_orders PRIMARY KEY (po_id)",
     "ALTER TABLE erp.maintenance_history ADD CONSTRAINT PK_maintenance_history PRIMARY KEY (maintenance_id)",
-    "ALTER TABLE erp.projects ADD CONSTRAINT PK_projects PRIMARY KEY (Project_ID)",
-    "ALTER TABLE erp.tasks ADD CONSTRAINT PK_tasks PRIMARY KEY (Task_ID)",
     "ALTER TABLE erp.sensor_definitions ADD CONSTRAINT PK_sensor_definitions PRIMARY KEY (sensor_id)",
-    # --- Foreign Keys: HR ---
+    "ALTER TABLE plm.simulators ADD CONSTRAINT PK_simulators PRIMARY KEY (simulator_id)",
+    "ALTER TABLE plm.bill_of_materials ADD CONSTRAINT PK_bill_of_materials PRIMARY KEY (bom_id)",
+    "ALTER TABLE plm.task_type_durations ADD CONSTRAINT PK_task_type_durations PRIMARY KEY (Task_Type)",
+    "ALTER TABLE plm.projects ADD CONSTRAINT PK_projects PRIMARY KEY (Project_ID)",
+    "ALTER TABLE plm.tasks ADD CONSTRAINT PK_tasks PRIMARY KEY (Task_ID)",
+    # --- Foreign Keys: hr ---
     "ALTER TABLE hr.skills_certifications ADD CONSTRAINT FK_skills_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     "ALTER TABLE hr.employee_schedules ADD CONSTRAINT FK_schedules_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     "ALTER TABLE hr.physical_limitations ADD CONSTRAINT FK_limitations_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     "ALTER TABLE hr.leave_of_absence ADD CONSTRAINT FK_leave_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     "ALTER TABLE hr.contractual_workforce ADD CONSTRAINT FK_contract_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
-    # --- Foreign Keys: ERP ---
+    # --- Foreign Keys: erp ---
     "ALTER TABLE erp.machines ADD CONSTRAINT FK_machine_line FOREIGN KEY (production_line_id) REFERENCES erp.production_lines(production_line_id)",
     "ALTER TABLE erp.maintenance_history ADD CONSTRAINT FK_maint_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
-    "ALTER TABLE erp.projects ADD CONSTRAINT FK_project_simulator FOREIGN KEY (Simulator_ID) REFERENCES erp.simulators(simulator_id)",
-    "ALTER TABLE erp.tasks ADD CONSTRAINT FK_task_project FOREIGN KEY (Parent_Project_ID) REFERENCES erp.projects(Project_ID)",
-    "ALTER TABLE erp.tasks ADD CONSTRAINT FK_task_type FOREIGN KEY (Task_Type) REFERENCES erp.task_type_durations(Task_Type)",
     "ALTER TABLE erp.sensor_definitions ADD CONSTRAINT FK_sensor_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
+    # --- Foreign Keys: plm ---
+    "ALTER TABLE plm.projects ADD CONSTRAINT FK_project_simulator FOREIGN KEY (Simulator_ID) REFERENCES plm.simulators(simulator_id)",
+    "ALTER TABLE plm.tasks ADD CONSTRAINT FK_task_project FOREIGN KEY (Parent_Project_ID) REFERENCES plm.projects(Project_ID)",
+    "ALTER TABLE plm.tasks ADD CONSTRAINT FK_task_type FOREIGN KEY (Task_Type) REFERENCES plm.task_type_durations(Task_Type)",
 ]
 
-print("Adding primary keys and foreign keys...\n")
+print("Adding constraints...\n")
 ok = 0
 for c in CONSTRAINTS:
     try:
@@ -404,7 +417,7 @@ print(f"\n{ok}/{len(CONSTRAINTS)} constraints added.")
 
 # CELL ********************
 
-# Step 5 - Verify row counts
+# Step 6 - Verify
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 cursor = conn.cursor()
 
@@ -423,11 +436,11 @@ conn.close()
 print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
-print(f"\nAll tables in SQL Database '{SQL_DBNAME}'")
-print("  hr.*  - employee data (7 tables)")
-print("  erp.* - machines, projects, tasks, BOM, etc. (9 tables)")
-print("\nConstraints: PKs + FKs enforced.")
-print("\nNext: Open the GetStarted notebook.")
+print(f"\nSQL Database: {SQL_DBNAME}")
+print("  hr.*  - 7 tables (employees, skills, schedules, ...)")
+print("  erp.* - 6 tables (production lines, machines, inventory, ...)")
+print("  plm.* - 5 tables (simulators, BOM, projects, tasks, task types)")
+print("\nNext: Open GetStarted notebook.")
 
 # METADATA ********************
 
