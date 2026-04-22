@@ -15,20 +15,20 @@
 # 
 # ## Architecture
 # 
-# | Store | Data | Purpose |
-# |---|---|---|
-# | **Lakehouse** (Delta) | HR, ERP, BOM, inventory, sensor defs | Read-heavy reference data |
-# | **SQL Database** | Projects, Tasks, Task Type Durations | Write-back for scheduling (CRUD) |
-# | **Eventhouse** (KQL DB) | Telemetry events, Clock-in events | Real-time event queries |
-# | **Eventstreams** | SimulatorTelemetryStream, ClockInEventStream | Ingestion from pipelines |
+# | Store | Schema | Data | Purpose |
+# |---|---|---|---|
+# | **SQL Database** | hr.* | employees, skills, schedules, limitations, leave, contractors, agreements | Workforce data (CRUD) |
+# | **SQL Database** | erp.* | machines, projects, tasks, task types, BOM, inventory, POs, maintenance, sensors | Manufacturing + project mgmt (CRUD) |
+# | **Eventhouse** (KQL DB) | - | Telemetry events, Clock-in events | Real-time event queries |
+# | **Lakehouse** | - | CSV files in Files/ area | Staging only (used during deployment) |
 # 
 # ## Data Flow
 # 
 # | Source | Mechanism | Destination |
 # |---|---|---|
-# | Telemetry (normal) | Data Pipeline (every 1 min) calls notebook | Eventstream to KQL DB |
-# | Telemetry (fault) | Manual notebook run during demo | Eventstream to KQL DB |
-# | Clock-in events | Data Pipeline (every 1 min) calls notebook | Eventstream to KQL DB |
+# | Telemetry (normal) | Data Pipeline (1 min) calls notebook | Eventstream to KQL DB |
+# | Telemetry (fault) | Manual notebook during demo | Eventstream to KQL DB |
+# | Clock-in events | Data Pipeline (1 min) calls notebook | Eventstream to KQL DB |
 # | Schedule changes | Agent / manual | SQL Database UPDATE |
 
 # METADATA ********************
@@ -42,39 +42,14 @@
 
 # ## Setup Steps
 # 
-# ### 1. PostDeploymentConfig (already done if you see data)
-# Loads reference data into Lakehouse + project tables into SQL Database.
+# 1. **PostDeploymentConfig** - creates hr.* and erp.* schemas + 16 tables with PKs/FKs in SQL DB
+# 2. **Create Eventstreams** - SimulatorTelemetryStream + ClockInEventStream (manual in Fabric UI)
+# 3. **Create Data Pipelines** - TelemetryPipeline + ClockInPipeline, 1-min schedule
+# 4. **Paste connection strings** into the simulator notebook config cells
+# 5. **Demo: Inject fault** - run TelemetryFaultInjection manually
+# 6. **Power BI Gantt** - connect to SQL Database erp.tasks + erp.projects
 # 
-# ### 2. Create Eventstreams (manual in Fabric UI)
-# - Create **SimulatorTelemetryStream** Eventstream
-# - Create **ClockInEventStream** Eventstream
-# - For each: add a **Custom App** source and copy the connection string
-# - Add a **KQL Database** destination routing to CAEManufacturingEH
-# 
-# ### 3. Create Data Pipelines (manual in Fabric UI)
-# - **TelemetryPipeline**: Notebook activity pointing to SimulatorTelemetryEmulator, schedule every 1 minute
-# - **ClockInPipeline**: Notebook activity pointing to ClockInEventEmulator, schedule every 1 minute
-# 
-# ### 4. Paste connection strings into the notebooks
-# Open each simulator notebook, paste the Eventstream connection string in the config cell.
-# 
-# ### 5. Demo: Inject a fault
-# Open **Simulation/TelemetryFaultInjection**, run manually. SIM-001 hydraulics degrade over 10 min.
-# 
-# ### 6. Power BI Gantt
-# Connect to SQL Database. Use Gantt visual (MAQ Software):
-# Task=Task_Name, Start=Modified_Planned_Start, Duration=Standard_Duration, %=Complete_Percentage, Resource=Resource_Login
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# MARKDOWN ********************
-
-# ## The 8 Projects (as of April 21, 2026)
+# ## The 8 Projects (April 21, 2026)
 # 
 # | Project | Simulator | Customer | Status |
 # |---|---|---|---|

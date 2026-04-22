@@ -57,7 +57,7 @@ resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_
 items = resp.json().get("value", [])
 lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
 if not lh:
-    raise RuntimeError("Lakehouse not found")
+    raise RuntimeError("Lakehouse not found (needed to read staged CSVs)")
 
 LH_ID = lh["id"]
 BASE = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{LH_ID}"
@@ -126,8 +126,8 @@ if EVENTHUB_CONNECTION_STRING:
 else:
     df = spark.createDataFrame(events)
     df.write.format("delta").mode("append").save(f"{BASE}/Tables/clockin_events_raw")
-    print(f"Wrote {len(events)} clock-in events to Lakehouse Delta")
-    print("(Set EVENTHUB_CONNECTION_STRING to route to Eventstream)")
+    print(f"Wrote {len(events)} clock-in events to Lakehouse staging")
+    print("(Set EVENTHUB_CONNECTION_STRING to route to Eventstream -> Eventhouse)")
 
 # METADATA ********************
 

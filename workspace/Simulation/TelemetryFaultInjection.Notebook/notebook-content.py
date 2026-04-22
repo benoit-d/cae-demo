@@ -57,7 +57,7 @@ resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_
 items_list = resp.json().get("value", [])
 lh = next((i for i in items_list if i.get("displayName") == "CAEManufacturing_LH"), None)
 if not lh:
-    raise RuntimeError("Lakehouse not found")
+    raise RuntimeError("Lakehouse not found (needed to read staged CSVs)")
 
 LH_ID = lh["id"]
 BASE = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{LH_ID}"

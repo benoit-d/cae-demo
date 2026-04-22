@@ -35,7 +35,7 @@
 
 # Configuration - set the Eventstream connection string
 # Get this from: Eventstream > Custom App source > Connection String
-# Or leave empty to write to the Eventhouse directly via the Lakehouse fallback
+# Or leave empty to write to the Lakehouse staging area as fallback
 
 EVENTHUB_CONNECTION_STRING = ""  # Paste your Eventstream connection string here
 
@@ -52,7 +52,7 @@ import json, math, random, time, os, requests
 from datetime import datetime, timezone
 import notebookutils
 
-# Discover Lakehouse for sensor definitions
+# Discover Lakehouse for reading staged CSV sensor definitions
 TOKEN = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
 WORKSPACE_ID = os.environ.get("TRIDENT_WORKSPACE_ID", "")
 if not WORKSPACE_ID:
@@ -125,11 +125,11 @@ if EVENTHUB_CONNECTION_STRING:
         producer.send_batch(batch)
     print(f"Sent {len(events)} events to Eventstream at {ts}")
 else:
-    # Fallback: write to Lakehouse Delta table
+    # Fallback: write to Lakehouse staging Delta table (configure Eventstream for production)
     df = spark.createDataFrame(events)
     df.write.format("delta").mode("append").save(f"{BASE}/Tables/simulator_telemetry_raw")
-    print(f"Wrote {len(events)} events to Lakehouse Delta at {ts}")
-    print("(Set EVENTHUB_CONNECTION_STRING to route to Eventstream instead)")
+    print(f"Wrote {len(events)} events to Lakehouse staging at {ts}")
+    print("(Set EVENTHUB_CONNECTION_STRING to route to Eventstream -> Eventhouse)")
 
 # METADATA ********************
 
