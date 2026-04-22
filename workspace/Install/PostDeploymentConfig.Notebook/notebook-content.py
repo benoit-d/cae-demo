@@ -34,8 +34,24 @@
 
 # CELL ********************
 
-# Step 1 - Discover workspace items
-import os, requests, notebookutils, struct
+# === CONFIGURATION ===
+# Paste your SQL Database JDBC connection string below (from SQL Database > Settings > Connection strings)
+# Leave empty to skip SQL Database setup (project data goes to Lakehouse only)
+
+SQL_JDBC_CONNECTION_STRING = ""
+# Example: "jdbc:sqlserver://xxxxx.database.fabric.microsoft.com:1433;database={MyDB-guid};encrypt=true;trustServerCertificate=false;authentication=ActiveDirectoryInteractive"
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 1 - Parse config and discover workspace items
+import os, re, requests, notebookutils, struct
 
 TOKEN_FABRIC = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
 WORKSPACE_ID = os.environ.get("TRIDENT_WORKSPACE_ID", "")
@@ -51,7 +67,6 @@ resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_
 items = resp.json().get("value", [])
 
 lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
-sql_db = next((i for i in items if "SQLDB" in i.get("displayName", "") or i.get("type") == "SQLDatabase"), None)
 
 if lh:
     LH_ID = lh["id"]
@@ -61,14 +76,7 @@ if lh:
 else:
     raise RuntimeError("CAEManufacturing_LH not found. Run SolutionInstaller first.")
 
-if sql_db:
-    SQLDB_NAME = sql_db["displayName"]
-    print(f"SQL Database: {SQLDB_NAME}")
-else:
-    print("WARNING: No SQL Database found.")
-    print("Create a Fabric SQL Database named 'CAEManufacturing_SQLDB' in the workspace,")
-    print("then re-run this notebook to set up the project management tables.")
-    SQLDB_NAME = None
+print(f"SQL Database JDBC: {'configured' if SQL_JDBC_CONNECTION_STRING else 'not configured (Lakehouse fallback)'}")
 
 # METADATA ********************
 
@@ -126,37 +134,24 @@ print("\nLakehouse tables loaded.")
 SQL_ENDPOINT = ""
 SQL_DBNAME = ""
 
-if SQLDB_NAME:
+if SQL_JDBC_CONNECTION_STRING:
     import pyodbc
+
+    # Parse server and database from the JDBC string
+    server_match = re.search(r'sqlserver://([^:;]+)', SQL_JDBC_CONNECTION_STRING)
+    db_match = re.search(r'database=\{?([^};]+)\}?', SQL_JDBC_CONNECTION_STRING)
+
+    if server_match and db_match:
+        SQL_ENDPOINT = server_match.group(1)
+        SQL_DBNAME = db_match.group(1)
+        print(f"SQL Server:   {SQL_ENDPOINT}")
+        print(f"SQL Database: {SQL_DBNAME}")
+    else:
+        print("ERROR: Could not parse JDBC string. Expected format:")
+        print("  jdbc:sqlserver://<server>:1433;database={<dbname>};...")
+
+if SQL_ENDPOINT and SQL_DBNAME:
     TOKEN_SQL = notebookutils.credentials.getToken("https://database.windows.net/")
-
-    # Discover the SQL endpoint from the Fabric API
-    sql_db_id = sql_db["id"]
-    detail_resp = requests.get(
-        f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/sqlDatabases/{sql_db_id}",
-        headers=headers,
-    )
-    print(f"SQL DB API response: {detail_resp.status_code}")
-    if detail_resp.status_code == 200:
-        db_info = detail_resp.json()
-        props = db_info.get("properties", {})
-        SQL_ENDPOINT = props.get("serverFqdn", "") or props.get("connectionString", "")
-        SQL_DBNAME = props.get("databaseName", SQLDB_NAME)
-        print(f"  Properties found: {list(props.keys())}")
-        print(f"  serverFqdn: {props.get('serverFqdn', 'N/A')}")
-        print(f"  databaseName: {props.get('databaseName', 'N/A')}")
-        print(f"  connectionString: {str(props.get('connectionString', 'N/A'))[:80]}")
-
-    if not SQL_ENDPOINT:
-        print("\nCould not auto-discover SQL endpoint.")
-        print("Open your SQL Database in Fabric > copy the Server from the connection string.")
-        print("It looks like: xxxx.datawarehouse.fabric.microsoft.com")
-        print("Paste it below and re-run:")
-        # SQL_ENDPOINT = "PASTE_HERE.datawarehouse.fabric.microsoft.com"
-        # SQL_DBNAME = "CAEManufacturing_SQLDB"
-
-if SQLDB_NAME and SQL_ENDPOINT:
-    print(f"\nConnecting to: {SQL_ENDPOINT} / {SQL_DBNAME}")
 
     conn_str = (
         f"Driver={{ODBC Driver 18 for SQL Server}};"
@@ -167,6 +162,7 @@ if SQLDB_NAME and SQL_ENDPOINT:
     token_bytes = TOKEN_SQL.encode("utf-16-le")
     token_struct = struct.pack(f"<I{len(token_bytes)}s", len(token_bytes), token_bytes)
 
+    print("Connecting...")
     conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
     conn.autocommit = True
     cursor = conn.cursor()
@@ -212,10 +208,10 @@ if SQLDB_NAME and SQL_ENDPOINT:
     conn.close()
     print("SQL tables ready.")
 else:
-    if SQLDB_NAME:
-        print("SQL endpoint not resolved. See instructions above.")
+    if SQL_JDBC_CONNECTION_STRING:
+        print("Could not parse JDBC string. Check the format.")
     else:
-        print("No SQL Database found. Project data will go to Lakehouse only.")
+        print("No SQL JDBC string provided. Project data will go to Lakehouse only.")
 
 # METADATA ********************
 
@@ -227,7 +223,7 @@ else:
 # CELL ********************
 
 # Step 4 - Load project data into SQL Database
-if SQLDB_NAME and SQL_ENDPOINT:
+if SQL_ENDPOINT and SQL_DBNAME:
     JDBC_URL = (
         f"jdbc:sqlserver://{SQL_ENDPOINT}:1433;"
         f"database={SQL_DBNAME};"
@@ -296,8 +292,8 @@ for _, table_name in LAKEHOUSE_CSVS:
     except Exception:
         print(f"  {table_name:30s} NOT FOUND")
 
-if SQLDB_NAME:
-    print(f"\nSQL Database ({SQLDB_NAME}):")
+if SQL_ENDPOINT and SQL_DBNAME:
+    print(f"\nSQL Database ({SQL_DBNAME}):")
     for _, table_name in SQL_CSVS:
         try:
             count = spark.read.jdbc(url=JDBC_URL, table=table_name, properties=jdbc_props).count()
@@ -316,12 +312,12 @@ else:
 print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
-if SQLDB_NAME:
-    print(f"\nProject tables are in SQL Database '{SQLDB_NAME}' (write-back enabled).")
+if SQL_ENDPOINT:
+    print(f"\nProject tables are in SQL Database '{SQL_DBNAME}' (write-back enabled).")
     print("Reference data is in Lakehouse Delta tables (read-only).")
 else:
     print("\nAll data is in Lakehouse Delta tables.")
-    print("To enable write-back, create a SQL Database and re-run.")
+    print("To enable write-back, paste the SQL JDBC string in the config cell and re-run.")
 print("\nNext: Open the GetStarted notebook.")
 
 # METADATA ********************
