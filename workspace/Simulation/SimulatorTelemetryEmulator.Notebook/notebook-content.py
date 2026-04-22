@@ -104,7 +104,7 @@ for s in sensor_defs:
 
     events.append({
         "timestamp": ts,
-        "simulator_id": s["simulator_id"],
+        "machine_id": s["machine_id"],
         "sensor_id": s["sensor_id"],
         "sensor_category": s["sensor_category"],
         "sensor_name": s["sensor_name"],
@@ -127,7 +127,7 @@ if EVENTHUB_CONNECTION_STRING:
 else:
     # Fallback: write to Lakehouse staging Delta table (configure Eventstream for production)
     df = spark.createDataFrame(events)
-    df.write.format("delta").mode("append").save(f"{BASE}/Tables/simulator_telemetry_raw")
+    df.write.format("delta").mode("append").save(f"{BASE}/Tables/machine_telemetry_raw")
     print(f"Wrote {len(events)} events to Lakehouse staging at {ts}")
     print("(Set EVENTHUB_CONNECTION_STRING to route to Eventstream -> Eventhouse)")
 

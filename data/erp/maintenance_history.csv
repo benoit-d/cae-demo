@@ -1,6 +1,8 @@
-maintenance_id,simulator_id,maintenance_type,system_affected,description,reported_date,started_date,completed_date,downtime_hours,root_cause,technician_email,parts_replaced,cost_usd
-MH-0901,SIM-001,Corrective,Hydraulics,Hydraulic pressure drop during motion test,2026-03-10,2026-03-10,2026-03-11,12,Worn servo valve seal,mc.dubois@caedemo.com,HYD-SV-100 x2,9400
-MH-0902,SIM-003,Preventive,Visual System,Scheduled projector lamp replacement,2026-01-15,2026-01-15,2026-01-15,4,Scheduled maintenance,sophie.lavoie@caedemo.com,VIS-LAMP-4K x3,2400
-MH-0903,SIM-001,Corrective,Motion Platform,Actuator #3 position drift detected,2026-02-22,2026-02-22,2026-02-24,36,Encoder calibration drift,jp.tremblay@caedemo.com,MP-ENC-350 x1,3200
-MH-0904,SIM-002,Preventive,Electrical,Annual electrical inspection during assembly,2026-03-05,2026-03-05,2026-03-05,2,Scheduled inspection,maria.garcia@contractco.com,,0
-MH-0905,SIM-003,Corrective,Environmental,Cooling loop flow rate below threshold,2026-03-08,2026-03-08,2026-03-08,3,Air trapped in coolant loop,cat.morin@caedemo.com,,0
+maintenance_id,machine_id,maintenance_type,system_affected,description,reported_date,started_date,completed_date,downtime_hours,root_cause,technician_email,parts_replaced,cost_usd
+MH-0901,MCH-001,Corrective,Spindle,Excessive spindle vibration during milling operation,2026-03-10,2026-03-10,2026-03-11,12,Worn spindle bearing,jp.tremblay@caedemo.com,Spindle bearing set,4200
+MH-0902,MCH-004,Preventive,Laser,Scheduled laser source recalibration,2026-01-15,2026-01-15,2026-01-15,4,Scheduled maintenance,sophie.lavoie@caedemo.com,Laser nozzle x2,1800
+MH-0903,MCH-005,Corrective,Hydraulic,Press brake ram position drift detected during bending,2026-02-22,2026-02-22,2026-02-24,36,Hydraulic seal wear,mc.dubois@caedemo.com,Hydraulic seal kit,850
+MH-0904,MCH-008,Preventive,Probe,Annual CMM probe calibration and air bearing service,2026-03-05,2026-03-05,2026-03-05,2,Scheduled calibration,david.chen@caedemo.com,,0
+MH-0905,MCH-011,Corrective,Heating,Reflow oven Zone 3 temperature controller fault,2026-03-08,2026-03-08,2026-03-08,3,Faulty thermocouple,cat.morin@caedemo.com,Type K thermocouple,120
+MH-0906,MCH-014,Preventive,Brake,Overhead crane annual brake inspection,2026-01-15,2026-01-15,2026-01-15,4,Scheduled inspection,nat.bouchard@caedemo.com,Brake pads x4,650
+MH-0907,MCH-007,Corrective,Wire,MIG welder wire feed motor stall during robotic welding,2026-04-02,2026-04-02,2026-04-03,8,Motor brush wear,ma.pelletier@caedemo.com,Feed motor brushes,280

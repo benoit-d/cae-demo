@@ -14,6 +14,7 @@ emps = lcsv(f"{BASE}/hr/employees.csv")
 skills = lcsv(f"{BASE}/hr/skills_certifications.csv")
 tasks = lcsv(f"{BASE}/sqldb/tasks.csv")
 projs = lcsv(f"{BASE}/sqldb/projects.csv")
+simulators = lcsv(f"{BASE}/erp/simulators.csv")
 machines = lcsv(f"{BASE}/erp/machines.csv")
 
 emp_emails = {e["email"] for e in emps}
@@ -21,7 +22,8 @@ email_to_id = {e["email"]: e["employee_id"] for e in emps}
 emp_skills = defaultdict(set)
 for s in skills:
     emp_skills[s["employee_id"]].add(s["skill_category"])
-sim_ids = {m["simulator_id"] for m in machines}
+sim_ids = {s["simulator_id"] for s in simulators}
+mach_ids = {m["machine_id"] for m in machines}
 
 errors = []
 
@@ -43,7 +45,7 @@ for t in tasks:
 
 for p in projs:
     if p["Simulator_ID"] not in sim_ids:
-        errors.append(f"{p['Project_ID']}: Simulator '{p['Simulator_ID']}' not in machines")
+        errors.append(f"{p['Project_ID']}: Simulator '{p['Simulator_ID']}' not in simulators")
 
 # 4) No overlapping bookings per employee
 bookings = defaultdict(list)
@@ -64,7 +66,7 @@ for email, periods in bookings.items():
                 f"vs {periods[i+1][2]} starts {periods[i+1][0]}"
             )
 
-print(f"Projects: {len(projs)}, Tasks: {len(tasks)}, Employees: {len(emps)}, Sims: {len(machines)}")
+print(f"Projects: {len(projs)}, Tasks: {len(tasks)}, Employees: {len(emps)}, Simulators: {len(simulators)}, Machines: {len(machines)}")
 if errors:
     print(f"\nERRORS ({len(errors)}):")
     for e in errors:
@@ -73,6 +75,6 @@ else:
     print("\nALL CHECKS PASSED")
     print("  - All Resource_Login emails exist in employees")
     print("  - All Skill_Requirements matched by assigned employee")
-    print("  - All Simulator_IDs exist in machines")
+    print("  - All Simulator_IDs exist in simulators")
     print("  - No actual dates in the future")
     print("  - No employee double-bookings")

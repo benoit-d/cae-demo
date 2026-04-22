@@ -11,13 +11,13 @@
 
 # MARKDOWN ********************
 
-# # Telemetry Fault Injection - SIM-001
+# # Machine Fault Injection - MCH-001 (5-Axis CNC Mill)
 # 
-# Manually run during a demo to simulate a hydraulic pump failure on SIM-001.
-# Sends degrading readings over 10 minutes (one batch per minute).
+# Simulates a spindle bearing failure on the DMG MORI 5-axis CNC mill.
+# Spindle vibration increases, spindle temperature rises, coolant flow drops,
+# axis accuracy degrades - triggering Warning then Critical alerts.
 # 
-# This is the ONE notebook that runs as a loop since the fault injection
-# needs to be a continuous degradation visible in the dashboard.
+# Run this manually during a demo. 10 batches over 10 minutes.
 
 # METADATA ********************
 
@@ -29,6 +29,7 @@
 # CELL ********************
 
 EVENTHUB_CONNECTION_STRING = ""  # SimulatorTelemetryStream connection string
+TARGET_MACHINE = "MCH-001"      # 5-Axis CNC Milling Center
 
 # METADATA ********************
 
@@ -64,21 +65,19 @@ BASE = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{LH_ID}"
 
 sensor_defs = [row.asDict() for row in
     spark.read.csv(f"{BASE}/Files/data/telemetry/sensor_definitions.csv", header=True, inferSchema=True)
-    .filter("simulator_id = 'SIM-001'").collect()]
-print(f"{len(sensor_defs)} SIM-001 sensors loaded")
+    .filter(f"machine_id = '{TARGET_MACHINE}'").collect()]
+print(f"{len(sensor_defs)} sensors loaded for {TARGET_MACHINE}")
 
+# Fault profile: spindle bearing failure on CNC mill
 FAULTS = {
-    "Hydraulic Pressure":          {"start": 0,  "rate": -60.0},
-    "Hydraulic Fluid Temperature": {"start": 2,  "rate":   3.5},
-    "Hydraulic Flow Rate":         {"start": 3,  "rate":  -4.0},
-    "Motion Platform Vibration X": {"start": 5,  "rate":   0.012},
-    "Motion Platform Vibration Y": {"start": 5,  "rate":   0.010},
-    "Base Frame Vibration":        {"start": 6,  "rate":   0.006},
-    "Motion Platform Temperature": {"start": 4,  "rate":   2.0},
-    "Power Consumption":           {"start": 3,  "rate":   5.0},
+    "Spindle Vibration":       {"start": 0,  "rate": 0.015},    # g increase per minute
+    "Spindle Temperature":     {"start": 1,  "rate": 3.0},      # C rise per minute
+    "Coolant Flow Rate":       {"start": 3,  "rate": -1.5},     # LPM drop per minute
+    "Axis Position Accuracy":  {"start": 5,  "rate": 0.001},    # mm drift per minute
+    "Power Consumption":       {"start": 2,  "rate": 2.0},      # kW rise per minute
 }
 
-INTERVAL = 60  # 1 minute between batches
+INTERVAL = 60
 DURATION_MIN = 10.0
 
 # METADATA ********************
@@ -93,7 +92,7 @@ DURATION_MIN = 10.0
 start = time.time()
 batch_num = 0
 
-print(f"Injecting fault on SIM-001 for {DURATION_MIN} min (1 batch/min)...\n")
+print(f"Injecting spindle bearing fault on {TARGET_MACHINE} for {DURATION_MIN} min...\n")
 
 try:
     while True:
@@ -121,7 +120,7 @@ try:
             else:                          lvl = "Normal"
 
             events.append({
-                "timestamp": ts, "simulator_id": "SIM-001",
+                "timestamp": ts, "machine_id": TARGET_MACHINE,
                 "sensor_id": s["sensor_id"], "sensor_category": s["sensor_category"],
                 "sensor_name": s["sensor_name"], "value": round(val, 4),
                 "unit": s["unit"], "alert_level": lvl, "is_anomaly": lvl != "Normal",
@@ -136,7 +135,7 @@ try:
                     b.add(EventData(json.dumps(e)))
                 p.send_batch(b)
         else:
-            spark.createDataFrame(events).write.format("delta").mode("append").save(f"{BASE}/Tables/simulator_telemetry_raw")
+            spark.createDataFrame(events).write.format("delta").mode("append").save(f"{BASE}/Tables/machine_telemetry_raw")
 
         w = sum(1 for e in events if e["alert_level"] == "Warning")
         c = sum(1 for e in events if e["alert_level"] == "Critical")
@@ -150,7 +149,7 @@ try:
 except KeyboardInterrupt:
     pass
 
-print(f"\nFault injection complete. {batch_num} batches over {DURATION_MIN} min.")
+print(f"\nFault injection complete. {batch_num} batches.")
 
 # METADATA ********************
 

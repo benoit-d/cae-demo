@@ -1,61 +1,76 @@
-sensor_id,simulator_id,sensor_category,sensor_name,unit,normal_min,normal_max,warning_min,warning_max,critical_min,critical_max
-SENS-001,SIM-001,Motion Platform,Pitch Actuator Position,degrees,-25.0,25.0,-28.0,28.0,-30.0,30.0
-SENS-002,SIM-001,Motion Platform,Roll Actuator Position,degrees,-22.0,22.0,-25.0,25.0,-27.0,27.0
-SENS-003,SIM-001,Motion Platform,Yaw Actuator Position,degrees,-30.0,30.0,-33.0,33.0,-35.0,35.0
-SENS-004,SIM-001,Hydraulics,Hydraulic Pressure,PSI,2800.0,3200.0,2600.0,3400.0,2400.0,3600.0
-SENS-005,SIM-001,Hydraulics,Hydraulic Fluid Temperature,Celsius,35.0,55.0,30.0,65.0,25.0,75.0
-SENS-006,SIM-001,Hydraulics,Hydraulic Flow Rate,LPM,40.0,80.0,35.0,90.0,30.0,100.0
-SENS-007,SIM-001,Thermal,Cockpit Display Temperature,Celsius,20.0,30.0,18.0,35.0,15.0,40.0
-SENS-008,SIM-001,Thermal,Motion Platform Temperature,Celsius,25.0,45.0,20.0,55.0,15.0,65.0
-SENS-009,SIM-001,Thermal,Power Supply Temperature,Celsius,30.0,50.0,25.0,60.0,20.0,70.0
-SENS-010,SIM-001,Electrical,Main Power Voltage AC,Volts,198.0,242.0,190.0,250.0,185.0,255.0
-SENS-011,SIM-001,Electrical,DC Bus Voltage 28V,Volts,27.0,29.0,26.5,29.5,26.0,30.0
-SENS-012,SIM-001,Electrical,Power Consumption,kW,45.0,120.0,40.0,140.0,35.0,160.0
-SENS-013,SIM-001,Visual System,Projector Brightness,Lumens,8000.0,12000.0,7000.0,13000.0,6000.0,14000.0
-SENS-014,SIM-001,Visual System,Image Generator GPU Temperature,Celsius,50.0,80.0,45.0,87.0,40.0,95.0
-SENS-015,SIM-001,Vibration,Motion Platform Vibration X,g,0.0,0.15,0.0,0.25,0.0,0.40
-SENS-016,SIM-001,Vibration,Motion Platform Vibration Y,g,0.0,0.15,0.0,0.25,0.0,0.40
-SENS-017,SIM-001,Vibration,Base Frame Vibration,g,0.0,0.05,0.0,0.10,0.0,0.20
-SENS-018,SIM-001,Control,Control Loading Torque Yoke,Nm,0.0,45.0,0.0,55.0,0.0,65.0
-SENS-019,SIM-001,Environmental,Cooling System Flow Rate,LPM,50.0,120.0,40.0,130.0,30.0,140.0
-SENS-020,SIM-001,Environmental,Ambient Temperature,Celsius,18.0,26.0,16.0,30.0,14.0,35.0
-SENS-021,SIM-002,Motion Platform,Pitch Actuator Position,degrees,-25.0,25.0,-28.0,28.0,-30.0,30.0
-SENS-022,SIM-002,Motion Platform,Roll Actuator Position,degrees,-22.0,22.0,-25.0,25.0,-27.0,27.0
-SENS-023,SIM-002,Motion Platform,Yaw Actuator Position,degrees,-30.0,30.0,-33.0,33.0,-35.0,35.0
-SENS-024,SIM-002,Hydraulics,Hydraulic Pressure,PSI,2800.0,3200.0,2600.0,3400.0,2400.0,3600.0
-SENS-025,SIM-002,Hydraulics,Hydraulic Fluid Temperature,Celsius,35.0,55.0,30.0,65.0,25.0,75.0
-SENS-026,SIM-002,Hydraulics,Hydraulic Flow Rate,LPM,40.0,80.0,35.0,90.0,30.0,100.0
-SENS-027,SIM-002,Thermal,Cockpit Display Temperature,Celsius,20.0,30.0,18.0,35.0,15.0,40.0
-SENS-028,SIM-002,Thermal,Motion Platform Temperature,Celsius,25.0,45.0,20.0,55.0,15.0,65.0
-SENS-029,SIM-002,Thermal,Power Supply Temperature,Celsius,30.0,50.0,25.0,60.0,20.0,70.0
-SENS-030,SIM-002,Electrical,Main Power Voltage AC,Volts,198.0,242.0,190.0,250.0,185.0,255.0
-SENS-031,SIM-002,Electrical,DC Bus Voltage 28V,Volts,27.0,29.0,26.5,29.5,26.0,30.0
-SENS-032,SIM-002,Electrical,Power Consumption,kW,45.0,120.0,40.0,140.0,35.0,160.0
-SENS-033,SIM-002,Visual System,Projector Brightness,Lumens,8000.0,12000.0,7000.0,13000.0,6000.0,14000.0
-SENS-034,SIM-002,Visual System,Image Generator GPU Temperature,Celsius,50.0,80.0,45.0,87.0,40.0,95.0
-SENS-035,SIM-002,Vibration,Motion Platform Vibration X,g,0.0,0.15,0.0,0.25,0.0,0.40
-SENS-036,SIM-002,Vibration,Motion Platform Vibration Y,g,0.0,0.15,0.0,0.25,0.0,0.40
-SENS-037,SIM-002,Vibration,Base Frame Vibration,g,0.0,0.05,0.0,0.10,0.0,0.20
-SENS-038,SIM-002,Control,Control Loading Torque Yoke,Nm,0.0,45.0,0.0,55.0,0.0,65.0
-SENS-039,SIM-002,Environmental,Cooling System Flow Rate,LPM,50.0,120.0,40.0,130.0,30.0,140.0
-SENS-040,SIM-002,Environmental,Ambient Temperature,Celsius,18.0,26.0,16.0,30.0,14.0,35.0
-SENS-041,SIM-003,Motion Platform,Pitch Actuator Position,degrees,-25.0,25.0,-28.0,28.0,-30.0,30.0
-SENS-042,SIM-003,Motion Platform,Roll Actuator Position,degrees,-22.0,22.0,-25.0,25.0,-27.0,27.0
-SENS-043,SIM-003,Motion Platform,Yaw Actuator Position,degrees,-30.0,30.0,-33.0,33.0,-35.0,35.0
-SENS-044,SIM-003,Hydraulics,Hydraulic Pressure,PSI,2800.0,3200.0,2600.0,3400.0,2400.0,3600.0
-SENS-045,SIM-003,Hydraulics,Hydraulic Fluid Temperature,Celsius,35.0,55.0,30.0,65.0,25.0,75.0
-SENS-046,SIM-003,Hydraulics,Hydraulic Flow Rate,LPM,40.0,80.0,35.0,90.0,30.0,100.0
-SENS-047,SIM-003,Thermal,Cockpit Display Temperature,Celsius,20.0,30.0,18.0,35.0,15.0,40.0
-SENS-048,SIM-003,Thermal,Motion Platform Temperature,Celsius,25.0,45.0,20.0,55.0,15.0,65.0
-SENS-049,SIM-003,Thermal,Power Supply Temperature,Celsius,30.0,50.0,25.0,60.0,20.0,70.0
-SENS-050,SIM-003,Electrical,Main Power Voltage AC,Volts,198.0,242.0,190.0,250.0,185.0,255.0
-SENS-051,SIM-003,Electrical,DC Bus Voltage 28V,Volts,27.0,29.0,26.5,29.5,26.0,30.0
-SENS-052,SIM-003,Electrical,Power Consumption,kW,45.0,120.0,40.0,140.0,35.0,160.0
-SENS-053,SIM-003,Visual System,Projector Brightness,Lumens,8000.0,12000.0,7000.0,13000.0,6000.0,14000.0
-SENS-054,SIM-003,Visual System,Image Generator GPU Temperature,Celsius,50.0,80.0,45.0,87.0,40.0,95.0
-SENS-055,SIM-003,Vibration,Motion Platform Vibration X,g,0.0,0.15,0.0,0.25,0.0,0.40
-SENS-056,SIM-003,Vibration,Motion Platform Vibration Y,g,0.0,0.15,0.0,0.25,0.0,0.40
-SENS-057,SIM-003,Vibration,Base Frame Vibration,g,0.0,0.05,0.0,0.10,0.0,0.20
-SENS-058,SIM-003,Control,Control Loading Torque Yoke,Nm,0.0,45.0,0.0,55.0,0.0,65.0
-SENS-059,SIM-003,Environmental,Cooling System Flow Rate,LPM,50.0,120.0,40.0,130.0,30.0,140.0
-SENS-060,SIM-003,Environmental,Ambient Temperature,Celsius,18.0,26.0,16.0,30.0,14.0,35.0
+sensor_id,machine_id,sensor_category,sensor_name,unit,normal_min,normal_max,warning_min,warning_max,critical_min,critical_max
+SENS-001,MCH-001,Spindle,Spindle Speed,RPM,4000,12000,3500,13000,3000,14000
+SENS-002,MCH-001,Spindle,Spindle Temperature,Celsius,30,55,25,65,20,75
+SENS-003,MCH-001,Vibration,Spindle Vibration,g,0.0,0.08,0.0,0.15,0.0,0.25
+SENS-004,MCH-001,Coolant,Coolant Flow Rate,LPM,8,20,6,25,4,30
+SENS-005,MCH-001,Coolant,Coolant Temperature,Celsius,15,30,12,35,10,40
+SENS-006,MCH-001,Power,Power Consumption,kW,5,25,4,30,3,35
+SENS-007,MCH-001,Axis,Axis Position Accuracy,mm,-0.005,0.005,-0.01,0.01,-0.02,0.02
+SENS-008,MCH-002,Spindle,Spindle Speed,RPM,3000,10000,2500,11000,2000,12000
+SENS-009,MCH-002,Spindle,Spindle Temperature,Celsius,30,55,25,65,20,75
+SENS-010,MCH-002,Vibration,Spindle Vibration,g,0.0,0.10,0.0,0.18,0.0,0.30
+SENS-011,MCH-002,Coolant,Coolant Flow Rate,LPM,6,18,5,22,3,26
+SENS-012,MCH-002,Power,Power Consumption,kW,4,20,3,25,2,30
+SENS-013,MCH-003,Spindle,Spindle Speed,RPM,500,4000,400,4500,300,5000
+SENS-014,MCH-003,Spindle,Spindle Temperature,Celsius,28,50,24,60,20,70
+SENS-015,MCH-003,Chuck,Chuck Pressure,bar,15,30,12,35,10,40
+SENS-016,MCH-003,Vibration,Spindle Vibration,g,0.0,0.06,0.0,0.12,0.0,0.20
+SENS-017,MCH-003,Coolant,Coolant Flow Rate,LPM,5,15,4,18,3,22
+SENS-018,MCH-003,Power,Power Consumption,kW,3,18,2,22,1,26
+SENS-019,MCH-004,Laser,Laser Power,W,500,4000,400,4500,300,5000
+SENS-020,MCH-004,Laser,Beam Alignment,mm,-0.05,0.05,-0.1,0.1,-0.2,0.2
+SENS-021,MCH-004,Gas,Assist Gas Pressure,bar,8,20,6,24,4,28
+SENS-022,MCH-004,Thermal,Nozzle Temperature,Celsius,40,80,35,90,30,100
+SENS-023,MCH-004,Exhaust,Exhaust Flow Rate,m3/min,5,15,4,18,3,22
+SENS-024,MCH-004,Power,Power Consumption,kW,10,40,8,45,6,50
+SENS-025,MCH-005,Hydraulic,Ram Pressure,bar,100,250,80,280,60,320
+SENS-026,MCH-005,Hydraulic,Hydraulic Oil Temperature,Celsius,30,55,25,65,20,75
+SENS-027,MCH-005,Hydraulic,Hydraulic Oil Level,Percent,70,100,60,100,50,100
+SENS-028,MCH-005,Position,Ram Position Accuracy,mm,-0.05,0.05,-0.1,0.1,-0.2,0.2
+SENS-029,MCH-005,Power,Power Consumption,kW,8,30,6,35,4,40
+SENS-030,MCH-006,Arc,Arc Voltage,V,10,18,8,22,6,26
+SENS-031,MCH-006,Arc,Welding Current,A,80,250,60,280,40,320
+SENS-032,MCH-006,Gas,Shielding Gas Flow,LPM,8,15,6,18,4,22
+SENS-033,MCH-006,Thermal,Interpass Temperature,Celsius,20,150,15,180,10,220
+SENS-034,MCH-006,Thermal,Torch Temperature,Celsius,30,80,25,100,20,120
+SENS-035,MCH-007,Arc,Arc Voltage,V,18,30,15,34,12,38
+SENS-036,MCH-007,Arc,Welding Current,A,100,350,80,400,60,450
+SENS-037,MCH-007,Wire,Wire Feed Speed,m/min,3,15,2,18,1,22
+SENS-038,MCH-007,Gas,Shielding Gas Flow,LPM,12,22,10,26,8,30
+SENS-039,MCH-007,Power,Power Consumption,kW,5,25,4,30,3,35
+SENS-040,MCH-008,Probe,Probe Deflection,um,-2.0,2.0,-3.5,3.5,-5.0,5.0
+SENS-041,MCH-008,Air,Air Bearing Pressure,bar,4.0,6.0,3.5,6.5,3.0,7.0
+SENS-042,MCH-008,Thermal,Enclosure Temperature,Celsius,19.5,20.5,19.0,21.0,18.5,21.5
+SENS-043,MCH-008,Vibration,Floor Vibration,um,0.0,0.5,0.0,1.0,0.0,2.0
+SENS-044,MCH-008,Accuracy,Measurement Accuracy Delta,um,0.0,1.5,0.0,2.5,0.0,4.0
+SENS-045,MCH-009,Wire,Wire Tension,N,8,18,6,22,4,26
+SENS-046,MCH-009,Dielectric,Dielectric Conductivity,uS/cm,1,10,0.5,15,0.2,20
+SENS-047,MCH-009,Dielectric,Dielectric Temperature,Celsius,18,28,15,32,12,36
+SENS-048,MCH-009,Power,Discharge Power,W,50,500,40,600,30,700
+SENS-049,MCH-010,Thermal,Soldering Iron Temperature,Celsius,315,365,300,380,280,400
+SENS-050,MCH-010,Environment,Station Humidity,Percent,30,60,25,70,20,80
+SENS-051,MCH-010,ESD,ESD Wrist Strap Voltage,V,0.0,0.5,0.0,1.0,0.0,5.0
+SENS-052,MCH-010,Power,Power Consumption,kW,0.5,3,0.3,4,0.2,5
+SENS-053,MCH-011,Zone1,Preheat Zone Temperature,Celsius,140,160,130,170,120,180
+SENS-054,MCH-011,Zone2,Soak Zone Temperature,Celsius,160,190,150,200,140,210
+SENS-055,MCH-011,Zone3,Reflow Zone Temperature,Celsius,230,250,220,260,210,270
+SENS-056,MCH-011,Zone4,Cooling Zone Temperature,Celsius,25,60,20,70,15,80
+SENS-057,MCH-011,Conveyor,Conveyor Speed,cm/min,40,80,35,90,30,100
+SENS-058,MCH-012,Chamber,Build Chamber Temperature,Celsius,35,80,30,90,25,100
+SENS-059,MCH-012,Laser,Laser Power,W,200,400,180,440,160,480
+SENS-060,MCH-012,Gas,Inert Gas O2 Level,ppm,0,100,0,500,0,1000
+SENS-061,MCH-012,Powder,Powder Bed Temperature,Celsius,40,120,35,140,30,160
+SENS-062,MCH-012,Power,Power Consumption,kW,8,30,6,35,4,40
+SENS-063,MCH-013,Airflow,Booth Airflow,m3/min,15,30,12,35,10,40
+SENS-064,MCH-013,Humidity,Booth Humidity,Percent,40,60,35,70,30,80
+SENS-065,MCH-013,Thermal,Booth Temperature,Celsius,18,25,16,28,14,32
+SENS-066,MCH-013,Filter,Filter Differential Pressure,Pa,50,250,40,350,30,500
+SENS-067,MCH-014,Load,Hoist Load,tonnes,0,45,0,48,0,50
+SENS-068,MCH-014,Position,Bridge Position,m,0,40,0,40,0,40
+SENS-069,MCH-014,Motor,Hoist Motor Temperature,Celsius,30,70,25,80,20,90
+SENS-070,MCH-014,Brake,Brake Pad Thickness,mm,4,12,3,12,2,12
+SENS-071,MCH-015,Hydraulic,Test Pressure,PSI,0,5000,0,5500,0,6000
+SENS-072,MCH-015,Hydraulic,Oil Temperature,Celsius,30,55,25,65,20,75
+SENS-073,MCH-015,Hydraulic,Flow Rate,LPM,10,80,8,90,5,100
+SENS-074,MCH-015,Vibration,Pump Vibration,g,0.0,0.10,0.0,0.20,0.0,0.35
+SENS-075,MCH-015,Power,Power Consumption,kW,5,30,4,35,3,40

@@ -126,11 +126,12 @@ DDL = [
     "IF OBJECT_ID('erp.projects') IS NOT NULL DROP TABLE erp.projects",
     "IF OBJECT_ID('erp.task_type_durations') IS NOT NULL DROP TABLE erp.task_type_durations",
     "IF OBJECT_ID('erp.maintenance_history') IS NOT NULL DROP TABLE erp.maintenance_history",
+    "IF OBJECT_ID('erp.sensor_definitions') IS NOT NULL DROP TABLE erp.sensor_definitions",
     "IF OBJECT_ID('erp.purchase_orders') IS NOT NULL DROP TABLE erp.purchase_orders",
     "IF OBJECT_ID('erp.inventory') IS NOT NULL DROP TABLE erp.inventory",
     "IF OBJECT_ID('erp.bill_of_materials') IS NOT NULL DROP TABLE erp.bill_of_materials",
     "IF OBJECT_ID('erp.machines') IS NOT NULL DROP TABLE erp.machines",
-    "IF OBJECT_ID('erp.sensor_definitions') IS NOT NULL DROP TABLE erp.sensor_definitions",
+    "IF OBJECT_ID('erp.simulators') IS NOT NULL DROP TABLE erp.simulators",
     "IF OBJECT_ID('hr.employee_agreements') IS NOT NULL DROP TABLE hr.employee_agreements",
     "IF OBJECT_ID('hr.contractual_workforce') IS NOT NULL DROP TABLE hr.contractual_workforce",
     "IF OBJECT_ID('hr.leave_of_absence') IS NOT NULL DROP TABLE hr.leave_of_absence",
@@ -183,12 +184,19 @@ DDL = [
         provision_name NVARCHAR(50), description NVARCHAR(500),
         impacts_scheduling NVARCHAR(5))""",
     # --- ERP tables (no constraints yet) ---
-    """CREATE TABLE erp.machines (
+    """CREATE TABLE erp.simulators (
         simulator_id NVARCHAR(10), simulator_model NVARCHAR(20),
         bay_id NVARCHAR(10), bay_name NVARCHAR(50), status NVARCHAR(20),
         customer NVARCHAR(50), aircraft_type NVARCHAR(50),
         serial_number NVARCHAR(20), build_start_date DATE,
         target_delivery_date DATE)""",
+    """CREATE TABLE erp.machines (
+        machine_id NVARCHAR(10), machine_type NVARCHAR(20),
+        machine_name NVARCHAR(100), manufacturer NVARCHAR(50),
+        model NVARCHAR(50), serial_number NVARCHAR(20),
+        location NVARCHAR(20), zone NVARCHAR(30),
+        install_date DATE, last_service_date DATE,
+        status NVARCHAR(20), next_pm_date DATE)""",
     """CREATE TABLE erp.task_type_durations (
         Task_Type NVARCHAR(50), Task_Name NVARCHAR(100),
         Standard_Duration INT, Required_Skill NVARCHAR(50),
@@ -211,7 +219,7 @@ DDL = [
         status NVARCHAR(20), destination_simulator NVARCHAR(10),
         notes NVARCHAR(200))""",
     """CREATE TABLE erp.maintenance_history (
-        maintenance_id NVARCHAR(10), simulator_id NVARCHAR(10),
+        maintenance_id NVARCHAR(10), machine_id NVARCHAR(10),
         maintenance_type NVARCHAR(20), system_affected NVARCHAR(30),
         description NVARCHAR(500), reported_date DATE, started_date DATE,
         completed_date DATE, downtime_hours FLOAT, root_cause NVARCHAR(200),
@@ -233,7 +241,7 @@ DDL = [
         Resource_Login NVARCHAR(100), Complete_Percentage INT,
         Last_Modified_By NVARCHAR(100), Last_Modified_On DATE)""",
     """CREATE TABLE erp.sensor_definitions (
-        sensor_id NVARCHAR(10), simulator_id NVARCHAR(10),
+        sensor_id NVARCHAR(10), machine_id NVARCHAR(10),
         sensor_category NVARCHAR(30), sensor_name NVARCHAR(50),
         unit NVARCHAR(20), normal_min FLOAT, normal_max FLOAT,
         warning_min FLOAT, warning_max FLOAT,
@@ -290,6 +298,7 @@ ALL_TABLES = [
     ("data/hr/leave_of_absence.csv",       "hr.leave_of_absence"),
     ("data/hr/contractual_workforce.csv",  "hr.contractual_workforce"),
     ("data/hr/employee_agreements.csv",    "hr.employee_agreements"),
+    ("data/erp/simulators.csv",            "erp.simulators"),
     ("data/erp/machines.csv",              "erp.machines"),
     ("data/erp/task_type_durations.csv",   "erp.task_type_durations"),
     ("data/erp/bill_of_materials.csv",     "erp.bill_of_materials"),
@@ -337,7 +346,8 @@ CONSTRAINTS = [
     "ALTER TABLE hr.leave_of_absence ADD CONSTRAINT PK_leave_of_absence PRIMARY KEY (leave_id)",
     "ALTER TABLE hr.contractual_workforce ADD CONSTRAINT PK_contractual_workforce PRIMARY KEY (contract_id)",
     "ALTER TABLE hr.employee_agreements ADD CONSTRAINT PK_employee_agreements PRIMARY KEY (agreement_id)",
-    "ALTER TABLE erp.machines ADD CONSTRAINT PK_machines PRIMARY KEY (simulator_id)",
+    "ALTER TABLE erp.simulators ADD CONSTRAINT PK_simulators PRIMARY KEY (simulator_id)",
+    "ALTER TABLE erp.machines ADD CONSTRAINT PK_machines PRIMARY KEY (machine_id)",
     "ALTER TABLE erp.task_type_durations ADD CONSTRAINT PK_task_type_durations PRIMARY KEY (Task_Type)",
     "ALTER TABLE erp.bill_of_materials ADD CONSTRAINT PK_bill_of_materials PRIMARY KEY (bom_id)",
     "ALTER TABLE erp.inventory ADD CONSTRAINT PK_inventory PRIMARY KEY (part_number)",
@@ -353,11 +363,11 @@ CONSTRAINTS = [
     "ALTER TABLE hr.leave_of_absence ADD CONSTRAINT FK_leave_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     "ALTER TABLE hr.contractual_workforce ADD CONSTRAINT FK_contract_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     # --- Foreign Keys: ERP ---
-    "ALTER TABLE erp.maintenance_history ADD CONSTRAINT FK_maint_simulator FOREIGN KEY (simulator_id) REFERENCES erp.machines(simulator_id)",
-    "ALTER TABLE erp.projects ADD CONSTRAINT FK_project_simulator FOREIGN KEY (Simulator_ID) REFERENCES erp.machines(simulator_id)",
+    "ALTER TABLE erp.maintenance_history ADD CONSTRAINT FK_maint_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
+    "ALTER TABLE erp.projects ADD CONSTRAINT FK_project_simulator FOREIGN KEY (Simulator_ID) REFERENCES erp.simulators(simulator_id)",
     "ALTER TABLE erp.tasks ADD CONSTRAINT FK_task_project FOREIGN KEY (Parent_Project_ID) REFERENCES erp.projects(Project_ID)",
     "ALTER TABLE erp.tasks ADD CONSTRAINT FK_task_type FOREIGN KEY (Task_Type) REFERENCES erp.task_type_durations(Task_Type)",
-    "ALTER TABLE erp.sensor_definitions ADD CONSTRAINT FK_sensor_simulator FOREIGN KEY (simulator_id) REFERENCES erp.machines(simulator_id)",
+    "ALTER TABLE erp.sensor_definitions ADD CONSTRAINT FK_sensor_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
 ]
 
 print("Adding primary keys and foreign keys...\n")
