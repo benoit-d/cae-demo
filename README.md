@@ -1,199 +1,246 @@
 # CAE Flight Simulator Manufacturing Demo
 
-A comprehensive Fabric Jumpstart solution accelerator that demonstrates agentic capacity management for a **CAE-style flight simulator manufacturing facility** using Microsoft Fabric and Azure AI Foundry.
+An end-to-end **Microsoft Fabric** demo that simulates a CAE-style flight simulator manufacturing facility in Montreal. It combines real-time machine telemetry, workforce management, project scheduling, and agentic AI to demonstrate capacity optimisation across a factory floor.
 
-## Overview
+## The Story
 
-This demo simulates a manufacturing floor where full-flight simulators (FFS) are built, tested, and maintained. It demonstrates how **agentic AI workflows** can optimize worker scheduling, predictive maintenance, and capacity management by reasoning across multiple real-time and batch data sources.
+CAE builds full-flight simulators (FFS) for airlines worldwide. Each simulator is a multi-million-dollar machine assembled from precision-machined parts, hydraulic systems, avionics, visual projections, and control loading systems.
 
-### Business Scenario
+This demo models **8 concurrent simulator build projects** for customers including Air Canada, Lufthansa, Emirates, Delta, United, WestJet, Air France, and Qatar Airways. A team of **12 workers** (10 FTEs + 2 contractors) builds these simulators using **15 manufacturing machines** — CNC mills, lathes, laser cutters, welders, CMMs, and more.
 
-CAE is a global leader in training for civil aviation, defense, and healthcare. Their flight simulators are complex, high-value machines with hundreds of sensors. This demo models:
-
-- **Manufacturing floor** with multiple simulator bays, each assembling/testing flight simulators
-- **Real-time machine telemetry** monitoring simulator health during testing and burn-in
-- **Workforce management** with skills-based scheduling, shift optimization, and proactive reassignment
-- **ERP integration** for work orders, parts inventory, and production scheduling
-- **Agentic AI** that reasons across all sources to make scheduling and maintenance decisions
-
-### Key Capabilities
-
-- **Proactive Maintenance Planning**: Detect anomalies in simulator telemetry → schedule maintenance → reassign workers
-- **Capacity Optimization**: Maximize manufacturing bay utilization by intelligently scheduling work
-- **Skills-Based Assignment**: Match workers to tasks based on certifications, physical limitations, shift preferences
-- **Schedule Reasoning**: AI agent explains *why* it recommends specific changes (e.g., "Moved Jean-Pierre to Bay 3 because Bay 1 needs hydraulic maintenance and he's certified for Bay 3 electrical work")
-- **Teams Integration**: Notify employees via Microsoft Teams when schedules change
+The AI agent reasons across all data sources to:
+- Detect machine health issues from telemetry and schedule preventive maintenance
+- Reassign workers based on skills, certifications, physical limitations, and union rules
+- Optimise the project schedule when tasks slip or resources become unavailable
+- Explain every decision with full reasoning
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                        External / On-Prem Sources                           │
-├──────────────────┬──────────────────┬──────────────────┬─────────────────────┤
-│ Simulator        │ Clock-In/        │ Oracle ERP       │ HR System           │
-│ Telemetry (IoT)  │ Milestone Events │ (Work Orders,    │ (Skills, Schedules, │
-│                  │                  │  BOM, Inventory)  │  Certifications)    │
-└────────┬─────────┴────────┬─────────┴────────┬─────────┴──────────┬──────────┘
-         │                  │                  │                    │
-         ▼                  ▼                  ▼                    ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                        Microsoft Fabric Workspace                           │
-│                                                                              │
-│  ┌─────────────────┐  ┌──────────────────┐  ┌────────────────────────────┐  │
-│  │ SimulatorTelemetry│  │ ClockInEvents     │  │ ManufacturingERP           │  │
-│  │ Eventstream       │  │ Eventstream       │  │ Lakehouse (Delta Tables)   │  │
-│  └────────┬──────────┘  └────────┬──────────┘  │  - work_orders             │  │
-│           │                      │              │  - bill_of_materials       │  │
-│           ▼                      ▼              │  - purchase_orders         │  │
-│  ┌─────────────────────────────────────┐       │  - inventory               │  │
-│  │ ManufacturingEventhouse (KQL DB)    │       │  - production_schedule     │  │
-│  │  - SimulatorTelemetry table         │       │  - machines                │  │
-│  │  - ClockInEvents table              │       │  - maintenance_history     │  │
-│  │  - MaintenanceAlerts table          │       └────────────────────────────┘  │
-│  └────────┬──────────────────┬─────────┘                                      │
-│           │                  │              ┌────────────────────────────────┐  │
-│           ▼                  ▼              │ HRData Lakehouse              │  │
-│  ┌──────────────┐  ┌──────────────────┐   │  - employees                  │  │
-│  │ Maintenance   │  │ Capacity Mgmt    │   │  - skills_certifications      │  │
-│  │ Activator     │  │ KQL Dashboard    │   │  - employee_schedules         │  │
-│  └──────┬───────┘  └──────────────────┘   │  - leave_of_absence           │  │
-│         │                                  │  - physical_limitations       │  │
-│         ▼                                  │  - contractual_workforce      │  │
-│  ┌──────────────────────────────────┐     └────────────────────────────────┘  │
-│  │ Azure AI Foundry Agent           │                                         │
-│  │  - Capacity Management Agent     │◄──── Reasons across ALL data sources    │
-│  │  - Schedule Optimizer Agent      │                                         │
-│  │  - Maintenance Planner Agent     │───── Sends Teams notifications          │
-│  └──────────────────────────────────┘                                         │
-│                                                                                │
-│  ┌──────────────────────────────────────────────────────────────────────────┐  │
-│  │ Power BI Reports                                                         │  │
-│  │  - Manufacturing Floor Overview    - Worker Schedule Heatmap             │  │
-│  │  - Simulator Health Dashboard      - Capacity Utilization               │  │
-│  └──────────────────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────┘
+                        ┌─────────────────────────────────────────┐
+                        │         Microsoft Fabric Workspace       │
+                        ├─────────────────────────────────────────┤
+                        │                                         │
+  Manufacturing         │   ┌─────────────┐    ┌──────────────┐  │
+  Machines (15)    ────►│   │ Eventstream  │───►│  Eventhouse   │  │
+  Telemetry             │   │             │    │  (KQL DB)    │  │
+                        │   └─────────────┘    └──────────────┘  │
+  Workforce             │   ┌─────────────┐           │          │
+  Clock-in/out     ────►│   │ Eventstream  │───►       │          │
+  Task events           │   └─────────────┘           ▼          │
+                        │                     ┌──────────────┐   │
+                        │                     │  Power BI     │   │
+  Reference Data        │   ┌─────────────┐   │  Dashboards   │   │
+  HR, BOM, Inventory───►│   │ SQL Database │──►│  Gantt Chart  │   │
+  Projects, Tasks       │   │  hr.*        │   └──────────────┘   │
+                        │   │  erp.*       │          │          │
+                        │   └──────┬───────┘          │          │
+                        │          │                  │          │
+                        │          ▼                  ▼          │
+                        │   ┌─────────────────────────────┐      │
+                        │   │  AI Agent (Foundry)          │      │
+                        │   │  Capacity Management         │      │
+                        │   └─────────────────────────────┘      │
+                        └─────────────────────────────────────────┘
 ```
 
-## Data Sources
+## Data Stores
 
-### 1. Simulator Telemetry (Real-Time Eventstream)
-Telemetry from flight simulators under test/burn-in. Each simulator has 30+ sensors:
+| Store | Schema | Tables | Purpose |
+|---|---|---|---|
+| **SQL Database** | `hr` | employees, skills_certifications, employee_schedules, physical_limitations, leave_of_absence, contractual_workforce, employee_agreements | Workforce data with CRUD |
+| **SQL Database** | `erp` | simulators, machines, projects, tasks, task_type_durations, bill_of_materials, inventory, purchase_orders, maintenance_history, sensor_definitions | Manufacturing + project management |
+| **Eventhouse** (KQL) | — | machine_telemetry, clockin_events | Real-time event data |
+| **Lakehouse** | — | CSV files in Files/ | Staging only (deployment) |
 
-| Sensor Category | Measures |
+## Manufacturing Machines (15)
+
+| ID | Type | Machine | Manufacturer | Zone |
+|---|---|---|---|---|
+| MCH-001 | CNC Mill | 5-Axis CNC Milling Center | DMG MORI | Machining |
+| MCH-002 | CNC Mill | 3-Axis CNC Milling Machine | Haas | Machining |
+| MCH-003 | CNC Lathe | CNC Turning Center | Mazak | Machining |
+| MCH-004 | Laser Cutter | Fiber Laser Cutting System | Trumpf | Sheet Metal |
+| MCH-005 | Press Brake | CNC Hydraulic Press Brake | Amada | Sheet Metal |
+| MCH-006 | TIG Welder | Automated TIG Welding Cell | Lincoln Electric | Welding |
+| MCH-007 | MIG Welder | Robotic MIG Welding Cell | Fanuc | Welding |
+| MCH-008 | CMM | Coordinate Measuring Machine | Zeiss | Quality |
+| MCH-009 | Wire EDM | Wire EDM Machine | Sodick | Machining |
+| MCH-010 | Electronics | Electronics Assembly Station | Juki | Electronics |
+| MCH-011 | Reflow Oven | SMT Reflow Oven | Heller | Electronics |
+| MCH-012 | 3D Printer | Metal Additive Manufacturing | EOS | Additive |
+| MCH-013 | Paint Booth | Downdraft Paint Spray Booth | Global Finishing | Finishing |
+| MCH-014 | Crane | 50-Ton Overhead Bridge Crane | Konecranes | Assembly |
+| MCH-015 | Hydraulic Test | Hydraulic Test Bench | Parker Hannifin | Test |
+
+**75 sensors** across all machines — spindle speed/temperature/vibration, coolant flow, laser power, arc voltage, welding current, probe deflection, reflow zone temperatures, and more.
+
+## Simulator Projects (8)
+
+| Project | Simulator | Customer | Status (Apr 21, 2026) |
+|---|---|---|---|
+| PRJ-003 | SIM-003 Boeing 777X | Emirates | 100% Delivered |
+| PRJ-001 | SIM-001 Boeing 737 MAX | Air Canada | 84% Qualification Testing |
+| PRJ-002 | SIM-002 Airbus A320neo | Lufthansa | 30% Cockpit Integration |
+| PRJ-006 | SIM-006 Boeing 737 MAX | WestJet | 15% Hydraulics |
+| PRJ-007 | SIM-007 Airbus A320neo | Air France | 0% Planned |
+| PRJ-004 | SIM-004 Airbus A350 | Delta Airlines | 0% Planned |
+| PRJ-005 | SIM-005 Boeing 787 | United Airlines | 0% Planned |
+| PRJ-008 | SIM-008 Boeing 777X | Qatar Airways | 0% Planned |
+
+Each project has **13 tasks** with finish-to-start dependencies, skill requirements, and a standard duration from the `task_type_durations` reference table. The Gantt structure is Power BI-compatible (Task Name, Start, Duration, % Complete, Resource).
+
+## Workforce (12 workers + 1 PM)
+
+| Employee | Type | Specialty | Limitation |
+|---|---|---|---|
+| Jean-Pierre Tremblay | FTE Senior | Motion Systems | Back — 25kg lift max |
+| Marie-Claire Dubois | FTE | Hydraulics | — |
+| Luc Bergeron | FTE Senior | Electrical | Knee — no ladders |
+| Sophie Lavoie | FTE | Visual Systems | — |
+| Philippe Gagnon | FTE Senior | Avionics | Hearing — noise restricted |
+| Marc-André Pelletier | FTE Senior | Hydraulics (Night) | Respiratory — no chemicals |
+| Catherine Morin | FTE | Electrical | — |
+| François Côté | FTE | Motion Systems | — |
+| David Chen | FTE | Test Engineering | — |
+| Nathalie Bouchard | FTE | Structures | — |
+| James Taylor | Contractor | Hydraulics | — |
+| Maria Garcia | Contractor | Electrical | — |
+| **Daniel Fortin** | **PM** | **Production Manager** | — |
+
+## Repo Structure
+
+```
+cae-demo/
+├── deploy/
+│   └── SolutionInstaller.ipynb          # Import into Fabric → Run All
+├── workspace/                           # Published by fabric-cicd
+│   ├── CAEManufacturing_LH.Lakehouse/   # Staging Lakehouse
+│   ├── CAEManufacturingEH.Eventhouse/   # Real-time telemetry store
+│   ├── GetStarted.Notebook/             # Guided walkthrough
+│   ├── Install/
+│   │   ├── PostDeploymentConfig.Notebook/ # Creates SQL tables, loads data
+│   │   └── LoadData.Notebook/
+│   ├── Simulation/
+│   │   ├── SimulatorTelemetryEmulator.Notebook/  # Single-shot, pipeline-scheduled
+│   │   ├── ClockInEventEmulator.Notebook/         # Single-shot, pipeline-scheduled
+│   │   └── TelemetryFaultInjection.Notebook/      # Manual — CNC mill failure demo
+│   └── Agent/
+│       └── CapacityManagementAgent.Notebook/      # AI agent querying SQL DB
+├── data/
+│   ├── erp/          # simulators, machines, BOM, inventory, POs, maintenance, task types
+│   ├── hr/           # employees, skills, schedules, limitations, leave, contractors
+│   ├── sqldb/        # projects.csv, tasks.csv (Gantt-compatible)
+│   └── telemetry/    # sensor_definitions.csv (75 sensors × 15 machines)
+└── scripts/          # Local Python tools
+    ├── generate_project_data.py    # Regenerate 8 projects with scheduling constraints
+    ├── telemetry_normal.py         # Standalone telemetry generator
+    ├── telemetry_fault_injection.py # CNC mill fault profile
+    ├── clockin_events.py           # Workforce event generator
+    └── validate_data.py            # Referential integrity checker
+```
+
+## Deployment
+
+### 1. Run the SolutionInstaller
+
+In a Fabric notebook, run these cells:
+
+```python
+# Cell 1
+%pip install -q fabric-cicd azure-identity gitpython
+
+# Cell 2
+import os, shutil, tempfile, glob, requests
+from git import Repo
+from fabric_cicd import FabricWorkspace, publish_all_items
+import notebookutils
+from azure.core.credentials import AccessToken
+
+clone_dir = os.path.join(tempfile.gettempdir(), "cae-demo-install")
+if os.path.exists(clone_dir): shutil.rmtree(clone_dir)
+Repo.clone_from("https://github.com/benoit-d/cae-demo.git", clone_dir, branch="master", depth=1)
+workspace_dir = os.path.join(clone_dir, "workspace")
+data_dir = os.path.join(clone_dir, "data")
+
+WORKSPACE_ID = os.environ.get("TRIDENT_WORKSPACE_ID", "")
+if not WORKSPACE_ID:
+    try:
+        ctx = notebookutils.runtime.context
+        WORKSPACE_ID = ctx.get("currentWorkspaceId", "") or ctx.get("workspaceId", "")
+    except: pass
+
+TOKEN = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
+class _Cred:
+    def get_token(self, *s, **k): return AccessToken(TOKEN, 0)
+
+ws = FabricWorkspace(workspace_id=WORKSPACE_ID, repository_directory=workspace_dir,
+    item_type_in_scope=["Notebook","Lakehouse","Eventhouse","SQLDatabase"], token_credential=_Cred())
+publish_all_items(ws)
+
+# Cell 3 — Upload seed data to Lakehouse
+headers = {"Authorization": f"Bearer {TOKEN}"}
+resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=headers)
+items = resp.json().get("value", [])
+lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
+if lh:
+    for folder in ["erp", "hr", "telemetry", "sqldb"]:
+        src = os.path.join(data_dir, folder)
+        if not os.path.isdir(src): continue
+        for f in sorted(glob.glob(os.path.join(src, "*"))):
+            dest = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/data/{folder}/{os.path.basename(f)}"
+            notebookutils.fs.cp(f"file://{f}", dest)
+
+shutil.rmtree(clone_dir, ignore_errors=True)
+```
+
+### 2. Create a Fabric SQL Database
+
+In the workspace, click **+ New item > SQL Database** and name it `CAEManufacturing_SQLDB`.
+
+### 3. Run PostDeploymentConfig
+
+Open the deployed `Install/PostDeploymentConfig` notebook. Paste the JDBC connection string (from SQL Database > Settings > Connection strings) in the config cell. Run All.
+
+This creates `hr.*` and `erp.*` schemas with 17 tables, bulk inserts all data, then adds primary keys and foreign keys.
+
+### 4. Set Up Eventstreams and Pipelines
+
+1. Create **SimulatorTelemetryStream** Eventstream with Custom App source → KQL Database destination
+2. Create **ClockInEventStream** Eventstream with Custom App source → KQL Database destination
+3. Paste connection strings into the simulator notebook config cells
+4. Create Data Pipelines: Notebook activity → 1-minute schedule for each emulator
+
+### 5. Demo
+
+- Pipelines stream machine telemetry and clock-in events every minute
+- Run **TelemetryFaultInjection** manually to simulate a CNC mill spindle bearing failure
+- Open **CapacityManagementAgent** to see the AI reason across all sources
+- Build a **Power BI Gantt chart** from `erp.projects` + `erp.tasks`
+
+## Referential Integrity
+
+All data has verified referential integrity:
+- Employee emails link across: employees → tasks → projects → clock-in events → maintenance history
+- Simulator IDs link: simulators → projects
+- Machine IDs link: machines → sensor_definitions → maintenance_history → telemetry events
+- Task dependencies: tasks.FS_Task_ID → tasks.Task_ID (self-referencing within project)
+- Skill requirements: tasks.Skill_Requirement matches assigned employee's skills_certifications
+- No employee is double-booked across concurrent tasks
+- No actual dates are in the future (relative to April 21, 2026)
+
+Run `python scripts/validate_data.py` to verify.
+
+## Key Design Decisions
+
+| Decision | Rationale |
 |---|---|
-| **Motion Platform** | Pitch actuator position, Roll actuator position, Yaw actuator position, Heave displacement, Surge displacement, Sway displacement |
-| **Hydraulics** | Hydraulic pressure (PSI), Hydraulic fluid temperature, Hydraulic flow rate |
-| **Thermal** | Cockpit display temperature, Motion platform temperature, Projection room temperature, Power supply temperature, Hydraulic system temperature |
-| **Electrical** | Main power voltage (AC), DC bus voltage (28V rail), UPS battery voltage, Power consumption (kW) |
-| **Visual System** | Projector brightness (lumens), Image generator GPU temperature, Frame render time (ms), Visual-to-motion sync latency (ms) |
-| **Vibration** | Motion platform vibration (X/Y/Z axes), Base frame vibration |
-| **Control** | Control loading force feedback torque, Instructor station response time |
-| **Environmental** | Cooling system flow rate, Ambient temperature, Humidity |
-
-### 2. Oracle ERP Data (CSV → Lakehouse)
-Simulated ERP tables representing manufacturing operations:
-- **Work Orders**: Assembly, testing, burn-in, qualification tasks
-- **Bill of Materials**: Components per simulator model (FFS Level D, etc.)
-- **Purchase Orders**: Parts procurement and delivery status
-- **Inventory**: Spare parts and components stock levels
-- **Production Schedule**: Planned simulator builds and deliveries
-- **Machines/Bays**: Manufacturing bay configuration and capabilities
-- **Maintenance History**: Past maintenance records
-
-### 3. Clock-In / Milestone Events (Real-Time Eventstream)
-Real-time events from the manufacturing floor:
-- Employee badge in/out (shift start/end)
-- Task milestone completions (e.g., "hydraulic system installed in Bay 2")
-- Maintenance task start/completion
-- Quality inspection checkpoints
-- Break start/end
-
-### 4. HR Data (CSV → Lakehouse)
-Workforce management data:
-- **Employees**: Full roster with name, Teams email, role, employee type
-- **Skills & Certifications**: Matrix of who can do what (hydraulics, electrical, avionics, projection, etc.)
-- **Schedules**: Day shift / Night shift / Flex assignments
-- **Leave of Absence**: Planned vacations, sick leave, personal days
-- **Physical Limitations**: Restrictions on record (heavy lifting, confined spaces, etc.)
-- **Contractual Workforce**: External contractors with different rules and availabilities
-- **Employee Agreements**: Union/non-union conditions affecting scheduling
-
-## Fabric Items Deployed
-
-| Item Type | Name | Purpose |
-|---|---|---|
-| Lakehouse | ManufacturingERP_LH | ERP reference data (work orders, BOM, inventory) |
-| Lakehouse | HRData_LH | HR data (employees, skills, schedules) |
-| Eventhouse | CAEManufacturingEH | Real-time query engine for telemetry and events |
-| KQL Database | CAEManufacturingKQLDB | Hot path for real-time queries |
-| Eventstream | SimulatorTelemetryStream | Ingests simulator sensor data |
-| Eventstream | ClockInEventStream | Ingests workforce clock-in/milestone events |
-| Notebook | SimulatorTelemetryEmulator | Generates synthetic telemetry data |
-| Notebook | ClockInEventEmulator | Generates synthetic clock-in events |
-| Notebook | LoadERPData | Loads ERP CSVs into lakehouse Delta tables |
-| Notebook | LoadHRData | Loads HR CSVs into lakehouse Delta tables |
-| Notebook | CapacityManagementAgent | Foundry agent for schedule optimization |
-| Notebook | PostDeploymentConfig | Post-install configuration |
-| Notebook | GetStarted | Entry point with instructions |
-| KQL Dashboard | ManufacturingFloorDashboard | Real-time manufacturing floor monitoring |
-| KQL Queryset | ManufacturingQueries | Pre-built KQL queries |
-| Reflex (Activator) | MaintenanceActivator | Triggers alerts on anomalous telemetry |
-| Environment | CAEDemoRuntime | Spark runtime with dependencies |
-
-## Installation
-
-### One-Click Install (via Fabric Notebook)
-
-1. Download [`deploy/SolutionInstaller.ipynb`](deploy/SolutionInstaller.ipynb)
-2. In your Fabric workspace, click **+ New > Import notebook**
-3. Upload `SolutionInstaller.ipynb` and open it
-4. Update `REPO_URL` in the first code cell to point to **your** GitHub repo
-5. Click **Run All**
-
-The installer will:
-- Clone the repo
-- Deploy all Fabric items using [`fabric-cicd`](https://microsoft.github.io/fabric-cicd/)
-- Upload CSV data files to the Lakehouses using `notebookutils`
-- Clean up temp files
-
-> **No dependency on Fabric Jumpstart.** This is a standalone repo that uses `fabric-cicd` (the same open-source library Jumpstart is built on) directly.
-
-### How It Works
-
-| Step | Tool | What it does |
-|---|---|---|
-| Clone repo | `gitpython` | Shallow-clones your GitHub repo into a temp folder |
-| Deploy items | `fabric-cicd` (`FabricWorkspace` + `publish_all_items`) | Reads the `workspace/` folder and creates/updates Fabric items via REST API |
-| Upload data | `notebookutils.fs.cp` | Copies CSV files from the cloned repo to Lakehouse Files via OneLake |
-| Authenticate | `notebookutils.credentials` or `azure-identity` | Works in Fabric notebooks (auto) or locally (Azure CLI) |
-
-### Reuse This Pattern
-
-To package **any** Fabric demo the same way:
-
-1. **Create a `workspace/` folder** with Fabric Git-integration format:
-   - Each item is `<ItemName>.<ItemType>/` (e.g., `MyNotebook.Notebook/`)
-   - Inside: `.platform` (JSON metadata) + `notebook-content.py` (code)
-2. **Create a `data/` folder** with CSVs or Parquet files to load
-3. **Copy `deploy/SolutionInstaller.ipynb`** and update `REPO_URL`
-4. **Push to GitHub** with a tagged release (e.g., `v1.0.0`)
-
-That's it — anyone can deploy your demo by importing one notebook.
-
-## Prerequisites
-
-- Microsoft Fabric capacity F16 or higher (for AI features)
-- Fabric workspace with Contributor or Admin permissions
-- Power BI Pro or PPU license
-- Azure AI Foundry project (for the agentic workflow — optional, demo works without it)
-
-## Post-Deployment Steps
-
-1. Run the `PostDeploymentConfig` notebook
-2. Start the `SimulatorTelemetryEmulator` notebook (runs continuously)
-3. Start the `ClockInEventEmulator` notebook (runs continuously)
-4. Explore the `GetStarted` notebook for a guided walkthrough
-5. Open the `ManufacturingFloorDashboard` for real-time monitoring
+| SQL Database for all reference/project tables | CRUD for write-back (schedule updates, task completions), DirectQuery for Power BI, agent-friendly |
+| Eventhouse for telemetry + events | Sub-second queries on time-series data, native KQL |
+| Lakehouse as staging only | CSVs upload there during deployment, then get loaded into SQL DB |
+| Single-shot notebooks for data pipelines | No long-running Spark executors; pipeline calls notebook every 1 min |
+| Constraints added after bulk insert | Avoids FK ordering issues during initial data load |
+| Separate simulators (products) from machines (equipment) | Telemetry monitors manufacturing machines, not the simulators being built |
 
 ## License
 
