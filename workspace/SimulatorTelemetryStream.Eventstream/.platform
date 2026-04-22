@@ -1,0 +1,5 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": { "type": "Eventstream", "displayName": "SimulatorTelemetryStream" },
+  "config": { "version": "2.0", "logicalId": "e1e2e3e4-aaaa-bbbb-cccc-111122223333" }
+}

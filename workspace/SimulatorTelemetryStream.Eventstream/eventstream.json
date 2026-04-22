@@ -1,0 +1,36 @@
+{
+  "sources": [
+    {
+      "id": "a0a0a0a0-1111-2222-3333-444455556666",
+      "name": "TelemetryCustomApp",
+      "type": "CustomApp",
+      "properties": {
+        "endpoint": {
+          "endpointType": "EventHub"
+        }
+      }
+    }
+  ],
+  "destinations": [
+    {
+      "id": "b0b0b0b0-1111-2222-3333-444455556666",
+      "name": "Eventhouse",
+      "type": "Eventhouse",
+      "properties": {
+        "dataIngestionMode": "ProcessedIngestion",
+        "workspaceId": "00000000-0000-0000-0000-000000000000",
+        "itemId": "a1b2c3d4-1111-2222-3333-aabbccddeeff",
+        "databaseName": "CAEManufacturingKQLDB",
+        "tableName": "MachineTelemetry",
+        "inputSerialization": {
+          "type": "Json",
+          "properties": { "encoding": "UTF8" }
+        }
+      },
+      "inputNodes": [{ "name": "TelemetryCustomApp" }]
+    }
+  ],
+  "streams": [],
+  "operators": [],
+  "compatibilityLevel": "1.0"
+}

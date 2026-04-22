@@ -42,17 +42,23 @@
 
 # MARKDOWN ********************
 
-# ## Setup Steps
+# ## Setup Steps (after running SolutionInstaller)
 # 
-# 1. **PostDeploymentConfig** - creates hr.* and erp.* schemas + 16 tables with PKs/FKs in SQL DB
+# **Automated by fabric-cicd** (deployed automatically):
+# - Lakehouse, Eventhouse, Eventstreams, Data Pipelines (1-min schedule), Activator shell, all Notebooks
+# 
+# **Run once manually:**
+# 1. **PostDeploymentConfig** - paste JDBC string, Run All (creates hr/erp/plm schemas + 18 tables)
 # 2. **KQL Database setup** - run commands from data/kql/machine_health_monitoring.kql in the Eventhouse
-# 3. **Create Eventstreams** - SimulatorTelemetryStream + ClockInEventStream (manual in Fabric UI)
-# 4. **Create Data Pipelines** - TelemetryPipeline + ClockInPipeline, 1-min schedule
-# 5. **Paste connection strings** into the simulator notebook config cells
-# 6. **Create Real-Time Dashboard** - use queries from data/kql/dashboard_spec.json
-# 7. **Configure Activator** - MachineHealthActivator monitors MachineHealthAlerts() function
-# 8. **Demo: Inject fault** - run TelemetryFaultInjection manually
-# 9. **Power BI Gantt** - connect to SQL Database erp.tasks + erp.projects
+# 3. **Paste Eventstream connection strings** into simulator notebook config cells
+# 
+# **Configure in Fabric UI:**
+# 4. **Configure Activator** - MachineHealthActivator monitors MachineHealthAlerts() function
+# 5. **Create Real-Time Dashboard** - use queries from data/kql/dashboard_spec.json
+# 
+# **Demo:**
+# 6. **Inject fault** - run Simulation/TelemetryFaultInjection manually
+# 7. **Power BI Gantt** - connect to SQL Database plm.tasks + plm.projects
 # 
 # ## Anomaly Detection (10 rules)
 # 
