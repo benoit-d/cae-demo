@@ -27,10 +27,17 @@
           "properties": { "encoding": "UTF8" }
         }
       },
-      "inputNodes": [{ "name": "ClockInCustomApp" }]
+      "inputNodes": [{ "name": "ClockInEventStream-stream" }]
     }
   ],
-  "streams": [],
+  "streams": [
+    {
+      "name": "ClockInEventStream-stream",
+      "type": "DefaultStream",
+      "properties": {},
+      "inputNodes": [{"name": "ClockInCustomApp"}]
+    }
+  ],
   "operators": [],
   "compatibilityLevel": "1.1"
 }

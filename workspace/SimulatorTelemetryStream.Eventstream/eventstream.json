@@ -27,10 +27,17 @@
           "properties": { "encoding": "UTF8" }
         }
       },
-      "inputNodes": [{ "name": "TelemetryCustomApp" }]
+      "inputNodes": [{ "name": "SimulatorTelemetryStream-stream" }]
     }
   ],
-  "streams": [],
+  "streams": [
+    {
+      "name": "SimulatorTelemetryStream-stream",
+      "type": "DefaultStream",
+      "properties": {},
+      "inputNodes": [{"name": "TelemetryCustomApp"}]
+    }
+  ],
   "operators": [],
   "compatibilityLevel": "1.1"
 }
