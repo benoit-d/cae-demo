@@ -49,9 +49,10 @@ The AI agent reasons across all data sources to:
 | Store | Schema | Tables | Purpose |
 |---|---|---|---|
 | **SQL Database** | `hr` | employees, skills_certifications, employee_schedules, work_restrictions, time_off, contractor_agreements, collective_agreements, machine_certifications | Workforce data with CRUD |
-| **SQL Database** | `erp` | production_lines, production_line_dependencies, machines, inventory, purchase_orders, maintenance_history, contract_clauses, sensor_definitions | Production infrastructure |
+| **SQL Database** | `erp` | production_lines, production_line_dependencies, machines, inventory, purchase_orders, maintenance_history, contract_clauses | Production infrastructure |
 | **SQL Database** | `plm` | simulators, bill_of_materials, projects, tasks, task_type_durations, part_specs, machine_capabilities | Product lifecycle management |
 | **SQL Database** | `mes` | machine_jobs | Manufacturing execution |
+| **SQL Database** | `telemetry` | sensor_definitions | Sensor metadata (107 sensors × 20 machines) |
 | **Eventhouse** (KQL) | — | MachineTelemetry, ClockInEvents | Real-time event data |
 | **Lakehouse** | — | CSV files in Files/ | Staging only (deployment) |
 
@@ -262,7 +263,7 @@ Open the deployed `PostDeploymentConfig` notebook. Paste the JDBC connection str
 
 ![PostDeploymentConfig](docs/screenshots/03-postdeployment-run-all.png)
 
-This creates 4 schemas (`hr`, `erp`, `plm`, `mes`) with 24 tables, bulk inserts all data, then adds primary keys and foreign keys.
+This creates 5 schemas (`hr`, `erp`, `plm`, `mes`, `telemetry`) with 24 tables, bulk inserts all data, then adds primary keys and foreign keys.
 
 ### 4. KQL Database Setup
 

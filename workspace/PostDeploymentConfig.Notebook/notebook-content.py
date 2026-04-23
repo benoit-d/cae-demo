@@ -13,11 +13,12 @@
 
 # # Post-Deployment Configuration
 # 
-# Loads all data into the SQL Database using four schemas:
+# Loads all data into the SQL Database using five schemas:
 # - **hr** — employees, skills, schedules, work restrictions, time off, contractor agreements, collective agreements, machine certifications
-# - **erp** — production lines, production line dependencies, machines, inventory, purchase orders, maintenance history, contract clauses, sensor definitions
+# - **erp** — production lines, production line dependencies, machines, inventory, purchase orders, maintenance history, contract clauses
 # - **plm** — simulators, bill of materials, projects, tasks, task type durations, part specs, machine capabilities
 # - **mes** — machine jobs (Manufacturing Execution System)
+# - **telemetry** — sensor definitions
 # 
 # ## Prerequisites
 # 1. SolutionInstaller has run (Lakehouse has CSVs in Files/)
@@ -251,7 +252,7 @@ cursor.execute("""
     FROM sys.foreign_keys f
     JOIN sys.tables t ON f.parent_object_id = t.object_id
     JOIN sys.schemas s ON t.schema_id = s.schema_id
-    WHERE s.name IN ('dbo', 'hr', 'erp', 'plm', 'mes');
+    WHERE s.name IN ('dbo', 'hr', 'erp', 'plm', 'mes', 'telemetry');
     EXEC sp_executesql @sql;
 """)
 cursor.execute("""
@@ -260,13 +261,13 @@ cursor.execute("""
     SELECT @sql = @sql + 'DROP TABLE ' + QUOTENAME(s.name) + '.' + QUOTENAME(t.name) + '; '
     FROM sys.tables t
     JOIN sys.schemas s ON t.schema_id = s.schema_id
-    WHERE s.name IN ('dbo', 'hr', 'erp', 'plm', 'mes');
+    WHERE s.name IN ('dbo', 'hr', 'erp', 'plm', 'mes', 'telemetry');
     EXEC sp_executesql @sql;
 """)
 print("  All existing tables dropped.")
 
 # Create schemas
-for schema in ['hr', 'erp', 'plm', 'mes']:
+for schema in ['hr', 'erp', 'plm', 'mes', 'telemetry']:
     try:
         cursor.execute(f"IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='{schema}') EXEC('CREATE SCHEMA {schema}')")
         print(f"  Schema: {schema}")
@@ -370,7 +371,7 @@ DDL = [
         contract_reference NVARCHAR(20), clause_type NVARCHAR(30),
         clause_text NVARCHAR(500), penalty_per_day_usd FLOAT,
         penalty_cap_usd FLOAT, [trigger] NVARCHAR(200))""",
-    """CREATE TABLE erp.sensor_definitions (
+    """CREATE TABLE telemetry.sensor_definitions (
         sensor_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10) NOT NULL,
         sensor_category NVARCHAR(30), sensor_name NVARCHAR(50),
         unit NVARCHAR(20), normal_min FLOAT, normal_max FLOAT,
@@ -486,7 +487,7 @@ ALL_TABLES = [
     ("data/erp/purchase_orders.csv",       "erp.purchase_orders"),
     ("data/erp/maintenance_history.csv",   "erp.maintenance_history"),
     ("data/erp/contract_clauses.csv",      "erp.contract_clauses"),
-    ("data/telemetry/sensor_definitions.csv", "erp.sensor_definitions"),
+    ("data/telemetry/sensor_definitions.csv", "telemetry.sensor_definitions"),
     # plm.*
     ("data/plm/simulators.csv",            "plm.simulators"),
     ("data/plm/bill_of_materials.csv",     "plm.bill_of_materials"),
@@ -542,7 +543,7 @@ CONSTRAINTS = [
     "ALTER TABLE erp.purchase_orders ADD CONSTRAINT PK_purchase_orders PRIMARY KEY (po_id)",
     "ALTER TABLE erp.maintenance_history ADD CONSTRAINT PK_maintenance_history PRIMARY KEY (maintenance_id)",
     "ALTER TABLE erp.contract_clauses ADD CONSTRAINT PK_contract_clauses PRIMARY KEY (clause_id)",
-    "ALTER TABLE erp.sensor_definitions ADD CONSTRAINT PK_sensor_definitions PRIMARY KEY (sensor_id)",
+    "ALTER TABLE telemetry.sensor_definitions ADD CONSTRAINT PK_sensor_definitions PRIMARY KEY (sensor_id)",
     "ALTER TABLE plm.simulators ADD CONSTRAINT PK_simulators PRIMARY KEY (simulator_id)",
     "ALTER TABLE plm.bill_of_materials ADD CONSTRAINT PK_bill_of_materials PRIMARY KEY (bom_id)",
     "ALTER TABLE plm.task_type_durations ADD CONSTRAINT PK_task_type_durations PRIMARY KEY (Task_Type)",
@@ -567,7 +568,7 @@ CONSTRAINTS = [
     "ALTER TABLE erp.maintenance_history ADD CONSTRAINT FK_maint_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
     "ALTER TABLE erp.purchase_orders ADD CONSTRAINT FK_po_simulator FOREIGN KEY (destination_simulator) REFERENCES plm.simulators(simulator_id)",
     "ALTER TABLE erp.contract_clauses ADD CONSTRAINT FK_clause_project FOREIGN KEY (project_id) REFERENCES plm.projects(Project_ID)",
-    "ALTER TABLE erp.sensor_definitions ADD CONSTRAINT FK_sensor_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
+    "ALTER TABLE telemetry.sensor_definitions ADD CONSTRAINT FK_sensor_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
     # --- Foreign Keys: plm ---
     "ALTER TABLE plm.projects ADD CONSTRAINT FK_project_simulator FOREIGN KEY (Simulator_ID) REFERENCES plm.simulators(simulator_id)",
     "ALTER TABLE plm.tasks ADD CONSTRAINT FK_task_project FOREIGN KEY (Parent_Project_ID) REFERENCES plm.projects(Project_ID)",
@@ -624,10 +625,11 @@ print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
 print(f"\nSQL Database: {SQL_DBNAME}")
-print("  hr.*  -  8 tables (employees, skills, schedules, restrictions, ...)")
-print("  erp.* -  7 tables (production lines, machines, inventory, ...)")
-print("  plm.* -  7 tables (simulators, BOM, projects, tasks, parts, ...)")
-print("  mes.* -  1 table  (machine_jobs)")
+print("  hr.*        -  8 tables (employees, skills, schedules, restrictions, ...)")
+print("  erp.*       -  7 tables (production lines, machines, inventory, ...)")
+print("  plm.*       -  7 tables (simulators, BOM, projects, tasks, parts, ...)")
+print("  mes.*       -  1 table  (machine_jobs)")
+print("  telemetry.* -  1 table  (sensor_definitions)")
 print("\nNext: Open GetStarted notebook.")
 
 # METADATA ********************
