@@ -1,4 +1,4 @@
 production_line_id,line_name,building,description,manager_email
 PL-01,Precision Fabrication,Building A,CNC machining and laser cutting and sheet metal forming and additive manufacturing,sylvie.raymond@caedemo.com
 PL-02,Assembly and Integration,Building B,Welding and structural assembly and painting and testing,robert.lapointe@caedemo.com
-PL-03,Electronics and Systems,Building C,Electronics assembly and SMT reflow and avionics integration,daniel.fortin@caedemo.com
+PL-03,Electronics and Systems,Building C,Electronics assembly and SMT reflow and avionics integration,claire.pelletier@caedemo.com

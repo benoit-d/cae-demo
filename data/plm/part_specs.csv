@@ -1,0 +1,8 @@
+part_spec_id,part_number,part_name,tolerance_mm,material,finish,allowed_machine_types,allowed_machine_ids,project_ids,plm_reference,revision
+PS-4821,MFG-HMF-B737,Hydraulic Manifold B737,0.02,Aluminum 7075-T6,Anodize Type III,CNC_Mill,"CNC-001,CNC-002,CNC-003,CNC-005","PRJ-002,PRJ-009",PLM-4821,R4
+PS-4815,MFG-DFB-A320,Door-Frame Bracket A320,0.03,Aluminum 6061-T6,Alodine,CNC_Mill,"CNC-001,CNC-002,CNC-003,CNC-005","PRJ-001,PRJ-009",PLM-4815,R2
+PS-4803,MFG-WBR-B777,Wing Bracket B777,0.025,Titanium Ti-6Al-4V,Passivate,CNC_Mill,"CNC-001,CNC-003,CNC-005","PRJ-001,PRJ-009",PLM-4803,R3
+PS-4832,MFG-AMT-B737,Actuator Mount B737,0.02,Steel 4340,Cadmium Plate,CNC_Mill,"CNC-001,CNC-002,CNC-003,CNC-005",PRJ-006,PLM-4832,R1
+PS-5102,MFG-AVN-MOUNT,Avionics Rack Mount,0.05,Aluminum 6061-T6,Anodize Type II,"CNC_Mill,Laser_Cutter","CNC-002,CNC-003,LSR-001","PRJ-001,PRJ-002,PRJ-009",PLM-5102,R2
+PS-6210,MFG-CKP-SHELL,Cockpit Shell Sub-Panel,0.1,Aluminum 5052,Paint,"Laser_Cutter,Press_Brake","LSR-001,PRB-001,LSR-002","PRJ-001,PRJ-002,PRJ-006,PRJ-009",PLM-6210,R5
+PS-7101,MFG-BSH-CYL,Hydraulic Cylinder Bushing,0.015,Stainless Steel 17-4PH,Passivate,CNC_Lathe,"LTH-001,LTH-002","PRJ-001,PRJ-006,PRJ-009",PLM-7101,R2

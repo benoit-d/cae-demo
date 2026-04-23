@@ -1,0 +1,5 @@
+clause_id,project_id,contract_reference,clause_type,clause_text,penalty_per_day_usd,penalty_cap_usd,trigger
+CLS-001,PRJ-009,P-2847,Liquidated Damages,"Liquidated damages of USD 80,000 per calendar day of delay beyond the Hard Delivery Date, capped at USD 2,800,000. No force-majeure relief for single-machine failure.",80000,2800000,Delay > 24h from Hard Delivery Date
+CLS-002,PRJ-009,P-2847,Security Clearance,All personnel assigned to P-2847 production must hold a current Government of Canada Reliability status clearance.,,,Any non-cleared assignment
+CLS-003,PRJ-001,C-AC-2026-001,Milestone Penalty,"USD 25,000 per day of delay on Qualification Testing milestone, capped at USD 500,000.",25000,500000,Qualification Testing milestone miss
+CLS-004,PRJ-006,C-WS-2026-006,Milestone Penalty,"USD 25,000 per day of delay on Customer Acceptance milestone, capped at USD 500,000.",25000,500000,Customer Acceptance milestone miss

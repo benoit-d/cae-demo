@@ -1,0 +1,4 @@
+upstream_line_id,downstream_line_id,description,criticality
+PL-01,PL-02,Precision-fabricated brackets/manifolds feed Assembly & Integration,High
+PL-01,PL-03,Precision-machined avionics mounts feed Electronics & Systems,High
+PL-02,PL-03,Assembled platforms receive avionics integration,Medium

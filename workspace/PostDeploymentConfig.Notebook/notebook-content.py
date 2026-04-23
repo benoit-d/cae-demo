@@ -13,10 +13,11 @@
 
 # # Post-Deployment Configuration
 # 
-# Loads all data into the SQL Database using three schemas:
-# - **hr** - employees, skills, schedules, limitations, leave, contractors, agreements
-# - **erp** - production lines, machines, inventory, purchase orders, maintenance, sensor definitions
-# - **plm** - simulators, bill of materials, projects, tasks, task type durations
+# Loads all data into the SQL Database using four schemas:
+# - **hr** — employees, skills, schedules, work restrictions, time off, contractor agreements, collective agreements, machine certifications
+# - **erp** — production lines, production line dependencies, machines, inventory, purchase orders, maintenance history, contract clauses, sensor definitions
+# - **plm** — simulators, bill of materials, projects, tasks, task type durations, part specs, machine capabilities
+# - **mes** — machine jobs (Manufacturing Execution System)
 # 
 # ## Prerequisites
 # 1. SolutionInstaller has run (Lakehouse has CSVs in Files/)
@@ -218,7 +219,7 @@ cursor.execute("""
     FROM sys.foreign_keys f
     JOIN sys.tables t ON f.parent_object_id = t.object_id
     JOIN sys.schemas s ON t.schema_id = s.schema_id
-    WHERE s.name IN ('hr', 'erp', 'plm');
+    WHERE s.name IN ('hr', 'erp', 'plm', 'mes');
     EXEC sp_executesql @sql;
 """)
 cursor.execute("""
@@ -227,13 +228,13 @@ cursor.execute("""
     SELECT @sql = @sql + 'DROP TABLE ' + QUOTENAME(s.name) + '.' + QUOTENAME(t.name) + '; '
     FROM sys.tables t
     JOIN sys.schemas s ON t.schema_id = s.schema_id
-    WHERE s.name IN ('hr', 'erp', 'plm');
+    WHERE s.name IN ('hr', 'erp', 'plm', 'mes');
     EXEC sp_executesql @sql;
 """)
 print("  All existing tables dropped.")
 
 # Create schemas
-for schema in ['hr', 'erp', 'plm']:
+for schema in ['hr', 'erp', 'plm', 'mes']:
     try:
         cursor.execute(f"IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name='{schema}') EXEC('CREATE SCHEMA {schema}')")
         print(f"  Schema: {schema}")
@@ -271,41 +272,48 @@ DDL = [
         monday NVARCHAR(10), tuesday NVARCHAR(10), wednesday NVARCHAR(10),
         thursday NVARCHAR(10), friday NVARCHAR(10), saturday NVARCHAR(10),
         sunday NVARCHAR(10), notes NVARCHAR(200))""",
-    """CREATE TABLE hr.physical_limitations (
+    """CREATE TABLE hr.work_restrictions (
         limitation_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL,
         limitation_type NVARCHAR(30), description NVARCHAR(500),
         effective_date DATE, review_date DATE,
         accommodations_required NVARCHAR(500), certified_by NVARCHAR(100),
         impacts_assignments NVARCHAR(5))""",
-    """CREATE TABLE hr.leave_of_absence (
-        leave_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL, leave_type NVARCHAR(30),
+    """CREATE TABLE hr.time_off (
+        timeoff_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL, leave_type NVARCHAR(30),
         start_date DATE, end_date DATE, status NVARCHAR(20),
         approved_by NVARCHAR(100), reason NVARCHAR(200), days_count FLOAT)""",
-    """CREATE TABLE hr.contractual_workforce (
+    """CREATE TABLE hr.contractor_agreements (
         contract_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL,
         agency_name NVARCHAR(50), contract_start DATE, contract_end DATE,
         hourly_rate_usd FLOAT, max_weekly_hours INT, overtime_allowed NVARCHAR(5),
         shift_flexibility NVARCHAR(100), minimum_notice_hours INT,
         specialization NVARCHAR(50), performance_rating NVARCHAR(20),
         extension_option NVARCHAR(100))""",
-    """CREATE TABLE hr.employee_agreements (
+    """CREATE TABLE hr.collective_agreements (
         agreement_id NVARCHAR(10) NOT NULL, employee_type NVARCHAR(30),
         union_name NVARCHAR(50), provision_category NVARCHAR(30),
         provision_name NVARCHAR(50), description NVARCHAR(500),
         impacts_scheduling NVARCHAR(5))""",
+    """CREATE TABLE hr.machine_certifications (
+        cert_id NVARCHAR(10) NOT NULL, employee_id NVARCHAR(10) NOT NULL,
+        machine_id NVARCHAR(10) NOT NULL, cert_level NVARCHAR(20),
+        cert_date DATE, expiry_date DATE, is_current NVARCHAR(5))""",
     # --- erp schema ---
     """CREATE TABLE erp.production_lines (
         production_line_id NVARCHAR(10) NOT NULL, line_name NVARCHAR(50),
         building NVARCHAR(20), description NVARCHAR(200),
         manager_email NVARCHAR(100))""",
+    """CREATE TABLE erp.production_line_dependencies (
+        upstream_line_id NVARCHAR(10) NOT NULL, downstream_line_id NVARCHAR(10) NOT NULL,
+        description NVARCHAR(200), criticality NVARCHAR(20))""",
     """CREATE TABLE erp.machines (
         machine_id NVARCHAR(10) NOT NULL, machine_type NVARCHAR(20),
         machine_name NVARCHAR(100), manufacturer NVARCHAR(50),
         model NVARCHAR(50), serial_number NVARCHAR(20),
-        production_line_id NVARCHAR(10),
+        production_line_id NVARCHAR(10) NOT NULL,
         location NVARCHAR(20), zone NVARCHAR(30),
         install_date DATE, last_service_date DATE,
-        status NVARCHAR(20), next_pm_date DATE)""",
+        status NVARCHAR(20), next_pm_date DATE, tolerance_mm FLOAT)""",
     """CREATE TABLE erp.inventory (
         part_number NVARCHAR(20) NOT NULL, component_name NVARCHAR(100),
         warehouse_location NVARCHAR(20), quantity_on_hand INT,
@@ -319,18 +327,23 @@ DDL = [
         status NVARCHAR(20), destination_simulator NVARCHAR(10),
         notes NVARCHAR(200))""",
     """CREATE TABLE erp.maintenance_history (
-        maintenance_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10),
+        maintenance_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10) NOT NULL,
         maintenance_type NVARCHAR(20), system_affected NVARCHAR(30),
         description NVARCHAR(500), reported_date DATE, started_date DATE,
         completed_date DATE, downtime_hours FLOAT, root_cause NVARCHAR(200),
         technician_email NVARCHAR(100), parts_replaced NVARCHAR(100),
         cost_usd FLOAT)""",
+    """CREATE TABLE erp.contract_clauses (
+        clause_id NVARCHAR(10) NOT NULL, project_id NVARCHAR(10) NOT NULL,
+        contract_reference NVARCHAR(20), clause_type NVARCHAR(30),
+        clause_text NVARCHAR(500), penalty_per_day_usd FLOAT,
+        penalty_cap_usd FLOAT, trigger NVARCHAR(200))""",
     """CREATE TABLE erp.sensor_definitions (
-        sensor_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10),
+        sensor_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10) NOT NULL,
         sensor_category NVARCHAR(30), sensor_name NVARCHAR(50),
         unit NVARCHAR(20), normal_min FLOAT, normal_max FLOAT,
         warning_min FLOAT, warning_max FLOAT,
-        critical_min FLOAT, critical_max FLOAT)""",
+        critical_min FLOAT, critical_max FLOAT, failure_mode NVARCHAR(50))""",
     # --- plm schema ---
     """CREATE TABLE plm.simulators (
         simulator_id NVARCHAR(10) NOT NULL, simulator_model NVARCHAR(20),
@@ -349,19 +362,40 @@ DDL = [
         Sequence_Order INT, Description NVARCHAR(500))""",
     """CREATE TABLE plm.projects (
         Project_ID NVARCHAR(10) NOT NULL, Project_Name NVARCHAR(100),
-        Simulator_ID NVARCHAR(10), Initial_Planned_Start DATE,
+        Simulator_ID NVARCHAR(10) NOT NULL, Initial_Planned_Start DATE,
         Modified_Planned_Start DATE, Standard_Duration INT,
         Actual_End DATE, Resource_Login NVARCHAR(100),
         Complete_Percentage INT, Last_Modified_By NVARCHAR(100),
-        Last_Modified_On DATE)""",
+        Last_Modified_On DATE, Customer NVARCHAR(50), Customer_Type NVARCHAR(20),
+        Contract_Reference NVARCHAR(20), Contract_Value_USD FLOAT,
+        Penalty_Per_Day_USD FLOAT, Penalty_Cap_USD FLOAT,
+        Hard_Deadline DATE, Is_Critical_Path NVARCHAR(5))""",
     """CREATE TABLE plm.tasks (
         Task_ID NVARCHAR(20) NOT NULL, Task_Name NVARCHAR(100),
         Parent_Project_ID NVARCHAR(10) NOT NULL, FS_Task_ID NVARCHAR(20),
-        Task_Type NVARCHAR(50), Milestone INT, Skill_Requirement NVARCHAR(50),
+        Task_Type NVARCHAR(50) NOT NULL, Milestone INT, Skill_Requirement NVARCHAR(50),
         Initial_Planned_Start DATE, Modified_Planned_Start DATE,
         Actual_Start DATE, Standard_Duration INT, Actual_End DATE,
         Resource_Login NVARCHAR(100), Complete_Percentage INT,
-        Last_Modified_By NVARCHAR(100), Last_Modified_On DATE)""",
+        Last_Modified_By NVARCHAR(100), Last_Modified_On DATE,
+        Machine_ID NVARCHAR(10))""",
+    """CREATE TABLE plm.part_specs (
+        part_spec_id NVARCHAR(10) NOT NULL, part_number NVARCHAR(20),
+        part_name NVARCHAR(100), tolerance_mm FLOAT,
+        material NVARCHAR(50), finish NVARCHAR(50),
+        allowed_machine_types NVARCHAR(100), allowed_machine_ids NVARCHAR(200),
+        project_ids NVARCHAR(100), plm_reference NVARCHAR(20),
+        revision NVARCHAR(10))""",
+    """CREATE TABLE plm.machine_capabilities (
+        capability_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10) NOT NULL,
+        capability NVARCHAR(50), value NVARCHAR(100), unit NVARCHAR(20))""",
+    # --- mes schema ---
+    """CREATE TABLE mes.machine_jobs (
+        job_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10) NOT NULL,
+        part_spec_id NVARCHAR(10) NOT NULL, part_name NVARCHAR(100),
+        project_id NVARCHAR(10) NOT NULL, quantity INT, tolerance_mm FLOAT,
+        planned_start NVARCHAR(30), planned_end NVARCHAR(30),
+        status NVARCHAR(20), priority NVARCHAR(20), due_date DATE)""",
 ]
 
 print("Creating tables...\n")
@@ -407,16 +441,19 @@ ALL_TABLES = [
     ("data/hr/employees.csv",              "hr.employees"),
     ("data/hr/skills_certifications.csv",  "hr.skills_certifications"),
     ("data/hr/employee_schedules.csv",     "hr.employee_schedules"),
-    ("data/hr/physical_limitations.csv",   "hr.physical_limitations"),
-    ("data/hr/leave_of_absence.csv",       "hr.leave_of_absence"),
-    ("data/hr/contractual_workforce.csv",  "hr.contractual_workforce"),
-    ("data/hr/employee_agreements.csv",    "hr.employee_agreements"),
+    ("data/hr/work_restrictions.csv",      "hr.work_restrictions"),
+    ("data/hr/time_off.csv",               "hr.time_off"),
+    ("data/hr/contractor_agreements.csv",  "hr.contractor_agreements"),
+    ("data/hr/collective_agreements.csv",  "hr.collective_agreements"),
+    ("data/hr/machine_certifications.csv", "hr.machine_certifications"),
     # erp.*
     ("data/erp/production_lines.csv",      "erp.production_lines"),
+    ("data/erp/production_line_dependencies.csv", "erp.production_line_dependencies"),
     ("data/erp/machines.csv",              "erp.machines"),
     ("data/erp/inventory.csv",             "erp.inventory"),
     ("data/erp/purchase_orders.csv",       "erp.purchase_orders"),
     ("data/erp/maintenance_history.csv",   "erp.maintenance_history"),
+    ("data/erp/contract_clauses.csv",      "erp.contract_clauses"),
     ("data/telemetry/sensor_definitions.csv", "erp.sensor_definitions"),
     # plm.*
     ("data/plm/simulators.csv",            "plm.simulators"),
@@ -424,6 +461,10 @@ ALL_TABLES = [
     ("data/plm/task_type_durations.csv",   "plm.task_type_durations"),
     ("data/plm/projects.csv",              "plm.projects"),
     ("data/plm/tasks.csv",                 "plm.tasks"),
+    ("data/plm/part_specs.csv",            "plm.part_specs"),
+    ("data/plm/machine_capabilities.csv",  "plm.machine_capabilities"),
+    # mes.*
+    ("data/mes/machine_jobs.csv",          "mes.machine_jobs"),
 ]
 
 print("Loading data...\n")
@@ -457,35 +498,54 @@ CONSTRAINTS = [
     "ALTER TABLE hr.employees ADD CONSTRAINT PK_employees PRIMARY KEY (employee_id)",
     "ALTER TABLE hr.employees ADD CONSTRAINT UQ_employees_email UNIQUE (email)",
     "ALTER TABLE hr.employee_schedules ADD CONSTRAINT PK_employee_schedules PRIMARY KEY (schedule_id)",
-    "ALTER TABLE hr.physical_limitations ADD CONSTRAINT PK_physical_limitations PRIMARY KEY (limitation_id)",
-    "ALTER TABLE hr.leave_of_absence ADD CONSTRAINT PK_leave_of_absence PRIMARY KEY (leave_id)",
-    "ALTER TABLE hr.contractual_workforce ADD CONSTRAINT PK_contractual_workforce PRIMARY KEY (contract_id)",
-    "ALTER TABLE hr.employee_agreements ADD CONSTRAINT PK_employee_agreements PRIMARY KEY (agreement_id)",
+    "ALTER TABLE hr.work_restrictions ADD CONSTRAINT PK_work_restrictions PRIMARY KEY (limitation_id)",
+    "ALTER TABLE hr.time_off ADD CONSTRAINT PK_time_off PRIMARY KEY (timeoff_id)",
+    "ALTER TABLE hr.contractor_agreements ADD CONSTRAINT PK_contractor_agreements PRIMARY KEY (contract_id)",
+    "ALTER TABLE hr.collective_agreements ADD CONSTRAINT PK_collective_agreements PRIMARY KEY (agreement_id)",
+    "ALTER TABLE hr.machine_certifications ADD CONSTRAINT PK_machine_certifications PRIMARY KEY (cert_id)",
     "ALTER TABLE erp.production_lines ADD CONSTRAINT PK_production_lines PRIMARY KEY (production_line_id)",
+    "ALTER TABLE erp.production_line_dependencies ADD CONSTRAINT PK_production_line_deps PRIMARY KEY (upstream_line_id, downstream_line_id)",
     "ALTER TABLE erp.machines ADD CONSTRAINT PK_machines PRIMARY KEY (machine_id)",
     "ALTER TABLE erp.inventory ADD CONSTRAINT PK_inventory PRIMARY KEY (part_number)",
     "ALTER TABLE erp.purchase_orders ADD CONSTRAINT PK_purchase_orders PRIMARY KEY (po_id)",
     "ALTER TABLE erp.maintenance_history ADD CONSTRAINT PK_maintenance_history PRIMARY KEY (maintenance_id)",
+    "ALTER TABLE erp.contract_clauses ADD CONSTRAINT PK_contract_clauses PRIMARY KEY (clause_id)",
     "ALTER TABLE erp.sensor_definitions ADD CONSTRAINT PK_sensor_definitions PRIMARY KEY (sensor_id)",
     "ALTER TABLE plm.simulators ADD CONSTRAINT PK_simulators PRIMARY KEY (simulator_id)",
     "ALTER TABLE plm.bill_of_materials ADD CONSTRAINT PK_bill_of_materials PRIMARY KEY (bom_id)",
     "ALTER TABLE plm.task_type_durations ADD CONSTRAINT PK_task_type_durations PRIMARY KEY (Task_Type)",
     "ALTER TABLE plm.projects ADD CONSTRAINT PK_projects PRIMARY KEY (Project_ID)",
     "ALTER TABLE plm.tasks ADD CONSTRAINT PK_tasks PRIMARY KEY (Task_ID)",
+    "ALTER TABLE plm.part_specs ADD CONSTRAINT PK_part_specs PRIMARY KEY (part_spec_id)",
+    "ALTER TABLE plm.machine_capabilities ADD CONSTRAINT PK_machine_capabilities PRIMARY KEY (capability_id)",
+    "ALTER TABLE mes.machine_jobs ADD CONSTRAINT PK_machine_jobs PRIMARY KEY (job_id)",
     # --- Foreign Keys: hr ---
     "ALTER TABLE hr.skills_certifications ADD CONSTRAINT FK_skills_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
     "ALTER TABLE hr.employee_schedules ADD CONSTRAINT FK_schedules_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
-    "ALTER TABLE hr.physical_limitations ADD CONSTRAINT FK_limitations_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
-    "ALTER TABLE hr.leave_of_absence ADD CONSTRAINT FK_leave_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
-    "ALTER TABLE hr.contractual_workforce ADD CONSTRAINT FK_contract_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
+    "ALTER TABLE hr.work_restrictions ADD CONSTRAINT FK_restrictions_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
+    "ALTER TABLE hr.time_off ADD CONSTRAINT FK_timeoff_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
+    "ALTER TABLE hr.contractor_agreements ADD CONSTRAINT FK_contractor_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
+    "ALTER TABLE hr.machine_certifications ADD CONSTRAINT FK_machinecert_employee FOREIGN KEY (employee_id) REFERENCES hr.employees(employee_id)",
+    "ALTER TABLE hr.machine_certifications ADD CONSTRAINT FK_machinecert_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
     # --- Foreign Keys: erp ---
+    "ALTER TABLE hr.employees ADD CONSTRAINT FK_employee_line FOREIGN KEY (production_line_id) REFERENCES erp.production_lines(production_line_id)",
     "ALTER TABLE erp.machines ADD CONSTRAINT FK_machine_line FOREIGN KEY (production_line_id) REFERENCES erp.production_lines(production_line_id)",
+    "ALTER TABLE erp.production_line_dependencies ADD CONSTRAINT FK_pldep_upstream FOREIGN KEY (upstream_line_id) REFERENCES erp.production_lines(production_line_id)",
+    "ALTER TABLE erp.production_line_dependencies ADD CONSTRAINT FK_pldep_downstream FOREIGN KEY (downstream_line_id) REFERENCES erp.production_lines(production_line_id)",
     "ALTER TABLE erp.maintenance_history ADD CONSTRAINT FK_maint_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
+    "ALTER TABLE erp.purchase_orders ADD CONSTRAINT FK_po_simulator FOREIGN KEY (destination_simulator) REFERENCES plm.simulators(simulator_id)",
+    "ALTER TABLE erp.contract_clauses ADD CONSTRAINT FK_clause_project FOREIGN KEY (project_id) REFERENCES plm.projects(Project_ID)",
     "ALTER TABLE erp.sensor_definitions ADD CONSTRAINT FK_sensor_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
     # --- Foreign Keys: plm ---
     "ALTER TABLE plm.projects ADD CONSTRAINT FK_project_simulator FOREIGN KEY (Simulator_ID) REFERENCES plm.simulators(simulator_id)",
     "ALTER TABLE plm.tasks ADD CONSTRAINT FK_task_project FOREIGN KEY (Parent_Project_ID) REFERENCES plm.projects(Project_ID)",
     "ALTER TABLE plm.tasks ADD CONSTRAINT FK_task_type FOREIGN KEY (Task_Type) REFERENCES plm.task_type_durations(Task_Type)",
+    "ALTER TABLE plm.tasks ADD CONSTRAINT FK_task_machine FOREIGN KEY (Machine_ID) REFERENCES erp.machines(machine_id)",
+    "ALTER TABLE plm.machine_capabilities ADD CONSTRAINT FK_capability_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
+    # --- Foreign Keys: mes ---
+    "ALTER TABLE mes.machine_jobs ADD CONSTRAINT FK_job_machine FOREIGN KEY (machine_id) REFERENCES erp.machines(machine_id)",
+    "ALTER TABLE mes.machine_jobs ADD CONSTRAINT FK_job_partspec FOREIGN KEY (part_spec_id) REFERENCES plm.part_specs(part_spec_id)",
+    "ALTER TABLE mes.machine_jobs ADD CONSTRAINT FK_job_project FOREIGN KEY (project_id) REFERENCES plm.projects(Project_ID)",
 ]
 
 print("Adding constraints...\n")
@@ -532,9 +592,10 @@ print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
 print(f"\nSQL Database: {SQL_DBNAME}")
-print("  hr.*  - 7 tables (employees, skills, schedules, ...)")
-print("  erp.* - 6 tables (production lines, machines, inventory, ...)")
-print("  plm.* - 5 tables (simulators, BOM, projects, tasks, task types)")
+print("  hr.*  -  8 tables (employees, skills, schedules, restrictions, ...)")
+print("  erp.* -  7 tables (production lines, machines, inventory, ...)")
+print("  plm.* -  7 tables (simulators, BOM, projects, tasks, parts, ...)")
+print("  mes.* -  1 table  (machine_jobs)")
 print("\nNext: Open GetStarted notebook.")
 
 # METADATA ********************

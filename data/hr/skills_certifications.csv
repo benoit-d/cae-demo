@@ -102,7 +102,7 @@ EMP-024,Welding,TIG Welding - Aluminum,Expert,2023-05-15,2025-05-15,CWB,Yes
 EMP-024,Welding,Welding Inspection,Advanced,2024-05-15,2026-05-15,CWB,Yes
 EMP-024,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
 EMP-024,Safety,Hot Work Permit,Certified,2025-04-01,2027-04-01,CNESST,Yes
-EMP-025,CNC Machining,3-Axis CNC Operation,Advanced,2025-09-01,2027-09-01,Haas,Yes
+EMP-025,CNC Machining,5-Axis CNC Operation,Expert,2026-03-15,2028-03-15,DMG MORI,Yes
 EMP-025,CNC Machining,Lathe Operation,Intermediate,2025-09-01,2027-09-01,Mazak,Yes
 EMP-025,Safety,WHMIS,Certified,2025-09-01,2027-09-01,Workplace Safety,Yes
 EMP-027,Additive Manufacturing,Metal 3D Printing,Advanced,2025-06-20,2027-06-20,EOS,Yes
@@ -117,3 +117,7 @@ EMP-028,Safety,ESD Protection,Certified,2025-02-01,2027-02-01,CAE Internal,Yes
 EMP-029,CNC Machining,5-Axis CNC Operation,Intermediate,2026-03-01,2028-03-01,DMG MORI,Yes
 EMP-029,CNC Machining,Wire EDM Operation,Advanced,2026-03-01,2028-03-01,Sodick,Yes
 EMP-029,Safety,WHMIS,Certified,2026-03-01,2028-03-01,Workplace Safety,Yes
+EMP-053,Electronics,SMT Assembly,Expert,2024-05-01,2026-05-01,IPC,Yes
+EMP-053,Electronics,Avionics Integration,Expert,2024-05-01,2026-05-01,CAE Internal,Yes
+EMP-053,Management,Lean Manufacturing,Advanced,2023-11-01,2025-11-01,Lean Enterprise Institute,Yes
+EMP-053,Safety,WHMIS,Certified,2025-06-01,2027-06-01,Workplace Safety,Yes
