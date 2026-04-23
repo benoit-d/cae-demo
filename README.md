@@ -21,13 +21,13 @@ The AI agent reasons across all data sources to:
                         │         Microsoft Fabric Workspace       │
                         ├─────────────────────────────────────────┤
                         │                                         │
-  Manufacturing         │   ┌─────────────┐    ┌──────────────┐  │
-  Machines (20)    ────►│   │ Eventstream  │───►│  Eventhouse   │  │
-  Telemetry             │   │             │    │  (KQL DB)    │  │
-                        │   └─────────────┘    └──────────────┘  │
-  Workforce             │   ┌─────────────┐           │          │
-  Clock-in/out     ────►│   │ Eventstream  │───►       │          │
-  Task events           │   └─────────────┘           ▼          │
+  Manufacturing         │   ┌──────────────────────────────┐  │
+  Machines (20)    ────►│   │  Eventhouse (KQL DB)        │  │
+  Telemetry             │   │  via Kusto streaming API    │  │
+                        │   └──────────────────────────────┘  │
+  Workforce             │          │                            │
+  Clock-in/out     ────►│          │                            │
+  Task events           │          ▼                            │
                         │                     ┌──────────────┐   │
                         │                     │  Power BI     │   │
   Reference Data        │   ┌─────────────┐   │  Dashboards   │   │
@@ -150,9 +150,7 @@ cae-demo/
 │   ├── Data/
 │   │   └── CAEManufacturing_LH.Lakehouse/       # Staging Lakehouse
 │   ├── RTI/                                      # Real-Time Intelligence
-│   │   ├── CAEManufacturingEH.Eventhouse/        # Telemetry store
-│   │   ├── SimulatorTelemetryStream.Eventstream/ # Machine telemetry ingestion
-│   │   └── ClockInEventStream.Eventstream/       # Workforce event ingestion
+│   │   └── CAEManufacturingEH.Eventhouse/        # Telemetry store
 │   ├── Pipelines/                                # Scheduled data pipelines
 │   │   ├── TelemetryPipeline.DataPipeline/       # 1-min schedule
 │   │   ├── ClockInPipeline.DataPipeline/         # 1-min schedule
@@ -216,7 +214,7 @@ class _Cred:
 ws = FabricWorkspace(workspace_id=WORKSPACE_ID, repository_directory=workspace_dir,
     item_type_in_scope=[
         "Notebook", "Lakehouse", "Environment",
-        "Eventhouse", "Eventstream",
+        "Eventhouse",
         "KQLDatabase", "KQLDashboard", "KQLQueryset",
         "SemanticModel", "Report", "SQLDatabase",
         "DataPipeline",
@@ -269,19 +267,13 @@ This creates 5 schemas (`hr`, `erp`, `plm`, `mes`, `telemetry`) with 24 tables, 
 
 The **PostDeploymentConfig** notebook automatically creates the KQL Database inside the Eventhouse via the Fabric API. It creates `MachineTelemetry` and `ClockInEvents` tables with streaming ingestion enabled.
 
-### 5. Paste Eventstream Connection Strings
-
-Open each Eventstream in the Fabric UI, go to **Custom App** source, and copy the connection string. Paste it into the config cell of the corresponding simulator notebook.
-
-![Eventstream Connection String](docs/screenshots/05-eventstream-connection-string.png)
-
-### 6. Configure Activator (optional)
+### 5. Configure Activator (optional)
 
 Create a new **Reflex** item in the Fabric workspace. Connect it to the KQL Database and set it to monitor anomaly scores. Configure trigger: any row with `composite_score > threshold`. Add a Teams notification action.
 
-### 7. Demo
+### 6. Demo
 
-- **Pipelines** stream machine telemetry and clock-in events every 1 minute (auto-scheduled)
+- **Pipelines** ingest machine telemetry (1-min) and clock-in events (10-min) directly into the KQL Database via Kusto streaming API
 - Run **Simulation/TelemetryFaultInjection** manually to simulate a CNC mill spindle bearing failure
 - Open **Agent/CapacityManagementAgent** to see the AI reason across all sources
 - Build a **Power BI Gantt chart** from `plm.projects` + `plm.tasks`
