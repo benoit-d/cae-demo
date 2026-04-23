@@ -1,5 +1,0 @@
-{
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
-  "metadata": { "type": "Reflex", "displayName": "MachineHealthActivator" },
-  "config": { "version": "2.0", "logicalId": "f1a2b3c4-5555-6666-7777-aabbccddeeff" }
-}

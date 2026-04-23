@@ -6,7 +6,7 @@ An end-to-end **Microsoft Fabric** demo that simulates a CAE-style flight simula
 
 CAE builds full-flight simulators (FFS) for airlines worldwide. Each simulator is a multi-million-dollar machine assembled from precision-machined parts, hydraulic systems, avionics, visual projections, and control loading systems.
 
-This demo models **8 concurrent simulator build projects** for customers including Air Canada, Lufthansa, Emirates, Delta, United, WestJet, Air France, and Qatar Airways. A team of **12 workers** (10 FTEs + 2 contractors) builds these simulators using **15 manufacturing machines** — CNC mills, lathes, laser cutters, welders, CMMs, and more.
+This demo models **9 concurrent simulator build projects** for customers including Air Canada, Lufthansa, Emirates, Delta, United, WestJet, Air France, Qatar Airways, and the Royal Canadian Air Force. A team of **28 technicians + 4 managers** (25 FTEs + 3 contractors) builds these simulators using **20 manufacturing machines** — CNC mills, lathes, laser cutters, welders, press brakes, CMMs, and more.
 
 The AI agent reasons across all data sources to:
 - Detect machine health issues from telemetry and schedule preventive maintenance
@@ -22,7 +22,7 @@ The AI agent reasons across all data sources to:
                         ├─────────────────────────────────────────┤
                         │                                         │
   Manufacturing         │   ┌─────────────┐    ┌──────────────┐  │
-  Machines (15)    ────►│   │ Eventstream  │───►│  Eventhouse   │  │
+  Machines (20)    ────►│   │ Eventstream  │───►│  Eventhouse   │  │
   Telemetry             │   │             │    │  (KQL DB)    │  │
                         │   └─────────────┘    └──────────────┘  │
   Workforce             │   ┌─────────────┐           │          │
@@ -32,8 +32,8 @@ The AI agent reasons across all data sources to:
                         │                     │  Power BI     │   │
   Reference Data        │   ┌─────────────┐   │  Dashboards   │   │
   HR, BOM, Inventory───►│   │ SQL Database │──►│  Gantt Chart  │   │
-  Projects, Tasks       │   │  hr.*        │   └──────────────┘   │
-                        │   │  erp.*       │          │          │
+  Projects, Tasks       │   │  hr.* erp.*  │   └──────────────┘   │
+                        │   │  plm.* mes.* │          │          │
                         │   └──────┬───────┘          │          │
                         │          │                  │          │
                         │          ▼                  ▼          │
@@ -48,65 +48,94 @@ The AI agent reasons across all data sources to:
 
 | Store | Schema | Tables | Purpose |
 |---|---|---|---|
-| **SQL Database** | `hr` | employees, skills_certifications, employee_schedules, physical_limitations, leave_of_absence, contractual_workforce, employee_agreements | Workforce data with CRUD |
-| **SQL Database** | `erp` | simulators, machines, projects, tasks, task_type_durations, bill_of_materials, inventory, purchase_orders, maintenance_history, sensor_definitions | Manufacturing + project management |
-| **Eventhouse** (KQL) | — | machine_telemetry, clockin_events | Real-time event data |
+| **SQL Database** | `hr` | employees, skills_certifications, employee_schedules, work_restrictions, time_off, contractor_agreements, collective_agreements, machine_certifications | Workforce data with CRUD |
+| **SQL Database** | `erp` | production_lines, production_line_dependencies, machines, inventory, purchase_orders, maintenance_history, contract_clauses, sensor_definitions | Production infrastructure |
+| **SQL Database** | `plm` | simulators, bill_of_materials, projects, tasks, task_type_durations, part_specs, machine_capabilities | Product lifecycle management |
+| **SQL Database** | `mes` | machine_jobs | Manufacturing execution |
+| **Eventhouse** (KQL) | — | MachineTelemetry, ClockInEvents | Real-time event data |
 | **Lakehouse** | — | CSV files in Files/ | Staging only (deployment) |
 
-## Manufacturing Machines (15)
+## Manufacturing Machines (20)
 
-| ID | Type | Machine | Manufacturer | Zone |
+| ID | Type | Machine | Manufacturer | Line | Zone |
+|---|---|---|---|---|---|
+| CNC-001 | CNC Mill | 5-Axis CNC Milling Center | DMG MORI | PL-01 | Machining |
+| CNC-002 | CNC Mill | 3-Axis CNC Milling Machine | Haas | PL-01 | Machining |
+| CNC-003 | CNC Mill | 3-Axis Horizontal CNC Mill | Mazak | PL-01 | Machining |
+| CNC-005 | CNC Mill | 5-Axis CNC Milling Center | DMG MORI | PL-01 | Machining |
+| LTH-001 | CNC Lathe | 2-Axis CNC Turning Center | Mazak | PL-01 | Machining |
+| LTH-002 | CNC Lathe | Multi-Axis CNC Turning Center | Okuma | PL-01 | Machining |
+| LSR-001 | Laser Cutter | Fiber Laser Cutting System | Trumpf | PL-01 | Sheet Metal |
+| LSR-002 | Laser Cutter | Fiber Laser Cutter 8kW | TRUMPF | PL-01 | Sheet Metal |
+| PRB-001 | Press Brake | CNC Hydraulic Press Brake | Amada | PL-01 | Sheet Metal |
+| EDM-001 | Wire EDM | Wire EDM Machine | Sodick | PL-01 | Machining |
+| ADD-001 | 3D Printer | Metal Additive Manufacturing | EOS | PL-01 | Additive |
+| WLD-001 | TIG Welder | Automated TIG Welding Cell | Lincoln Electric | PL-02 | Welding |
+| WLD-002 | MIG Welder | Robotic MIG Welding Cell | Fanuc | PL-02 | Welding |
+| CMM-001 | CMM | Coordinate Measuring Machine | Zeiss | PL-02 | Quality |
+| PNT-001 | Paint Booth | Downdraft Paint Spray Booth | Global Finishing | PL-02 | Finishing |
+| PNT-002 | Paint Booth | Automated Robotic Paint Booth | Durr | PL-02 | Finishing |
+| CRN-001 | Overhead Crane | 50-Ton Overhead Bridge Crane | Konecranes | PL-02 | Assembly |
+| HTB-001 | Hydraulic Test | Hydraulic Test Bench | Parker Hannifin | PL-02 | Test |
+| ASM-001 | Electronics Assembly | Electronics Assembly Station | Juki | PL-03 | Electronics |
+| RFL-001 | Reflow Oven | SMT Reflow Oven | Heller | PL-03 | Electronics |
+
+**3 Production Lines:** PL-01 Precision Fabrication (Building A), PL-02 Assembly & Integration (Building B), PL-03 Electronics & Systems (Building C)
+
+**107 sensors** across all machines — spindle speed/temperature/vibration, coolant flow, laser power, arc voltage, welding current, probe deflection, reflow zone temperatures, and more.
+
+## Simulator Projects (9)
+
+| Project | Simulator | Customer | Type | Status (Apr 22, 2026) |
 |---|---|---|---|---|
-| MCH-001 | CNC Mill | 5-Axis CNC Milling Center | DMG MORI | Machining |
-| MCH-002 | CNC Mill | 3-Axis CNC Milling Machine | Haas | Machining |
-| MCH-003 | CNC Lathe | CNC Turning Center | Mazak | Machining |
-| MCH-004 | Laser Cutter | Fiber Laser Cutting System | Trumpf | Sheet Metal |
-| MCH-005 | Press Brake | CNC Hydraulic Press Brake | Amada | Sheet Metal |
-| MCH-006 | TIG Welder | Automated TIG Welding Cell | Lincoln Electric | Welding |
-| MCH-007 | MIG Welder | Robotic MIG Welding Cell | Fanuc | Welding |
-| MCH-008 | CMM | Coordinate Measuring Machine | Zeiss | Quality |
-| MCH-009 | Wire EDM | Wire EDM Machine | Sodick | Machining |
-| MCH-010 | Electronics | Electronics Assembly Station | Juki | Electronics |
-| MCH-011 | Reflow Oven | SMT Reflow Oven | Heller | Electronics |
-| MCH-012 | 3D Printer | Metal Additive Manufacturing | EOS | Additive |
-| MCH-013 | Paint Booth | Downdraft Paint Spray Booth | Global Finishing | Finishing |
-| MCH-014 | Crane | 50-Ton Overhead Bridge Crane | Konecranes | Assembly |
-| MCH-015 | Hydraulic Test | Hydraulic Test Bench | Parker Hannifin | Test |
-
-**75 sensors** across all machines — spindle speed/temperature/vibration, coolant flow, laser power, arc voltage, welding current, probe deflection, reflow zone temperatures, and more.
-
-## Simulator Projects (8)
-
-| Project | Simulator | Customer | Status (Apr 21, 2026) |
-|---|---|---|---|
-| PRJ-003 | SIM-003 Boeing 777X | Emirates | 100% Delivered |
-| PRJ-001 | SIM-001 Boeing 737 MAX | Air Canada | 84% Qualification Testing |
-| PRJ-002 | SIM-002 Airbus A320neo | Lufthansa | 30% Cockpit Integration |
-| PRJ-006 | SIM-006 Boeing 737 MAX | WestJet | 15% Hydraulics |
-| PRJ-007 | SIM-007 Airbus A320neo | Air France | 0% Planned |
-| PRJ-004 | SIM-004 Airbus A350 | Delta Airlines | 0% Planned |
-| PRJ-005 | SIM-005 Boeing 787 | United Airlines | 0% Planned |
-| PRJ-008 | SIM-008 Boeing 777X | Qatar Airways | 0% Planned |
+| PRJ-003 | SIM-003 Boeing 777X | Emirates | Civilian | 100% Delivered |
+| PRJ-001 | SIM-001 Boeing 737 MAX | Air Canada | Civilian | 84% Qualification Testing |
+| PRJ-009 | SIM-009 CF-18 Hornet | Royal Canadian Air Force | Military | 45% Qualification Testing |
+| PRJ-002 | SIM-002 Airbus A320neo | Lufthansa | Civilian | 30% Cockpit Integration |
+| PRJ-006 | SIM-006 Boeing 737 MAX | WestJet | Civilian | 15% Hydraulics |
+| PRJ-007 | SIM-007 Airbus A320neo | Air France | Civilian | 0% Planned |
+| PRJ-004 | SIM-004 Airbus A350 | Delta Airlines | Civilian | 0% Planned |
+| PRJ-005 | SIM-005 Boeing 787 | United Airlines | Civilian | 0% Planned |
+| PRJ-008 | SIM-008 Boeing 777X | Qatar Airways | Civilian | 0% Planned |
 
 Each project has **13 tasks** with finish-to-start dependencies, skill requirements, and a standard duration from the `task_type_durations` reference table. The Gantt structure is Power BI-compatible (Task Name, Start, Duration, % Complete, Resource).
 
-## Workforce (12 workers + 1 PM)
+## Workforce (28 technicians + 4 managers)
 
-| Employee | Type | Specialty | Limitation |
-|---|---|---|---|
-| Jean-Pierre Tremblay | FTE Senior | Motion Systems | Back — 25kg lift max |
-| Marie-Claire Dubois | FTE | Hydraulics | — |
-| Luc Bergeron | FTE Senior | Electrical | Knee — no ladders |
-| Sophie Lavoie | FTE | Visual Systems | — |
-| Philippe Gagnon | FTE Senior | Avionics | Hearing — noise restricted |
-| Marc-André Pelletier | FTE Senior | Hydraulics (Night) | Respiratory — no chemicals |
-| Catherine Morin | FTE | Electrical | — |
-| François Côté | FTE | Motion Systems | — |
-| David Chen | FTE | Test Engineering | — |
-| Nathalie Bouchard | FTE | Structures | — |
-| James Taylor | Contractor | Hydraulics | — |
-| Maria Garcia | Contractor | Electrical | — |
-| **Daniel Fortin** | **PM** | **Production Manager** | — |
+| Employee | Type | Specialty | Line | Limitation |
+|---|---|---|---|---|
+| Jean-Pierre Tremblay | FTE Senior | Motion Systems | PL-01 | Back — 25kg lift max |
+| Marie-Claire Dubois | FTE | Hydraulics | PL-02 | — |
+| Luc Bergeron | FTE Senior | Electrical | PL-03 | Knee — no ladders |
+| Sophie Lavoie | FTE | Visual Systems | PL-02 | — |
+| Philippe Gagnon | FTE Senior | Avionics | PL-03 | Hearing — noise restricted |
+| Marc-André Pelletier | FTE Senior | Hydraulics (Night) | PL-02 | Respiratory — no chemicals |
+| Catherine Morin | FTE | Electrical | PL-03 | — |
+| François Côté | FTE | Motion Systems | PL-01 | — |
+| David Chen | FTE | Test Engineering | PL-02 | — |
+| Nathalie Bouchard | FTE | Structures | PL-02 | — |
+| Miguel Lopez | FTE | CNC Machining | PL-01 | — |
+| Véronique Dufresne | FTE Senior | CNC Machining | PL-01 | Vision — corrective lenses |
+| Hassan Al-Farsi | FTE | Welding | PL-02 | — |
+| Patrick O'Brien | FTE | Welding (Night) | PL-02 | — |
+| Yuki Tanaka | FTE | Electronics | PL-03 | — |
+| Samuel Martin | FTE Senior | Electronics | PL-03 | — |
+| Priya Sharma | FTE | Avionics | PL-03 | — |
+| Thomas Wilson | FTE | Sheet Metal | PL-01 | — |
+| Mei Wong | FTE | Sheet Metal (Night) | PL-01 | — |
+| Kevin Murphy | FTE | Painting | PL-02 | — |
+| Aisha Mohammed | FTE | Quality | PL-02 | — |
+| Roberto Silva | FTE Senior | Welding | PL-02 | Wrist — limited TIG |
+| Wei Chen | FTE | CNC Machining | PL-01 | — |
+| André Lefebvre | FTE | Additive Manufacturing | PL-01 | — |
+| Isabelle Roy | FTE | Electronics | PL-03 | — |
+| James Taylor | Contractor | Hydraulics | PL-02 | — |
+| Maria Garcia | Contractor | Electrical | PL-03 | — |
+| Wei Zhang | Contractor | CNC Machining | PL-01 | — |
+| **Sylvie Raymond** | **Line Mgr** | **Precision Fabrication** | **PL-01** | — |
+| **Robert Lapointe** | **Line Mgr** | **Assembly & Integration** | **PL-02** | — |
+| **Claire Pelletier** | **Line Mgr** | **Electronics & Systems** | **PL-03** | — |
+| **Marc Fortin** | **Prod Mgr** | **Manufacturing** | — | — |
 
 ## Repo Structure
 
@@ -117,7 +146,6 @@ cae-demo/
 ├── workspace/                           # Published by fabric-cicd
 │   ├── CAEManufacturing_LH.Lakehouse/   # Staging Lakehouse
 │   ├── CAEManufacturingEH.Eventhouse/   # Real-time telemetry store
-│   ├── MachineHealthActivator.Reflex/   # Anomaly alert trigger
 │   ├── GetStarted.Notebook/             # Guided walkthrough
 │   ├── PostDeploymentConfig.Notebook/   # Creates SQL tables, loads data
 │   ├── Simulation/
@@ -127,11 +155,11 @@ cae-demo/
 │   └── Agent/
 │       └── CapacityManagementAgent.Notebook/      # AI agent querying SQL DB
 ├── data/
-│   ├── erp/          # machines, inventory, purchase orders, maintenance history
-│   ├── hr/           # employees, skills, schedules, limitations, leave, contractors
-│   ├── plm/          # simulators, BOMs, projects, tasks, task type durations
-│   ├── kql/          # KQL queries, dashboard spec, anomaly scoring rules
-│   └── telemetry/    # sensor_definitions.csv (75 sensors x 15 machines)
+│   ├── erp/          # production lines, machines, inventory, purchase orders, maintenance
+│   ├── hr/           # employees, skills, schedules, restrictions, time off, contractors
+│   ├── plm/          # simulators, BOMs, projects, tasks, part specs, machine capabilities
+│   ├── mes/          # machine_jobs (MES scheduling)
+│   └── telemetry/    # sensor_definitions.csv (107 sensors × 20 machines)
 └── scripts/          # Local Python tools
     ├── generate_project_data.py    # Regenerate 8 projects with scheduling constraints
     ├── telemetry_normal.py         # Standalone telemetry generator
@@ -179,7 +207,7 @@ ws = FabricWorkspace(workspace_id=WORKSPACE_ID, repository_directory=workspace_d
         "Notebook", "Lakehouse", "Environment",
         "Eventhouse", "Eventstream",
         "KQLDatabase", "KQLDashboard", "KQLQueryset",
-        "Reflex", "SemanticModel", "Report", "SQLDatabase",
+        "SemanticModel", "Report", "SQLDatabase",
         "DataPipeline",
     ], token_credential=_Cred())
 publish_all_items(ws)
@@ -190,7 +218,7 @@ resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_
 items = resp.json().get("value", [])
 lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
 if lh:
-    for folder in ["erp", "hr", "telemetry", "plm"]:
+    for folder in ["erp", "hr", "telemetry", "plm", "mes"]:
         src = os.path.join(data_dir, folder)
         if not os.path.isdir(src): continue
         for f in sorted(glob.glob(os.path.join(src, "*"))):
@@ -216,16 +244,11 @@ Open the deployed `PostDeploymentConfig` notebook. Paste the JDBC connection str
 
 ![PostDeploymentConfig](docs/screenshots/03-postdeployment-run-all.png)
 
-This creates 3 schemas (`hr`, `erp`, `plm`) with 18 tables, bulk inserts all data, then adds primary keys and foreign keys.
+This creates 4 schemas (`hr`, `erp`, `plm`, `mes`) with 24 tables, bulk inserts all data, then adds primary keys and foreign keys.
 
 ### 4. KQL Database Setup
 
-Open the **CAEManufacturingEH** Eventhouse, then open the KQL Database query editor. Run the commands from `data/kql/machine_health_monitoring.kql`:
-- Creates `MachineTelemetry` and `ClockInEvents` tables
-- Creates 10 materialized views for anomaly scoring
-- Creates the `MachineHealthAlerts()` function
-
-![KQL Setup](docs/screenshots/04-eventhouse-kql-setup.png)
+The **PostDeploymentConfig** notebook automatically creates the KQL Database inside the Eventhouse via the Fabric API. It creates `MachineTelemetry` and `ClockInEvents` tables with streaming ingestion enabled.
 
 ### 5. Paste Eventstream Connection Strings
 
@@ -233,11 +256,9 @@ Open each Eventstream in the Fabric UI, go to **Custom App** source, and copy th
 
 ![Eventstream Connection String](docs/screenshots/05-eventstream-connection-string.png)
 
-### 6. Configure the Activator (optional)
+### 6. Configure Activator (optional)
 
-Open `MachineHealthActivator` in the Fabric UI. Connect it to the KQL Database and set it to monitor the `MachineHealthAlerts()` function. Configure trigger: any row with `composite_score > threshold`. Add a Teams notification action.
-
-![Activator Setup](docs/screenshots/06-activator-setup.png)
+Create a new **Reflex** item in the Fabric workspace. Connect it to the KQL Database and set it to monitor anomaly scores. Configure trigger: any row with `composite_score > threshold`. Add a Teams notification action.
 
 ### 7. Demo
 
