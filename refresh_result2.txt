@@ -1,0 +1,12 @@
+=== ATTEMPT 2: SemanticModels/Refreshes API ===
+URI: https://api.fabric.microsoft.com/v1/workspaces/161c43a4-6a14-4b8f-81eb-070f0981a609/semanticModels/2e76bd04-3994-485f-b2b6-847fea6aa0aa/refreshes
+Body: {"type":"full"}
+STATUS: FAILED
+ERROR: Response status code does not indicate success: 404 (Not Found).
+DETAILS: 
+{
+  "requestId": "7bbaa8d6-34b7-4820-986b-8f241c340269",
+  "errorCode": "EntityNotFound",
+  "message": "The requested resource could not be found",
+  "isRetriable": false
+}

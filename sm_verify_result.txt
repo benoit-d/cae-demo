@@ -1,0 +1,41 @@
+=== STEP 1: Getting Semantic Model Definition ===
+Initial response status: 202
+Polling location: https://wabi-west-us3-a-primary-redirect.analysis.windows.net/v1/operations/66cde23e-02bc-4376-bb3d-8e8ff5643634
+Poll attempt 1 - status: 200
+
+=== DEFINITION STRUCTURE ===
+Parts count: 0
+
+All parts:
+
+=== STEP 2: Looking for tasks.tmdl ===
+tasks.tmdl NOT FOUND!
+
+=== STEP 3: Executing DAX Query ===
+DAX Query ERROR: Response status code does not indicate success: 400 (Bad Request).
+Error Details: 
+{
+  "error": {
+    "code": "DatasetExecuteQueriesError",
+    "pbi.error": {
+      "code": "DatasetExecuteQueriesError",
+      "parameters": {},
+      "details": [
+        {
+          "code": "DetailsMessage",
+          "detail": {
+            "type": 1,
+            "value": "MdxScript(Model) (3, 39) Failed to resolve name \u0027SYNTAXERROR\u0027. It is not a valid table, variable, or function name."
+          }
+        },
+        {
+          "code": "AnalysisServicesErrorCode",
+          "detail": {
+            "type": 1,
+            "value": "3241803821"
+          }
+        }
+      ]
+    }
+  }
+}

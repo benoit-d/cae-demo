@@ -3,145 +3,145 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CAE Flight Simulator Manufacturing Demo – Architecture</title>
+<title>CAE Manufacturing Demo – Architecture</title>
 <style>
   :root {
     --teal:        #117865;
-    --teal-light:  #e6f3f0;
+    --teal-light:  #eaf5f2;
     --teal-mid:    #3d9e8e;
-    --grey-dark:   #505050;
+    --grey-dark:   #404040;
     --grey-mid:    #8c8c8c;
     --grey-light:  #e8e8e8;
     --grey-bg:     #f5f5f5;
     --white:       #ffffff;
-    --foundry-bg:  #1b3a5c;
+    --foundry:     #1b3a5c;
     --foundry-lt:  #e8eef5;
-    --shadow:      0 2px 8px rgba(0,0,0,0.10);
+    --magic:       #7c5cbf;
+    --magic-lt:    #f5f1ff;
+    --shadow:      0 2px 6px rgba(0,0,0,0.08);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: var(--white);
-    color: var(--grey-dark);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px 60px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--white); color: var(--grey-dark);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 36px 20px 56px;
   }
-
-  .header { text-align:center; margin-bottom:36px; }
+  .header { text-align:center; margin-bottom:28px; }
   .header h1 { font-size:26px; font-weight:600; color:var(--teal); }
   .header p  { font-size:14px; color:var(--grey-mid); margin-top:4px; }
 
-  /* ── canvas ── */
-  .canvas {
-    position: relative;
-    width: 1140px;
-    height: 760px;
+  /* Canvas is sized by JS after layout */
+  .canvas { position:relative; }
+
+  /* ── cards ── */
+  .c {
+    position:absolute; border-radius:12px; padding:18px 22px;
+    box-shadow:var(--shadow); display:flex; flex-direction:column;
+    align-items:center; text-align:center; gap:6px; z-index:3;
+    visibility:hidden; /* hidden until positioned by JS */
+  }
+  .c .i  { font-size:30px; }
+  .c .l  { font-size:15px; font-weight:600; line-height:1.4; }
+  .c .s  { font-size:12px; color:var(--grey-mid); line-height:1.45; }
+  .c-w   { background:var(--white); border:1.5px solid var(--grey-light); }
+  .c-g   { background:var(--grey-bg); border:1.5px solid var(--grey-light); }
+  .c-t   { background:var(--teal); color:#fff; border:none; }
+  .c-t .s { color:rgba(255,255,255,.8); }
+  .c-f   { background:var(--foundry); color:#fff; border:none; }
+  .c-f .s { color:rgba(255,255,255,.75); }
+  .c-magic { border-color: var(--magic); }
+
+  /* ── zones (drawn by JS) ── */
+  .z {
+    position:absolute; border-radius:16px; z-index:1;
+    visibility: hidden;
+  }
+  .z-lbl {
+    position:absolute; top:-16px; left:20px;
+    font-size:16px; font-weight:700; padding:4px 16px;
+    border-radius:8px; display:flex; align-items:center; gap:8px; z-index:4;
+    white-space:nowrap;
+  }
+  .z-fabric  { border:2.5px solid var(--teal); background:var(--teal-light); }
+  .z-fabric .z-lbl { background:var(--teal); color:#fff; }
+  .z-foundry { border:2.5px solid var(--foundry); background:var(--foundry-lt); }
+  .z-foundry .z-lbl { background:var(--foundry); color:#fff; }
+
+  .z-magic {
+    border:2.5px dashed var(--magic); border-radius:14px;
+    background:var(--magic-lt); z-index:2;
+  }
+  .z-magic-lbl {
+    position:absolute; top:-14px; left:14px;
+    font-size:14px; font-weight:700; padding:3px 14px;
+    border-radius:6px; background:var(--magic); color:#fff; z-index:4;
+    white-space:nowrap;
+  }
+  .z-magic-desc {
+    position:absolute; bottom:16px; left:16px; right:16px;
+    font-size:11px; color:var(--magic); line-height:1.45;
+    font-style:italic; z-index:4; text-align:center;
   }
 
-  /* ── generic card ── */
-  .card {
-    position: absolute;
-    border-radius: 10px;
-    padding: 14px 16px;
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 4px;
-    z-index: 2;
+  .z-kb {
+    border:2.5px dashed var(--foundry); border-radius:14px;
+    opacity:.35; z-index:2;
   }
-  .card .icon  { font-size: 26px; }
-  .card .label { font-size: 13px; font-weight: 600; line-height: 1.3; }
-  .card .sub   { font-size: 11px; color: var(--grey-mid); line-height: 1.3; }
-
-  /* card themes */
-  .card-white   { background: var(--white);   border: 1px solid var(--grey-light); }
-  .card-grey    { background: var(--grey-bg); border: 1px solid var(--grey-light); }
-  .card-teal    { background: var(--teal);    color: var(--white); border: none; }
-  .card-teal .sub   { color: rgba(255,255,255,0.78); }
-  .card-foundry { background: var(--foundry-bg); color: var(--white); border: none; }
-  .card-foundry .sub { color: rgba(255,255,255,0.72); }
-
-  /* ── zone containers ── */
-  .zone {
-    position: absolute;
-    border-radius: 14px;
-    border: 2.5px solid;
-    z-index: 1;
-  }
-  .zone-label {
-    position: absolute;
-    top: -15px; left: 18px;
-    font-size: 14px; font-weight: 700;
-    padding: 3px 14px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    z-index: 3;
+  .kb-lbl {
+    position:absolute; z-index:3;
+    font-size:11px; font-weight:700; color:var(--foundry);
+    text-transform:uppercase; letter-spacing:1px; opacity:.6;
+    white-space:nowrap;
   }
 
-  /* Fabric workspace */
-  .zone-fabric {
-    border-color: var(--teal);
-    background: var(--teal-light);
-    top: 80px; left: 150px;
-    width: 710px; height: 620px;
+  /* ── setup badge ── */
+  .setup-badge {
+    position:absolute; border-radius:12px; padding:20px 22px;
+    background:var(--grey-bg); border:1.5px dashed var(--grey-mid);
+    display:flex; align-items:flex-start; gap:14px;
+    z-index:3; opacity:.75; visibility:hidden;
   }
-  .zone-fabric .zone-label {
-    background: var(--teal); color: var(--white);
+  .setup-badge .i  { font-size:28px; margin-top:2px; }
+  .setup-badge .l  { font-size:14px; font-weight:600; line-height:1.3; }
+  .setup-badge .s  { font-size:11.5px; color:var(--grey-mid); line-height:1.4; margin-top:4px; }
+  .setup-badge .tag {
+    font-size:9.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.8px; color:var(--grey-mid); background:var(--grey-light);
+    padding:3px 9px; border-radius:4px; margin-top:6px; display:inline-block;
   }
 
-  /* Foundry */
-  .zone-foundry {
-    border-color: var(--foundry-bg);
-    background: var(--foundry-lt);
-    top: 240px; left: 900px;
-    width: 220px; height: 200px;
-  }
-  .zone-foundry .zone-label {
-    background: var(--foundry-bg); color: var(--white);
+  /* ── section labels ── */
+  .sec {
+    position:absolute; font-size:11px; font-weight:700;
+    text-transform:uppercase; letter-spacing:1.3px;
+    color:var(--teal-mid); opacity:.55; z-index:2;
+    white-space:nowrap;
   }
 
   /* ── external sources ── */
   .ext {
-    position: absolute;
-    width: 120px;
-    text-align: center;
-    z-index: 2;
+    position:absolute; text-align:center; z-index:3; visibility:hidden;
   }
-  .ext .icon  { font-size: 30px; }
-  .ext .label { font-size: 12px; font-weight: 600; margin-top: 4px; }
-  .ext .sub   { font-size: 10px; color: var(--grey-mid); }
+  .ext .i  { font-size:34px; }
+  .ext .l  { font-size:13px; font-weight:600; margin-top:4px; }
+  .ext .s  { font-size:11px; color:var(--grey-mid); }
 
-  /* ── SVG arrows ── */
-  svg.arrows {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 2;
+  /* ── SVG ── */
+  svg.arr {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    pointer-events:none; z-index:2;
   }
-  svg.arrows line, svg.arrows path, svg.arrows polyline {
-    stroke-width: 2.2;
-    fill: none;
-  }
-  .a-teal    { stroke: var(--teal); }
-  .a-grey    { stroke: var(--grey-mid); }
-  .a-foundry { stroke: var(--foundry-bg); }
-  .a-dash    { stroke-dasharray: 7 5; }
+  svg.arr polyline, svg.arr line { stroke-width:2.2; fill:none; }
 
   /* ── legend ── */
   .legend {
-    margin-top: 28px;
-    display: flex; gap: 30px;
-    font-size: 12px; color: var(--grey-mid);
+    margin-top:32px; display:flex; flex-wrap:wrap; gap:30px;
+    font-size:12.5px; color:var(--grey-mid);
   }
   .legend span { display:inline-flex; align-items:center; gap:6px; }
-  .legend .sw  { width:16px; height:4px; border-radius:2px; display:inline-block; }
+  .legend .sw  { width:22px; height:3px; border-radius:2px; display:inline-block; }
+  .legend .sw-d { border-top:2.2px dashed; height:0; width:22px; display:inline-block; }
 </style>
 </head>
 <body>
@@ -151,197 +151,509 @@
   <p>Microsoft Fabric &amp; AI Foundry — Architecture Overview</p>
 </div>
 
-<div class="canvas">
+<div class="canvas" id="canvas">
 
-  <!-- ════ SVG ARROWS ════ -->
-  <svg class="arrows" viewBox="0 0 1140 760">
-    <defs>
-      <marker id="t" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-        <path d="M0,0 L8,3 L0,6Z" fill="#117865"/></marker>
-      <marker id="g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-        <path d="M0,0 L8,3 L0,6Z" fill="#8c8c8c"/></marker>
-      <marker id="f" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-        <path d="M0,0 L8,3 L0,6Z" fill="#1b3a5c"/></marker>
-    </defs>
+  <!-- ── External Sources ── -->
+  <div class="ext" id="src-machines">
+    <div class="i">⚙️</div>
+    <div class="l">Manufacturing<br>Machines</div>
+    <div class="s">15 machines · 75 sensors</div>
+  </div>
+  <div class="ext" id="src-workforce">
+    <div class="i">👷</div>
+    <div class="l">Workforce</div>
+    <div class="s">Clock-in / task events</div>
+  </div>
+  <div class="ext" id="src-refdata">
+    <div class="i">📋</div>
+    <div class="l">Reference Data</div>
+    <div class="s">HR · ERP · PLM</div>
+  </div>
 
-    <!-- External → Eventstreams -->
-    <line x1="128" y1="185" x2="205" y2="185" class="a-teal" marker-end="url(#t)"/>
-    <line x1="128" y1="310" x2="205" y2="310" class="a-teal" marker-end="url(#t)"/>
-    <!-- External → Lakehouse -->
-    <line x1="128" y1="475" x2="205" y2="475" class="a-grey" marker-end="url(#g)"/>
+  <!-- ── Ingestion Row ── -->
+  <div class="c c-w c-magic" id="es-telemetry">
+    <div class="i">🔄</div>
+    <div class="l">Eventstream</div>
+    <div class="s">Telemetry Stream<br>
+      <em style="color:var(--magic); font-size:10.5px;">virtualized by Demo Magic</em>
+    </div>
+  </div>
+  <div class="c c-w c-magic" id="es-clockin">
+    <div class="i">🔄</div>
+    <div class="l">Eventstream</div>
+    <div class="s">Clock-In Stream<br>
+      <em style="color:var(--magic); font-size:10.5px;">virtualized by Demo Magic</em>
+    </div>
+  </div>
+  <div class="c c-g" id="lakehouse">
+    <div class="i">🏠</div>
+    <div class="l">Lakehouse</div>
+    <div class="s">Staging CSVs<br>(deployment only)</div>
+  </div>
 
-    <!-- Eventstream Telem → Eventhouse -->
-    <line x1="340" y1="185" x2="425" y2="195" class="a-teal" marker-end="url(#t)"/>
-    <!-- Eventstream Clock → Eventhouse -->
-    <line x1="340" y1="310" x2="425" y2="240" class="a-teal" marker-end="url(#t)"/>
+  <!-- ── Data Stores Row ── -->
+  <div class="c c-t" id="eventhouse">
+    <div class="i">⚡</div>
+    <div class="l">Eventhouse</div>
+    <div class="s">KQL Database<br>machine_telemetry<br>clockin_events</div>
+  </div>
+  <div class="c c-t" id="sqldb">
+    <div class="i">🗄️</div>
+    <div class="l">SQL Database</div>
+    <div class="s">hr.* · erp.* schemas<br>17 tables · CRUD</div>
+  </div>
 
-    <!-- Lakehouse → SQL DB -->
-    <line x1="340" y1="475" x2="425" y2="475" class="a-grey" marker-end="url(#g)"/>
+  <!-- ── Analytics Row ── -->
+  <div class="c c-w" id="reflex">
+    <div class="i">🔔</div>
+    <div class="l">Reflex Activator</div>
+    <div class="s">Machine Health monitoring<br>Anomaly alert triggers</div>
+  </div>
+  <div class="c c-w" id="powerbi">
+    <div class="i">📊</div>
+    <div class="l">Power BI</div>
+    <div class="s">Gantt Chart<br>KQL Dashboards</div>
+  </div>
 
-    <!-- Eventhouse → Power BI -->
-    <line x1="565" y1="195" x2="640" y2="178" class="a-teal" marker-end="url(#t)"/>
-    <!-- SQL DB → Power BI -->
-    <path d="M540,445 Q600,350 660,200" class="a-grey" marker-end="url(#g)"/>
-    <!-- Eventhouse → Reflex -->
-    <line x1="555" y1="240" x2="625" y2="310" class="a-teal" marker-end="url(#t)"/>
+  <!-- ── Demo Magic Cards ── -->
+  <div class="c c-w c-magic" id="pipelines">
+    <div class="i">⏱️</div>
+    <div class="l">Data Pipelines</div>
+    <div class="s">1-min scheduled triggers</div>
+  </div>
+  <div class="c c-w c-magic" id="sim-notebooks">
+    <div class="i">🧪</div>
+    <div class="l">Simulation Notebooks</div>
+    <div class="s">Telemetry · ClockIn<br>Fault Injection</div>
+  </div>
 
-    <!-- Pipelines → Eventstreams -->
-    <path d="M430,630 Q350,550 300,350" class="a-grey a-dash" marker-end="url(#g)"/>
+  <!-- ── AI Foundry Agent ── -->
+  <div class="c c-f" id="agent">
+    <div class="i">🧠</div>
+    <div class="l">Capacity Management AI Agent</div>
+    <div class="s">Activated by Reflex<br>Reasons across all Fabric data sources</div>
+  </div>
 
-    <!-- SQL DB → Foundry -->
-    <path d="M570,490 Q750,500 910,370" class="a-foundry" marker-end="url(#f)"/>
-    <!-- Eventhouse → Foundry -->
-    <path d="M570,220 Q780,260 910,330" class="a-foundry" marker-end="url(#f)"/>
+  <!-- ── Web Application ── -->
+  <div class="c c-w" id="webapp">
+    <div class="i">💬</div>
+    <div class="l">Web Application</div>
+    <div class="s">Chat interface<br>
+      <em style="color:var(--teal);">(replaces Teams for demo)</em>
+    </div>
+  </div>
 
-    <!-- Foundry → Web App -->
-    <line x1="1010" y1="432" x2="1010" y2="510" class="a-foundry" marker-end="url(#f)"/>
-    <!-- Web App → Foundry (bidirectional) -->
-    <line x1="990" y1="510" x2="990" y2="435" class="a-foundry a-dash" marker-end="url(#f)"/>
-  </svg>
+  <!-- ── Setup Badge ── -->
+  <div class="setup-badge" id="setup-notebooks">
+    <div class="i">📓</div>
+    <div>
+      <div class="l">Setup Notebooks</div>
+      <div class="s">Install · LoadData<br>PostDeploymentConfig</div>
+      <div class="tag">Workspace setup — not part of demo</div>
+    </div>
+  </div>
 
-  <!-- ════ ZONES ════ -->
-  <div class="zone zone-fabric">
-    <div class="zone-label">
-      <!-- Fabric icon (diamond) -->
+  <!-- ── Zones (positioned by JS) ── -->
+  <div class="z z-fabric" id="zone-fabric">
+    <div class="z-lbl">
       <svg width="22" height="22" viewBox="0 0 22 22">
-        <polygon points="11,1 21,7 21,15 11,21 1,15 1,7" fill="rgba(255,255,255,0.25)"/>
+        <polygon points="11,1 21,7 21,15 11,21 1,15 1,7" fill="rgba(255,255,255,.25)"/>
         <polygon points="11,3.5 18.5,8 18.5,14 11,18.5 3.5,14 3.5,8" fill="#fff"/>
       </svg>
       Microsoft Fabric Workspace
     </div>
   </div>
-
-  <div class="zone zone-foundry">
-    <div class="zone-label">
-      <!-- Foundry icon -->
+  <div class="z z-foundry" id="zone-foundry">
+    <div class="z-lbl">
       <svg width="20" height="20" viewBox="0 0 20 20">
-        <circle cx="10" cy="10" r="9" fill="rgba(255,255,255,0.3)"/>
+        <circle cx="10" cy="10" r="9" fill="rgba(255,255,255,.3)"/>
         <circle cx="10" cy="10" r="6" fill="#fff"/>
         <circle cx="10" cy="10" r="3" fill="#1b3a5c"/>
       </svg>
       AI Foundry
     </div>
   </div>
+  <div class="z z-magic" id="zone-magic">
+    <div class="z-magic-lbl">🪄 Demo Magic</div>
+    <div class="z-magic-desc">
+      Virtualizes the Eventstreams —<br>
+      pushes synthetic data directly<br>
+      into the Eventhouse
+    </div>
+  </div>
+  <div class="z z-kb" id="zone-kb"></div>
+  <div class="kb-lbl" id="kb-label">📚 Agent Knowledge Base</div>
 
-  <!-- ════ EXTERNAL SOURCES ════ -->
-  <div class="ext" style="top:145px; left:8px;">
-    <div class="icon">⚙️</div>
-    <div class="label">Manufacturing<br>Machines</div>
-    <div class="sub">15 machines · 75 sensors</div>
-  </div>
-  <div class="ext" style="top:270px; left:8px;">
-    <div class="icon">👷</div>
-    <div class="label">Workforce</div>
-    <div class="sub">Clock-in / task events</div>
-  </div>
-  <div class="ext" style="top:430px; left:8px;">
-    <div class="icon">📋</div>
-    <div class="label">Reference Data</div>
-    <div class="sub">HR · ERP · PLM</div>
-  </div>
+  <!-- Section labels -->
+  <div class="sec" id="lbl-ingestion">Ingestion</div>
+  <div class="sec" id="lbl-stores">Data Stores</div>
+  <div class="sec" id="lbl-analytics">Analytics</div>
 
-  <!-- ════ FABRIC CARDS ════ -->
-
-  <!-- Eventstream – Telemetry -->
-  <div class="card card-white" style="top:150px; left:210px; width:125px;">
-    <div class="icon">🔄</div>
-    <div class="label">Eventstream</div>
-    <div class="sub">Telemetry Stream</div>
-  </div>
-
-  <!-- Eventstream – Clock-in -->
-  <div class="card card-white" style="top:275px; left:210px; width:125px;">
-    <div class="icon">🔄</div>
-    <div class="label">Eventstream</div>
-    <div class="sub">Clock-In Stream</div>
-  </div>
-
-  <!-- Eventhouse (KQL) -->
-  <div class="card card-teal" style="top:155px; left:430px; width:140px;">
-    <div class="icon">⚡</div>
-    <div class="label">Eventhouse</div>
-    <div class="sub">KQL Database<br>machine_telemetry<br>clockin_events</div>
-  </div>
-
-  <!-- Reflex Activator -->
-  <div class="card card-white" style="top:295px; left:610px; width:140px;">
-    <div class="icon">🔔</div>
-    <div class="label">Reflex Activator</div>
-    <div class="sub">Machine Health<br>Alert triggers</div>
-  </div>
-
-  <!-- Lakehouse -->
-  <div class="card card-grey" style="top:425px; left:210px; width:130px;">
-    <div class="icon">🏠</div>
-    <div class="label">Lakehouse</div>
-    <div class="sub">Staging CSVs<br>(deployment only)</div>
-  </div>
-
-  <!-- SQL Database -->
-  <div class="card card-teal" style="top:415px; left:430px; width:140px;">
-    <div class="icon">🗄️</div>
-    <div class="label">SQL Database</div>
-    <div class="sub">hr.* · erp.* schemas<br>17 tables · CRUD</div>
-  </div>
-
-  <!-- Power BI -->
-  <div class="card card-white" style="top:130px; left:645px; width:130px;">
-    <div class="icon">📊</div>
-    <div class="label">Power BI</div>
-    <div class="sub">Gantt Chart<br>KQL Dashboards</div>
-  </div>
-
-  <!-- Notebooks (Install) -->
-  <div class="card card-grey" style="top:530px; left:195px; width:140px;">
-    <div class="icon">📓</div>
-    <div class="label">Notebooks</div>
-    <div class="sub">Install · LoadData<br>PostDeployConfig</div>
-  </div>
-
-  <!-- Simulation Notebooks -->
-  <div class="card card-grey" style="top:530px; left:355px; width:150px;">
-    <div class="icon">🧪</div>
-    <div class="label">Simulation</div>
-    <div class="sub">Telemetry Emulator<br>ClockIn Emulator<br>Fault Injection</div>
-  </div>
-
-  <!-- Data Pipelines -->
-  <div class="card card-white" style="top:618px; left:355px; width:150px;">
-    <div class="icon">⏱️</div>
-    <div class="label">Data Pipelines</div>
-    <div class="sub">1-min scheduled<br>notebook triggers</div>
-  </div>
-
-  <!-- Agent Notebook -->
-  <div class="card card-grey" style="top:530px; left:540px; width:150px;">
-    <div class="icon">🤖</div>
-    <div class="label">Agent Notebook</div>
-    <div class="sub">CapacityManagement<br>Agent code</div>
-  </div>
-
-  <!-- ════ FOUNDRY CARD ════ -->
-  <div class="card card-foundry" style="top:290px; left:930px; width:160px;">
-    <div class="icon">🧠</div>
-    <div class="label">Capacity Mgmt<br>AI Agent</div>
-    <div class="sub">Reasons across<br>all data sources</div>
-  </div>
-
-  <!-- ════ WEB APP ════ -->
-  <div class="card card-white" style="top:520px; left:935px; width:160px;">
-    <div class="icon">💬</div>
-    <div class="label">Web Application</div>
-    <div class="sub">Chat interface<br><em style="color:var(--teal);">(replaces Teams for demo)</em></div>
-  </div>
+  <!-- SVG arrows (drawn by JS) -->
+  <svg class="arr" id="arrows"></svg>
 
 </div><!-- canvas -->
 
-<!-- ════ LEGEND ════ -->
 <div class="legend">
   <span><span class="sw" style="background:var(--teal);"></span> Real-time data flow</span>
-  <span><span class="sw" style="background:var(--grey-mid);"></span> Batch / reference data</span>
-  <span><span class="sw" style="background:var(--foundry-bg);"></span> AI Agent connectivity</span>
-  <span><span class="sw" style="background:var(--grey-mid); border-top:2px dashed var(--grey-mid); height:0;"></span> Scheduled trigger</span>
+  <span><span class="sw" style="background:var(--grey-mid);"></span> Batch / staging data</span>
+  <span><span class="sw" style="background:var(--foundry);"></span> AI Agent trigger &amp; output</span>
+  <span><span class="sw-d" style="border-color:var(--foundry);"></span> Knowledge base query</span>
+  <span><span class="sw-d" style="border-color:var(--magic);"></span> Demo simulation path</span>
 </div>
+
+<script>
+(() => {
+  // ─── Configuration ───
+  const GAP_ROW    = 70;   // vertical gap between rows (enough for routing + KB zone padding)
+  const GAP_COL    = 36;   // horizontal gap between cards in same row
+  const ZONE_PAD   = 30;   // padding inside zones around cards
+  const ZONE_PAD_T = 40;   // extra top padding (room for zone label)
+  const ARROW_GAP  = 20;   // gap between arrow routing channels and elements
+  const MAGIC_GAP  = 40;   // gap between magic zone and workspace
+
+  const $ = id => document.getElementById(id);
+
+  // Measure natural size of an element
+  function measure(el) {
+    el.style.visibility = 'visible';
+    el.style.position   = 'absolute';
+    el.style.left       = '-9999px';
+    el.style.top        = '-9999px';
+    const r = el.getBoundingClientRect();
+    el.style.left = ''; el.style.top = '';
+    return { w: Math.ceil(r.width), h: Math.ceil(r.height) };
+  }
+
+  // Place element at (x, y) with optional fixed width
+  function place(el, x, y, w) {
+    if (w) el.style.width = w + 'px';
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    el.style.visibility = 'visible';
+  }
+
+  // Get bounding box of a placed element
+  function box(el) {
+    const s = el.style;
+    return {
+      x: parseFloat(s.left), y: parseFloat(s.top),
+      w: el.offsetWidth, h: el.offsetHeight,
+      cx: parseFloat(s.left) + el.offsetWidth / 2,
+      cy: parseFloat(s.top) + el.offsetHeight / 2,
+      b: parseFloat(s.top) + el.offsetHeight,
+      r: parseFloat(s.left) + el.offsetWidth
+    };
+  }
+
+  // ─── Step 1: Measure all elements ───
+  const cards = {};
+  ['src-machines','src-workforce','src-refdata',
+   'es-telemetry','es-clockin','lakehouse',
+   'eventhouse','sqldb',
+   'reflex','powerbi',
+   'pipelines','sim-notebooks',
+   'agent','webapp','setup-notebooks'].forEach(id => {
+    cards[id] = measure($(id));
+  });
+
+  // ─── Step 2: Layout calculation ───
+  // Fixed widths for alignment
+  const CARD_W  = 190;  // standard card width
+  const CARD_WL = 210;  // wider cards (data stores)
+  const SRC_W   = 140;  // source width
+  const AGENT_W = 350;
+  const WEBAPP_W = 220;
+
+  // ── Fabric workspace content area ──
+  // The workspace X will be determined after we know the magic zone width
+  const magicCardW = 210;
+
+  // Measure magic zone description
+  const magicDescEl = $('zone-magic').querySelector('.z-magic-desc');
+  // Approximate magic desc height
+  const magicDescH = 55;
+
+  // Calculate magic zone dimensions
+  const pipeH = cards['pipelines'].h;
+  const simH  = cards['sim-notebooks'].h;
+  const magicContentH = pipeH + GAP_COL + simH + GAP_COL + magicDescH;
+  const magicZoneH = ZONE_PAD_T + magicContentH + ZONE_PAD;
+  const magicZoneW = magicCardW + ZONE_PAD * 2;
+
+  // Sources row
+  let Y = 0;
+  const srcY = Y;
+  const srcMaxH = Math.max(cards['src-machines'].h, cards['src-workforce'].h, cards['src-refdata'].h);
+
+  // Workspace starts after sources + gap
+  Y = srcY + srcMaxH + GAP_ROW;
+  const fabricTop = Y;
+
+  // Ingestion row (inside workspace)
+  const ingY = fabricTop + ZONE_PAD_T;
+  const ingMaxH = Math.max(cards['es-telemetry'].h, cards['es-clockin'].h, cards['lakehouse'].h);
+
+  // Data stores row
+  Y = ingY + ingMaxH + GAP_ROW;
+  const storeY = Y;
+  const storeMaxH = Math.max(cards['eventhouse'].h, cards['sqldb'].h);
+
+  // Analytics row
+  Y = storeY + storeMaxH + GAP_ROW;
+  const analyticsY = Y;
+  const analyticsMaxH = Math.max(cards['reflex'].h, cards['powerbi'].h);
+
+  // Fabric workspace bottom
+  const fabricBottom = analyticsY + analyticsMaxH + ZONE_PAD;
+  const fabricH = fabricBottom - fabricTop;
+
+  // Three columns inside workspace (left-aligned cards)
+  const fabricInnerW = CARD_W + GAP_COL + CARD_WL + GAP_COL + CARD_W;
+  const fabricW = fabricInnerW + ZONE_PAD * 2;
+
+  // Magic zone X and workspace X
+  const magicX = 20;
+  const fabricX = magicX + magicZoneW + MAGIC_GAP;
+  const innerX = fabricX + ZONE_PAD;
+
+  // Column X positions inside workspace
+  const col1X = innerX;
+  const col2X = col1X + CARD_W + GAP_COL;
+  const col3X = col2X + CARD_WL + GAP_COL;
+
+  // ── Place sources (centered above their ingestion columns) ──
+  place($('src-machines'),  col1X + (CARD_W - SRC_W) / 2,  srcY, SRC_W);
+  place($('src-workforce'), col2X + (CARD_WL - SRC_W) / 2, srcY, SRC_W);
+  place($('src-refdata'),   col3X + (CARD_W - SRC_W) / 2,  srcY, SRC_W);
+
+  // ── Place ingestion row ──
+  place($('es-telemetry'), col1X, ingY, CARD_W);
+  place($('es-clockin'),   col2X, ingY, CARD_WL);
+  place($('lakehouse'),    col3X, ingY, CARD_W);
+
+  // ── Place data stores row (centered in 2-col span) ──
+  const store2ColW = CARD_WL;
+  const storeGap = GAP_COL + 40; // wider gap for data stores
+  const storeBlockW = store2ColW * 2 + storeGap;
+  const storeStartX = innerX + (fabricInnerW - storeBlockW) / 2;
+  place($('eventhouse'), storeStartX, storeY, store2ColW);
+  place($('sqldb'),      storeStartX + store2ColW + storeGap, storeY, store2ColW);
+
+  // ── Place analytics row ──
+  const analBlockW = CARD_W * 2 + storeGap;
+  const analStartX = innerX + (fabricInnerW - analBlockW) / 2;
+  place($('reflex'),  analStartX, analyticsY, CARD_W);
+  place($('powerbi'), analStartX + CARD_W + storeGap, analyticsY, CARD_W);
+
+  // ── Place Fabric zone ──
+  const zf = $('zone-fabric');
+  place(zf, fabricX, fabricTop, fabricW);
+  zf.style.height = fabricH + 'px';
+
+  // ── Magic zone (vertically centered on data stores row) ──
+  const magicCenterY = storeY + storeMaxH / 2;
+  const magicY = magicCenterY - magicZoneH / 2;
+  const zm = $('zone-magic');
+  place(zm, magicX, magicY, magicZoneW);
+  zm.style.height = magicZoneH + 'px';
+
+  // Magic cards inside magic zone
+  const mCardX = magicX + ZONE_PAD;
+  const mCardY = magicY + ZONE_PAD_T;
+  place($('pipelines'),     mCardX, mCardY, magicCardW);
+  place($('sim-notebooks'), mCardX, mCardY + pipeH + GAP_COL, magicCardW);
+
+  // ── KB zone (around data stores with generous padding) ──
+  const ehBox = box($('eventhouse'));
+  const sqlBox = box($('sqldb'));
+  const kbPadX = 18;   // horizontal padding
+  const kbPadTop = 30;  // extra top padding to clear ingestion→storage routing arrows
+  const kbPadBot = 18;
+  const zkb = $('zone-kb');
+  place(zkb,
+    ehBox.x - kbPadX,
+    Math.min(ehBox.y, sqlBox.y) - kbPadTop,
+    sqlBox.r - ehBox.x + kbPadX * 2);
+  zkb.style.height = (Math.max(ehBox.b, sqlBox.b) - Math.min(ehBox.y, sqlBox.y) + kbPadTop + kbPadBot) + 'px';
+
+  // KB label below the zone
+  const kbBox = box(zkb);
+  place($('kb-label'), kbBox.x + kbBox.w / 2 - 80, kbBox.y + kbBox.h + 6);
+
+  // ── Setup Notebooks (right of workspace) ──
+  const setupX = fabricX + fabricW + MAGIC_GAP;
+  const setupY = storeY + (storeMaxH - cards['setup-notebooks'].h) / 2;
+  place($('setup-notebooks'), setupX, setupY);
+
+  // ── Foundry zone (below workspace, centered) ──
+  const foundryGapY = GAP_ROW + 30;
+  const foundryTop = fabricBottom + foundryGapY;
+  // Measure agent to size foundry
+  const agentMeasured = cards['agent'];
+  const foundryPad = 35;
+  const foundryH = agentMeasured.h + foundryPad * 2 + 10; // extra for label
+  const foundryW = AGENT_W + foundryPad * 2;
+  const foundryCX = fabricX + fabricW / 2;
+  const foundryX = foundryCX - foundryW / 2;
+  const zfo = $('zone-foundry');
+  place(zfo, foundryX, foundryTop, foundryW);
+  zfo.style.height = foundryH + 'px';
+
+  // Agent card centered in foundry
+  const agentX = foundryCX - AGENT_W / 2;
+  const agentY = foundryTop + foundryPad + 10;
+  place($('agent'), agentX, agentY, AGENT_W);
+
+  // ── Web App (below foundry) ──
+  const agentBox = box($('agent'));
+  const foundryBottom = foundryTop + foundryH;
+  const webappY = foundryBottom + GAP_ROW;
+  const webappX = foundryCX - WEBAPP_W / 2;
+  place($('webapp'), webappX, webappY, WEBAPP_W);
+
+  // ── Section labels ──
+  place($('lbl-ingestion'), fabricX + 8, ingY - 18);
+  place($('lbl-stores'),    fabricX + 8, storeY - 18);
+  place($('lbl-analytics'), fabricX + 8, analyticsY - 18);
+
+  // ── Canvas size ──
+  const webappBox = box($('webapp'));
+  const setupBox  = box($('setup-notebooks'));
+  const canvasW = setupBox.r + 40;
+  const canvasH = webappBox.b + 30;
+  const canvas = $('canvas');
+  canvas.style.width  = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+
+  // ─── Step 3: Draw arrows ───
+  const svg = $('arrows');
+  svg.setAttribute('viewBox', `0 0 ${canvasW} ${canvasH}`);
+
+  const TEAL    = '#117865';
+  const GREY    = '#8c8c8c';
+  const FOUNDRY = '#1b3a5c';
+  const MAGIC   = '#7c5cbf';
+
+  function mkMarker(id, color) {
+    const m = document.createElementNS('http://www.w3.org/2000/svg','marker');
+    m.setAttribute('id', id);
+    m.setAttribute('markerWidth','9');
+    m.setAttribute('markerHeight','7');
+    m.setAttribute('refX','8');
+    m.setAttribute('refY','3.5');
+    m.setAttribute('orient','auto');
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d','M0,0 L9,3.5 L0,7Z');
+    p.setAttribute('fill', color);
+    m.appendChild(p);
+    return m;
+  }
+
+  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.appendChild(mkMarker('mt', TEAL));
+  defs.appendChild(mkMarker('mg', GREY));
+  defs.appendChild(mkMarker('mf', FOUNDRY));
+  defs.appendChild(mkMarker('mm', MAGIC));
+  svg.appendChild(defs);
+
+  function drawLine(x1,y1,x2,y2, color, marker, dashed) {
+    const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+    l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+    l.setAttribute('stroke', color);
+    l.setAttribute('stroke-width','2.2');
+    l.setAttribute('fill','none');
+    if (dashed) l.setAttribute('stroke-dasharray','8 5');
+    if (marker) l.setAttribute('marker-end', `url(#${marker})`);
+    svg.appendChild(l);
+  }
+
+  function drawPolyline(pts, color, marker, dashed) {
+    const p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    p.setAttribute('points', pts.map(pt => pt.join(',')).join(' '));
+    p.setAttribute('stroke', color);
+    p.setAttribute('stroke-width','2.2');
+    p.setAttribute('fill','none');
+    if (dashed) p.setAttribute('stroke-dasharray','8 5');
+    if (marker) p.setAttribute('marker-end', `url(#${marker})`);
+    svg.appendChild(p);
+  }
+
+  function drawText(x, y, text, color, opts = {}) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', x); t.setAttribute('y', y);
+    t.setAttribute('font-family','Segoe UI');
+    t.setAttribute('font-size', opts.size || '12');
+    t.setAttribute('fill', color);
+    t.setAttribute('font-weight', opts.weight || '600');
+    if (opts.rotate) t.setAttribute('transform', `rotate(${opts.rotate} ${x} ${y})`);
+    t.textContent = text;
+    svg.appendChild(t);
+  }
+
+  // Get boxes for arrow routing
+  const srcM = box($('src-machines'));
+  const srcW = box($('src-workforce'));
+  const srcR = box($('src-refdata'));
+  const esT  = box($('es-telemetry'));
+  const esC  = box($('es-clockin'));
+  const lh   = box($('lakehouse'));
+  const eh   = box($('eventhouse'));
+  const sql  = box($('sqldb'));
+  const rfx  = box($('reflex'));
+  const pbi  = box($('powerbi'));
+  const ag   = box($('agent'));
+  const wa   = box($('webapp'));
+  const pipe = box($('pipelines'));
+  const simN = box($('sim-notebooks'));
+
+  // ── Sources → Ingestion (vertical) ──
+  drawLine(srcM.cx, srcM.b, esT.cx, esT.y, TEAL, 'mt');
+  drawLine(srcW.cx, srcW.b, esC.cx, esC.y, TEAL, 'mt');
+  drawLine(srcR.cx, srcR.b, lh.cx,  lh.y,  GREY, 'mg');
+
+  // ── Ingestion → Storage (L-shaped, routing Y in upper third of gap to stay above KB zone) ──
+  const ingestionBottom = ingY + ingMaxH;
+  const routeY1 = ingestionBottom + (storeY - ingestionBottom) * 0.33;
+  drawPolyline([[esT.cx, esT.b], [esT.cx, routeY1], [eh.cx, routeY1], [eh.cx, eh.y]], TEAL, 'mt');
+  drawPolyline([[esC.cx, esC.b], [esC.cx, routeY1 + 10], [eh.cx + 40, routeY1 + 10], [eh.cx + 40, eh.y]], TEAL, 'mt');
+  drawPolyline([[lh.cx, lh.b], [lh.cx, routeY1], [sql.cx, routeY1], [sql.cx, sql.y]], GREY, 'mg');
+
+  // ── Demo Magic → Eventhouse (dashed purple) ──
+  const magicArrowY = eh.cy;
+  drawLine(magicX + magicZoneW, magicArrowY, eh.x, magicArrowY, MAGIC, 'mm', true);
+
+  // ── Storage → Analytics ──
+  const routeY2 = eh.b + (analyticsY - (storeY + storeMaxH)) / 2;
+  // Eventhouse → Reflex
+  drawLine(eh.cx, eh.b, rfx.cx, rfx.y, TEAL, 'mt');
+  // SQL → Power BI
+  drawLine(sql.cx, sql.b, pbi.cx, pbi.y, TEAL, 'mt');
+  // Eventhouse → Power BI (L-shaped)
+  const ehPbiRouteX = eh.r + ARROW_GAP;
+  drawPolyline([[eh.r, eh.cy + 15], [ehPbiRouteX, eh.cy + 15],
+                [ehPbiRouteX, pbi.cy], [pbi.x, pbi.cy]], TEAL, 'mt');
+
+  // ── Reflex → Foundry (trigger, L-shaped) ──
+  const triggerRouteY = rfx.b + (foundryTop - fabricBottom) / 2 + fabricBottom - rfx.b;
+  drawPolyline([[rfx.cx, rfx.b], [rfx.cx, triggerRouteY],
+                [ag.cx, triggerRouteY], [ag.cx, foundryTop]], FOUNDRY, 'mf');
+  drawText(rfx.cx + 20, triggerRouteY - 6, 'triggers', FOUNDRY);
+
+  // ── Knowledge Base access (dashed, routed inside workspace right margin to avoid setup) ──
+  const kbRouteX = fabricX + fabricW - 12; // inside workspace right edge, left of setup
+  drawPolyline([[ag.r, ag.cy], [kbRouteX, ag.cy],
+                [kbRouteX, eh.cy], [sql.r, eh.cy]], FOUNDRY, 'mf', true);
+  drawText(kbRouteX + 8, (ag.cy + eh.cy) / 2 + 5, 'queries knowledge base', FOUNDRY,
+           { size: '11', rotate: -90 });
+
+  // ── Foundry ↔ Web App ──
+  drawLine(ag.cx + 14, foundryTop + foundryH, wa.cx + 14, wa.y, FOUNDRY, 'mf');
+  drawLine(ag.cx - 14, wa.y, ag.cx - 14, foundryTop + foundryH, FOUNDRY, 'mf', true);
+
+})();
+</script>
 
 </body>
 </html>

@@ -1,0 +1,198 @@
+﻿table tasks
+	lineageTag: bbbc8861-b321-4094-8b78-5bfd21568765
+	sourceLineageTag: [plm].[tasks]
+
+	column Task_ID
+		dataType: string
+		lineageTag: 5153bfa7-c334-41d7-9e61-d9a32b462c9e
+		sourceLineageTag: Task_ID
+		summarizeBy: none
+		sourceColumn: Task_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Task_Name
+		dataType: string
+		lineageTag: 89d16959-17ad-4a4d-9486-126f269e8541
+		sourceLineageTag: Task_Name
+		summarizeBy: none
+		sourceColumn: Task_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Parent_Project_ID
+		dataType: string
+		lineageTag: 06fbe368-086a-4fed-96d3-535e5e7a1b04
+		sourceLineageTag: Parent_Project_ID
+		summarizeBy: none
+		sourceColumn: Parent_Project_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column FS_Task_ID
+		dataType: string
+		lineageTag: b589de88-12dd-4368-b9de-c639b7b2bb1d
+		sourceLineageTag: FS_Task_ID
+		summarizeBy: none
+		sourceColumn: FS_Task_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Task_Type
+		dataType: string
+		lineageTag: 736929e9-2a43-415c-913d-9a79e60cee19
+		sourceLineageTag: Task_Type
+		summarizeBy: none
+		sourceColumn: Task_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Milestone
+		dataType: int64
+		formatString: 0
+		lineageTag: 5a15631e-fed1-4c3b-8ba2-d7119e0094e7
+		sourceLineageTag: Milestone
+		summarizeBy: sum
+		sourceColumn: Milestone
+
+		annotation SummarizationSetBy = Automatic
+
+	column Skill_Requirement
+		dataType: string
+		lineageTag: cf75c9f1-05b9-4789-8fd3-2eaa249f3d5d
+		sourceLineageTag: Skill_Requirement
+		summarizeBy: none
+		sourceColumn: Skill_Requirement
+
+		annotation SummarizationSetBy = Automatic
+
+	column Initial_Planned_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5d8f1e9c-b2be-4067-9773-974936acb265
+		sourceLineageTag: Initial_Planned_Start
+		summarizeBy: none
+		sourceColumn: Initial_Planned_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified_Planned_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c94a96b2-4a95-455c-85c2-2c0de4f4838d
+		sourceLineageTag: Modified_Planned_Start
+		summarizeBy: none
+		sourceColumn: Modified_Planned_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Actual_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 08d1a229-727a-456a-9267-8aa0c9e1d344
+		sourceLineageTag: Actual_Start
+		summarizeBy: none
+		sourceColumn: Actual_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Standard_Duration
+		dataType: int64
+		formatString: 0
+		lineageTag: 7c371a6a-6077-4098-9621-9bdc0e7a2ef2
+		sourceLineageTag: Standard_Duration
+		summarizeBy: sum
+		sourceColumn: Standard_Duration
+
+		annotation SummarizationSetBy = Automatic
+
+	column Actual_End
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7ef12389-c7e8-4f94-b432-c3ab859056c4
+		sourceLineageTag: Actual_End
+		summarizeBy: none
+		sourceColumn: Actual_End
+
+		annotation SummarizationSetBy = Automatic
+
+	column Resource_Login
+		dataType: string
+		lineageTag: 35627d2b-0d0f-4e5c-bb9c-92e1ac349832
+		sourceLineageTag: Resource_Login
+		summarizeBy: none
+		sourceColumn: Resource_Login
+
+		annotation SummarizationSetBy = Automatic
+
+	column Complete_Percentage
+		dataType: int64
+		formatString: 0
+		lineageTag: d6c6e70b-713b-4aa4-ba0f-f1a460a602a9
+		sourceLineageTag: Complete_Percentage
+		summarizeBy: sum
+		sourceColumn: Complete_Percentage
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Modified_By
+		dataType: string
+		lineageTag: 6b775efe-28ac-4b33-a6d1-9b3ad55c75e1
+		sourceLineageTag: Last_Modified_By
+		summarizeBy: none
+		sourceColumn: Last_Modified_By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Modified_On
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 44fdec9a-60e0-4f97-88eb-55cd25573761
+		sourceLineageTag: Last_Modified_On
+		summarizeBy: none
+		sourceColumn: Last_Modified_On
+
+		annotation SummarizationSetBy = Automatic
+
+	column Machine_ID
+		dataType: string
+		lineageTag: 332812c5-831c-4736-bd2c-bdb7882d05d1
+		sourceLineageTag: Machine_ID
+		summarizeBy: none
+		sourceColumn: Machine_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Calculated_Start_Date
+		dataType: dateTime
+		formatString: General Date
+		summarizeBy: none
+		sourceColumn: Calculated_Start_Date
+
+	column Calculated_End_Date
+		dataType: dateTime
+		formatString: General Date
+		summarizeBy: none
+		sourceColumn: Calculated_End_Date
+
+	measure 'Calculated Start Date' = 
+		VAR _start = COALESCE(tasks[Actual_Start], tasks[Modified_Planned_Start], tasks[Initial_Planned_Start])
+		RETURN _start
+		formatString: General Date
+
+	measure 'Calculated End Date' = 
+		VAR _start = COALESCE(tasks[Actual_Start], tasks[Modified_Planned_Start], tasks[Initial_Planned_Start])
+		VAR _end = COALESCE(tasks[Actual_End], _start + tasks[Standard_Duration])
+		RETURN _end
+		formatString: General Date
+
+	measure 'Is Milestone' = IF(tasks[Milestone] = 1, TRUE(), FALSE())
+
+	partition tasks = entity
+		mode: directLake
+		source
+			entityName: tasks
+			schemaName: plm
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+

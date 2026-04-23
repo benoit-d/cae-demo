@@ -1,0 +1,6 @@
+=== Listing Semantic Models in Workspace ===
+URI: https://api.fabric.microsoft.com/v1/workspaces/161c43a4-6a14-4b8f-81eb-070f0981a609/semanticModels
+Found 1 semantic model(s):
+  - Name: Manufacturing_semantic
+    ID: 2e76bd04-3994-485f-b2b6-847fea6aa0aa
+    Type: SemanticModel

@@ -1,0 +1,3 @@
+=== DAX Query with All Three Measures ===
+FAILED!
+The remote server returned an error: (400) Bad Request.

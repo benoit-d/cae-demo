@@ -1,0 +1,38 @@
+Getting item details...
+{
+    "id":  "6c31cad3-74a3-4eae-91f3-e2a4ed845e7e",
+    "type":  "SQLDatabase",
+    "displayName":  "CAEManufacturing_SQLDB",
+    "description":  "",
+    "workspaceId":  "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId":  "645a5345-2ccb-4926-9453-0a03184c936b"
+}
+
+Getting SQL Database properties...
+{
+    "id":  "6c31cad3-74a3-4eae-91f3-e2a4ed845e7e",
+    "type":  "SQLDatabase",
+    "displayName":  "CAEManufacturing_SQLDB",
+    "description":  "",
+    "workspaceId":  "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "properties":  {
+                       "connectionInfo":  "Data Source=glhdjewslwruzpuscihr6nmsre-urbryfqunkhuxapla4hqtangbe.database.fabric.microsoft.com,1433;Initial Catalog=CAEManufacturing_SQLDB-6c31cad3-74a3-4eae-91f3-e2a4ed845e7e;Multiple Active Result Sets=False;Connect Timeout=30;Encrypt=True;Trust Server Certificate=False",
+                       "connectionString":  "Data Source=glhdjewslwruzpuscihr6nmsre-urbryfqunkhuxapla4hqtangbe.database.fabric.microsoft.com,1433;Initial Catalog=CAEManufacturing_SQLDB-6c31cad3-74a3-4eae-91f3-e2a4ed845e7e;Multiple Active Result Sets=False;Connect Timeout=30;Encrypt=True;Trust Server Certificate=False",
+                       "databaseName":  "CAEManufacturing_SQLDB-6c31cad3-74a3-4eae-91f3-e2a4ed845e7e",
+                       "serverFqdn":  "glhdjewslwruzpuscihr6nmsre-urbryfqunkhuxapla4hqtangbe.database.fabric.microsoft.com,1433",
+                       "earliestRestorePoint":  "2026-04-22T02:11:44Z",
+                       "latestRestorePoint":  "2026-04-23T16:06:43.5475079Z",
+                       "backupRetentionDays":  7,
+                       "collation":  "SQL_Latin1_General_CP1_CI_AS"
+                   },
+    "folderId":  "645a5345-2ccb-4926-9453-0a03184c936b"
+}
+
+========================================
+Trying TDS connection...
+========================================
+Server: 161c43a4-6a14-4b8f-81eb-070f0981a609.database.fabric.microsoft.com
+Database: CAEManufacturing_SQLDB
+
+Query 1: SQL Version...
+ERROR: The term 'Invoke-Sqlcmd' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.

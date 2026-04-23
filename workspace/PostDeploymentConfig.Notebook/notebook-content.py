@@ -407,8 +407,8 @@ DDL = [
         Resource_Login NVARCHAR(100), Complete_Percentage INT,
         Last_Modified_By NVARCHAR(100), Last_Modified_On DATE,
         Machine_ID NVARCHAR(10),
-        Calculated_Start_Date AS CAST(COALESCE(Actual_Start, Modified_Planned_Start, Initial_Planned_Start) AS DATE),
-        Calculated_End_Date AS CAST(COALESCE(Actual_End, DATEADD(day, ISNULL(Standard_Duration, 0), COALESCE(Actual_Start, Modified_Planned_Start, Initial_Planned_Start))) AS DATE))""",
+        Calculated_Start_Date AS CAST(COALESCE(Actual_Start, Modified_Planned_Start, Initial_Planned_Start) AS DATE) PERSISTED,
+        Calculated_End_Date AS CAST(COALESCE(Actual_End, DATEADD(day, ISNULL(Standard_Duration, 0), COALESCE(Actual_Start, Modified_Planned_Start, Initial_Planned_Start))) AS DATE) PERSISTED)""",
     """CREATE TABLE plm.part_specs (
         part_spec_id NVARCHAR(10) NOT NULL, part_number NVARCHAR(20),
         part_name NVARCHAR(100), tolerance_mm FLOAT,
@@ -722,8 +722,8 @@ relationship 'Jobs to Projects'
 \tfromColumn: machine_jobs.project_id
 \ttoColumn: projects.Project_ID"""
 
-    def make_table_tmdl(table_name, schema_name, columns):
-        """Generate a DirectLake table TMDL with columns."""
+    def make_table_tmdl(table_name, schema_name, columns, measures=None):
+        """Generate a DirectLake table TMDL with columns and optional DAX measures."""
         lines = [f"table {table_name}"]
         lines.append(f"\tsourceLineageTag: [{schema_name}].[{table_name}]")
         lines.append("")
@@ -733,13 +733,19 @@ relationship 'Jobs to Projects'
             if dtype in ("double", "int64"):
                 if dtype == "int64":
                     lines.append(f"\t\tformatString: 0")
-                lines.append(f"\t\tsummarizeBy: {'sum' if dtype in ('double','int64') and col_name not in ('Complete_Percentage','Standard_Duration','quantity') else 'none'}")
+                lines.append(f"\t\tsummarizeBy: {'sum' if dtype in ('double','int64') and col_name not in ('Complete_Percentage','Standard_Duration','quantity','Milestone') else 'none'}")
             else:
                 lines.append(f"\t\tsummarizeBy: none")
             if dtype == "dateTime":
                 lines.append(f"\t\tformatString: General Date")
             lines.append(f"\t\tsourceColumn: {col_name}")
             lines.append("")
+        if measures:
+            for m_name, m_expr, m_fmt in measures:
+                lines.append(f"\tmeasure '{m_name}' = {m_expr}")
+                if m_fmt:
+                    lines.append(f"\t\tformatString: {m_fmt}")
+                lines.append("")
         lines.append(f"\tpartition {table_name} = entity")
         lines.append(f"\t\tmode: directLake")
         lines.append(f"\t\tsource")
@@ -808,9 +814,15 @@ relationship 'Jobs to Projects'
             ("Resource_Login","string"),("Complete_Percentage","int64"),
             ("Last_Modified_By","string"),("Last_Modified_On","dateTime"),
             ("Machine_ID","string"),
-            ("Calculated_Start_Date","dateTime"),("Calculated_End_Date","dateTime"),
         ]),
     }
+
+    # DAX measures for the tasks table (DirectLake can't read SQL computed columns)
+    TASKS_MEASURES = [
+        ("Calculated Start Date", "COALESCE([Actual_Start], [Modified_Planned_Start], [Initial_Planned_Start])", "General Date"),
+        ("Calculated End Date", "COALESCE([Actual_End], [Actual_Start] + [Standard_Duration], [Modified_Planned_Start] + [Standard_Duration], [Initial_Planned_Start] + [Standard_Duration])", "General Date"),
+        ("Is Milestone", "IF([Milestone] = 1, TRUE(), FALSE())", None),
+    ]
 
     # Assemble all definition parts
     def b64(text):
@@ -824,7 +836,8 @@ relationship 'Jobs to Projects'
         {"path": "definition/relationships.tmdl", "payload": b64(tmdl_relationships), "payloadType": "InlineBase64"},
     ]
     for tbl_name, (schema, cols) in TABLE_DEFS.items():
-        tmdl = make_table_tmdl(tbl_name, schema, cols)
+        measures = TASKS_MEASURES if tbl_name == "tasks" else None
+        tmdl = make_table_tmdl(tbl_name, schema, cols, measures)
         parts.append({"path": f"definition/tables/{tbl_name}.tmdl", "payload": b64(tmdl), "payloadType": "InlineBase64"})
 
     # Check if semantic model already exists

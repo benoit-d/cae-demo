@@ -1,0 +1,18 @@
+
+sql_version : Microsoft SQL Azure (RTM) - 12.0.2000.8 
+              	Mar 13 2026 08:25:28 
+              	Copyright (C) 2025 Microsoft Corporation
+              
+db_name     : CAEManufacturing_SQLDB-6c31cad3-74a3-4eae-91f3-e2a4ed845e7e
+edition     : SQL Azure
+
+
+Task_Name                               Calculated_Start_Date  Calculated_End_Da
+                                                               te
+---------                               ---------------------  -----------------
+Material Readiness Check                2025-11-25 12:00:00 AM 2025-11-30 12:00…
+Platform Frame Assembly                 2025-11-30 12:00:00 AM 2025-12-25 12:00…
+Hydraulic System Installation           2025-12-25 12:00:00 AM 2026-01-24 12:00…
+Electrical Harness & Power Distribution 2025-12-25 12:00:00 AM 2026-01-24 12:00…
+Cockpit Shell Integration               2026-01-24 12:00:00 AM 2026-02-18 12:00…
+

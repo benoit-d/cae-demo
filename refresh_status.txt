@@ -1,0 +1,19 @@
+{
+  "requestId": "5e146285-2b8a-416c-9539-5cdc1bc3dd59",
+  "id": 53577863,
+  "refreshType": "ViaApi",
+  "startTime": "2026-04-23T16:00:18.28Z",
+  "endTime": "2026-04-23T16:00:21.077Z",
+  "serviceExceptionJson": "{\"errorCode\":\"ModelRefresh_ShortMessage_ProcessingError\",\"errorDescription\":\"Delta protocol violation: the column '<oii>Calculated_Start_Date<\\/oii>' is not found in delta table '<oii>tasks<\\/oii>'.\"}",
+  "status": "Failed",
+  "refreshAttempts": [
+    {
+      "attemptId": 1,
+      "startTime": "2026-04-23T16:00:18.3734949Z",
+      "endTime": "2026-04-23T16:00:20.5766143Z",
+      "type": "Data",
+      "serviceExceptionJson": "{\"errorCode\":\"ModelRefresh_ShortMessage_ProcessingError\",\"errorDescription\":\"Delta protocol violation: the column '<oii>Calculated_Start_Date<\\/oii>' is not found in delta table '<oii>tasks<\\/oii>'.\"}",
+      "executionMetrics": []
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+=== ATTEMPT 1: Jobs/Instances API ===
+URI: https://api.fabric.microsoft.com/v1/workspaces/161c43a4-6a14-4b8f-81eb-070f0981a609/items/2e76bd04-3994-485f-b2b6-847fea6aa0aa/jobs/instances?jobType=enhancedRefresh
+STATUS: FAILED
+ERROR: Response status code does not indicate success: 404 (Not Found).
+DETAILS: 
+{
+  "requestId": "7675f1fd-adbf-46d9-8750-d1992f32a727",
+  "errorCode": "ItemNotFound",
+  "message": "Could not found the requested item",
+  "isRetriable": false
+}

@@ -1,0 +1,92 @@
+﻿=== Semantic Model Measure Verification ===
+Date: 04/23/2026 13:06:23
+
+=== Available Measures (via DMV) ===
+SUCCESS!
+{
+    "results":  [
+                    {
+                        "tables":  [
+                                       {
+                                           "rows":  [
+                                                        {
+                                                            "MEASURE_UNIQUE_NAME":  "[Measures].[Calculated Start Date]",
+                                                            "MEASURE_NAME":  "Calculated Start Date",
+                                                            "EXPRESSION":  "SYNTAXERROR"
+                                                        },
+                                                        {
+                                                            "MEASURE_UNIQUE_NAME":  "[Measures].[Calculated End Date]",
+                                                            "MEASURE_NAME":  "Calculated End Date",
+                                                            "EXPRESSION":  "SYNTAXERROR"
+                                                        },
+                                                        {
+                                                            "MEASURE_UNIQUE_NAME":  "[Measures].[Is Milestone]",
+                                                            "MEASURE_NAME":  "Is Milestone",
+                                                            "EXPRESSION":  "IF(tasks[Milestone] = 1, TRUE(), FALSE())"
+                                                        },
+                                                        {
+                                                            "MEASURE_UNIQUE_NAME":  "[Measures].[__Default measure]",
+                                                            "MEASURE_NAME":  "__Default measure",
+                                                            "EXPRESSION":  "1"
+                                                        }
+                                                    ]
+                                       }
+                                   ]
+                    }
+                ]
+}
+
+=== Testing Individual Measures ===
+
+--- Calculated Start Date ---
+SUCCESS: {
+    "results":  [
+                    {
+                        "tables":  [
+                                       {
+                                           "rows":  [
+
+                                                    ]
+                                       }
+                                   ],
+                        "error":  {
+                                      "code":  "QueryUserError",
+                                      "message":  "MdxScript(Model) (3, 39) Failed to resolve name \u0027SYNTAXERROR\u0027. It is not a valid table, variable, or function name.",
+                                      "details":  [
+                                                      {
+                                                          "code":  "AnalysisServicesErrorCode",
+                                                          "detail":  "@{type=1; value=3241803821}"
+                                                      }
+                                                  ]
+                                  }
+                    }
+                ]
+}
+
+--- Is Milestone ---
+SUCCESS: {
+    "results":  [
+                    {
+                        "tables":  [
+                                       {
+                                           "rows":  [
+
+                                                    ]
+                                       }
+                                   ],
+                        "error":  {
+                                      "code":  "QueryUserError",
+                                      "message":  "MdxScript(Model) (5, 33) Calculation error in measure \u0027\u003coii\u003etasks\u003c/oii\u003e\u0027[\u003coii\u003eIs Milestone\u003c/oii\u003e]: A single value for column \u0027\u003coii\u003eMilestone\u003c/oii\u003e\u0027 in table \u0027\u003coii\u003etasks\u003c/oii\u003e\u0027 cannot be determined. This can happen when a measure or function formula refers to a column that contains many values without specifying an aggregation such as min, max, count, or sum to get a single result.",
+                                      "details":  [
+                                                      {
+                                                          "code":  "AnalysisServicesErrorCode",
+                                                          "detail":  "@{type=1; value=3241803789}"
+                                                      }
+                                                  ]
+                                  }
+                    }
+                ]
+}
+
+=== Full Query Test ===
+FAILED: The remote server returned an error: (400) Bad Request.
