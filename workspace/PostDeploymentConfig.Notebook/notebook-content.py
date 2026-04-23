@@ -131,14 +131,17 @@ else:
     db_properties = json.dumps({
         "databaseType": "ReadWrite",
         "parentEventhouseItemId": eventhouse_id,
-        "oneLakeCachingPeriod": "7d",
-        "oneLakeStandardStoragePeriod": "30d"
+        "oneLakeCachingPeriod": "P7D",
+        "oneLakeStandardStoragePeriod": "P30D"
     })
     db_props_b64 = base64.b64encode(db_properties.encode("utf-8")).decode("utf-8")
     db_schema_b64 = base64.b64encode(kql_schema.encode("utf-8")).decode("utf-8")
 
-    # Check if KQL DB already exists
-    existing_kqldb = next((i for i in items if i.get("displayName") == db_name), None)
+    # Check if KQL DB already exists (also check inside Eventhouse children)
+    existing_kqldb = next((i for i in items if i.get("displayName") == db_name and i.get("type") == "KQLDatabase"), None)
+    if not existing_kqldb:
+        # Also check for the default DB that Eventhouse auto-creates (same name as Eventhouse)
+        existing_kqldb = next((i for i in items if i.get("type") == "KQLDatabase" and i.get("displayName") == "CAEManufacturingEH"), None)
 
     if existing_kqldb:
         print(f"KQL Database '{db_name}' already exists: {existing_kqldb['id']}")
@@ -174,7 +177,9 @@ else:
                     print(f"  KQL Database created with schema.")
                     KQL_SETUP_OK = True
                 else:
+                    detail = poll_resp.json().get("error", {}).get("message", poll_resp.text[:300])
                     print(f"  KQL Database creation ended with status: {status}")
+                    print(f"  Detail: {detail}")
                     KQL_SETUP_OK = False
             else:
                 print("  Created (no polling needed).")
