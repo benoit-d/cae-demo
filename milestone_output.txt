@@ -1,0 +1,15 @@
+=== TASK 1: SQL Query for Milestones ===
+Getting access token...
+Token obtained successfully
+Connecting to: x6eps4xrq2xudenlfcykddpgry-t6qmqwlnb25ernnilbqhxqxqbe.datawarehouse.fabric.microsoft.com
+Database: CAEManufacturing_LH
+Query: SELECT Task_ID, Task_Name, Milestone FROM plm.tasks WHERE Milestone = 1 ORDER BY Task_ID
+
+Invoke-Sqlcmd: C:\Repo\cae-demo\check_milestones.ps1:23:16
+Line |
+  23 |  .  $results = Invoke-Sqlcmd -ServerInstance $server -Database $database .
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | A connection was successfully established with the server, but then an error occurred during the login process. (provider: TCP Provider, error: 0 - An existing connection was forcibly closed
+     | by the remote host.)
+Error: Incorrect syntax was encountered while parsing ''.
+Error details: Incorrect syntax was encountered while parsing ''.

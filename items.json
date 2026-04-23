@@ -1,0 +1,158 @@
+[
+  {
+    "id": "2e76bd04-3994-485f-b2b6-847fea6aa0aa",
+    "type": "SemanticModel",
+    "displayName": "Manufacturing_semantic",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609"
+  },
+  {
+    "id": "6056e10b-bcb8-4567-a970-adcc2e6a7ad1",
+    "type": "SQLEndpoint",
+    "displayName": "CAEManufacturing_LH",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "645a5345-2ccb-4926-9453-0a03184c936b"
+  },
+  {
+    "id": "2578ea28-0f61-49f3-bab4-b6dfdef1d49a",
+    "type": "SQLEndpoint",
+    "displayName": "CAEManufacturing_SQLDB",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "645a5345-2ccb-4926-9453-0a03184c936b"
+  },
+  {
+    "id": "9202af39-41ad-487b-85e1-cf4d926f8183",
+    "type": "Notebook",
+    "displayName": "Deploy",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609"
+  },
+  {
+    "id": "d9589856-ea47-4ecd-9057-878ea59da3c0",
+    "type": "Lakehouse",
+    "displayName": "CAEManufacturing_LH",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "645a5345-2ccb-4926-9453-0a03184c936b"
+  },
+  {
+    "id": "bc123c3a-b58c-4d72-8a2c-a9044a97be1b",
+    "type": "Notebook",
+    "displayName": "ClockInEventEmulator",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "5fc34dff-2f41-4c87-b1b7-3942a55763be"
+  },
+  {
+    "id": "275679b5-d751-4900-8732-cac46c149c01",
+    "type": "Notebook",
+    "displayName": "SimulatorTelemetryEmulator",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "5fc34dff-2f41-4c87-b1b7-3942a55763be"
+  },
+  {
+    "id": "89706039-4b7a-4cf9-8d38-9193a1360dd0",
+    "type": "Notebook",
+    "displayName": "TelemetryFaultInjection",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "5fc34dff-2f41-4c87-b1b7-3942a55763be"
+  },
+  {
+    "id": "e536b5fb-7892-42cb-bab9-653c3d9604c3",
+    "type": "Notebook",
+    "displayName": "CapacityManagementAgent",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "9146adbb-ad2c-48e2-88c5-72b398057346"
+  },
+  {
+    "id": "2f578fe8-c163-479c-b102-23de591816e6",
+    "type": "Notebook",
+    "displayName": "GetStarted",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609"
+  },
+  {
+    "id": "28e26ad1-2baf-47cb-957b-275f7634cbaf",
+    "type": "Notebook",
+    "displayName": "PostDeploymentConfig",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609"
+  },
+  {
+    "id": "6c31cad3-74a3-4eae-91f3-e2a4ed845e7e",
+    "type": "SQLDatabase",
+    "displayName": "CAEManufacturing_SQLDB",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "645a5345-2ccb-4926-9453-0a03184c936b"
+  },
+  {
+    "id": "4cadb3ce-eb27-498c-80ba-12c1a4521b6f",
+    "type": "DataPipeline",
+    "displayName": "TelemetryPipeline",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "5fc34dff-2f41-4c87-b1b7-3942a55763be"
+  },
+  {
+    "id": "7d82152b-f2e1-46c4-afca-80defa5a4413",
+    "type": "DataPipeline",
+    "displayName": "ClockInPipeline",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "5fc34dff-2f41-4c87-b1b7-3942a55763be"
+  },
+  {
+    "id": "8f255656-5bd5-49dd-a4aa-0a7b7d597ee1",
+    "type": "Eventhouse",
+    "displayName": "CAEManufacturingEH",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "7445db5a-5f53-4fa5-97d4-d106434f0703"
+  },
+  {
+    "id": "f0d1437e-f6e4-4c73-8b41-2f71c228d2de",
+    "type": "KQLDatabase",
+    "displayName": "CAEManufacturingKQLDB",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "7445db5a-5f53-4fa5-97d4-d106434f0703"
+  },
+  {
+    "id": "5ebb2b67-3a70-4a61-b8c9-5d79a0d925af",
+    "type": "Notebook",
+    "displayName": "AnomalyDetection",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "7445db5a-5f53-4fa5-97d4-d106434f0703"
+  },
+  {
+    "id": "45ac5e6d-09e6-4aea-bb62-66faaa52bba7",
+    "type": "Reflex",
+    "displayName": "MachineHealthActivator",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "7445db5a-5f53-4fa5-97d4-d106434f0703"
+  },
+  {
+    "id": "db8312cb-57c9-471d-8ea7-14abec64ff5c",
+    "type": "Notebook",
+    "displayName": "AlertNotificationAgent",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "9146adbb-ad2c-48e2-88c5-72b398057346"
+  },
+  {
+    "id": "68783fa8-eb4d-4a9e-9427-d4945c258f2b",
+    "type": "DataPipeline",
+    "displayName": "AlertPipeline",
+    "description": "",
+    "workspaceId": "161c43a4-6a14-4b8f-81eb-070f0981a609",
+    "folderId": "5fc34dff-2f41-4c87-b1b7-3942a55763be"
+  }
+]

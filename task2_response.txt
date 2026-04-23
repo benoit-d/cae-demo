@@ -1,0 +1,2 @@
+StatusCode: 202
+Location: https://wabi-west-us3-a-primary-redirect.analysis.windows.net/v1/operations/3efac3c0-5ec9-4027-91b1-4159e0e782a1

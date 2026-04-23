@@ -1,0 +1,14 @@
+table tasks
+	lineageTag: bbbc8861-b321-4094-8b78-5bfd21568765
+	sourceLineageTag: [plm].[tasks]
+
+	column Task_ID
+		dataType: string
+		lineageTag: 5153bfa7-c334-41d7-9e61-d9a32b462c9e
+		sourceLineageTag: Task_ID
+		summarizeBy: none
+		sourceColumn: Task_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Task_Name

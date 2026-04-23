@@ -1,0 +1,44 @@
+{
+  "Cache-Control": [
+    "no-store, must-revalidate, no-cache"
+  ],
+  "Pragma": [
+    "no-cache"
+  ],
+  "Location": [
+    "https://wabi-west-us3-a-primary-redirect.analysis.windows.net/v1/operations/ec7a6cb3-27f5-4091-9b7c-64bde5c2a8a4"
+  ],
+  "Retry-After": [
+    "20"
+  ],
+  "x-ms-operation-id": [
+    "ec7a6cb3-27f5-4091-9b7c-64bde5c2a8a4"
+  ],
+  "Strict-Transport-Security": [
+    "max-age=31536000; includeSubDomains"
+  ],
+  "X-Frame-Options": [
+    "deny"
+  ],
+  "X-Content-Type-Options": [
+    "nosniff"
+  ],
+  "RequestId": [
+    "18d3ba1e-c2d4-40a7-823f-4afe44436a26"
+  ],
+  "Access-Control-Expose-Headers": [
+    "RequestId,Location,Retry-After,x-ms-operation-id"
+  ],
+  "request-redirected": [
+    "true"
+  ],
+  "home-cluster-uri": [
+    "https://wabi-west-us3-a-primary-redirect.analysis.windows.net/"
+  ],
+  "Date": [
+    "Thu, 23 Apr 2026 14:27:03 GMT"
+  ],
+  "Content-Type": [
+    "application/json; charset=utf-8"
+  ]
+}

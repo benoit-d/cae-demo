@@ -406,7 +406,9 @@ DDL = [
         Actual_Start DATE, Standard_Duration INT, Actual_End DATE,
         Resource_Login NVARCHAR(100), Complete_Percentage INT,
         Last_Modified_By NVARCHAR(100), Last_Modified_On DATE,
-        Machine_ID NVARCHAR(10))""",
+        Machine_ID NVARCHAR(10),
+        Calculated_Start_Date AS CAST(COALESCE(Actual_Start, Modified_Planned_Start, Initial_Planned_Start) AS DATE),
+        Calculated_End_Date AS CAST(COALESCE(Actual_End, DATEADD(day, ISNULL(Standard_Duration, 0), COALESCE(Actual_Start, Modified_Planned_Start, Initial_Planned_Start))) AS DATE))""",
     """CREATE TABLE plm.part_specs (
         part_spec_id NVARCHAR(10) NOT NULL, part_number NVARCHAR(20),
         part_name NVARCHAR(100), tolerance_mm FLOAT,
@@ -806,6 +808,7 @@ relationship 'Jobs to Projects'
             ("Resource_Login","string"),("Complete_Percentage","int64"),
             ("Last_Modified_By","string"),("Last_Modified_On","dateTime"),
             ("Machine_ID","string"),
+            ("Calculated_Start_Date","dateTime"),("Calculated_End_Date","dateTime"),
         ]),
     }
 
