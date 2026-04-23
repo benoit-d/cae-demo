@@ -224,7 +224,7 @@ cursor.execute("""
     FROM sys.foreign_keys f
     JOIN sys.tables t ON f.parent_object_id = t.object_id
     JOIN sys.schemas s ON t.schema_id = s.schema_id
-    WHERE s.name IN ('hr', 'erp', 'plm', 'mes');
+    WHERE s.name IN ('dbo', 'hr', 'erp', 'plm', 'mes');
     EXEC sp_executesql @sql;
 """)
 cursor.execute("""
@@ -233,7 +233,7 @@ cursor.execute("""
     SELECT @sql = @sql + 'DROP TABLE ' + QUOTENAME(s.name) + '.' + QUOTENAME(t.name) + '; '
     FROM sys.tables t
     JOIN sys.schemas s ON t.schema_id = s.schema_id
-    WHERE s.name IN ('hr', 'erp', 'plm', 'mes');
+    WHERE s.name IN ('dbo', 'hr', 'erp', 'plm', 'mes');
     EXEC sp_executesql @sql;
 """)
 print("  All existing tables dropped.")
