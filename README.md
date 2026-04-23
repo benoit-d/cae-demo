@@ -144,16 +144,22 @@ cae-demo/
 ├── deploy/
 │   └── SolutionInstaller.ipynb          # Import into Fabric → Run All
 ├── workspace/                           # Published by fabric-cicd
-│   ├── CAEManufacturing_LH.Lakehouse/   # Staging Lakehouse
-│   ├── CAEManufacturingEH.Eventhouse/   # Real-time telemetry store
 │   ├── GetStarted.Notebook/             # Guided walkthrough
 │   ├── PostDeploymentConfig.Notebook/   # Creates SQL tables, loads data
-│   ├── Simulation/
-│   │   ├── SimulatorTelemetryEmulator.Notebook/  # Single-shot, pipeline-scheduled
-│   │   ├── ClockInEventEmulator.Notebook/         # Single-shot, pipeline-scheduled
-│   │   └── TelemetryFaultInjection.Notebook/      # Manual — CNC mill failure demo
+│   ├── Data/
+│   │   └── CAEManufacturing_LH.Lakehouse/       # Staging Lakehouse
+│   ├── RTI/                                      # Real-Time Intelligence
+│   │   ├── CAEManufacturingEH.Eventhouse/        # Telemetry store
+│   │   ├── SimulatorTelemetryStream.Eventstream/ # Machine telemetry ingestion
+│   │   └── ClockInEventStream.Eventstream/       # Workforce event ingestion
+│   ├── Pipelines/                                # Scheduled data pipelines
+│   │   ├── TelemetryPipeline.DataPipeline/       # 1-min schedule
+│   │   ├── ClockInPipeline.DataPipeline/         # 1-min schedule
+│   │   ├── SimulatorTelemetryEmulator.Notebook/  # Single-shot telemetry emitter
+│   │   ├── ClockInEventEmulator.Notebook/        # Single-shot clock-in emitter
+│   │   └── TelemetryFaultInjection.Notebook/     # Manual — CNC mill failure demo
 │   └── Agent/
-│       └── CapacityManagementAgent.Notebook/      # AI agent querying SQL DB
+│       └── CapacityManagementAgent.Notebook/     # AI agent querying SQL DB
 ├── data/
 │   ├── erp/          # production lines, machines, inventory, purchase orders, maintenance
 │   ├── hr/           # employees, skills, schedules, restrictions, time off, contractors
