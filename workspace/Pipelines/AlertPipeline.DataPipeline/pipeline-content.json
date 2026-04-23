@@ -1,0 +1,43 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        },
+        "policy": {
+          "timeout": "0.00:10:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Run Anomaly Detection",
+        "dependsOn": []
+      },
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        },
+        "policy": {
+          "timeout": "0.00:05:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Send Alert Notifications",
+        "dependsOn": [
+          {
+            "activity": "Run Anomaly Detection",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ]
+      }
+    ]
+  }
+}

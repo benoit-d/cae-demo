@@ -1,303 +1,282 @@
 // =====================================================================
-// CAE Manufacturing - Machine Health Monitoring KQL Queries
+// CAE Manufacturing - Machine Health Monitoring KQL Functions
 // For use with CAEManufacturingEH Eventhouse / KQL Database
+// Deploy: Run each command block in the KQL Database query editor
 // =====================================================================
 
-// ----- TABLE CREATION (run once in KQL Database) ---------------------
+// ----- TABLE CREATION (run once) ------------------------------------
 
-// Ingestion table for machine telemetry
 .create-merge table MachineTelemetry (
-    timestamp: datetime,
-    machine_id: string,
-    sensor_id: string,
-    sensor_category: string,
-    sensor_name: string,
-    value: real,
-    unit: string,
-    alert_level: string,
-    is_anomaly: bool
-)
+    timestamp: datetime, machine_id: string, sensor_id: string,
+    sensor_category: string, sensor_name: string, value: real,
+    unit: string, alert_level: string, is_anomaly: bool)
 
-// Ingestion table for clock-in events
 .create-merge table ClockInEvents (
-    timestamp: datetime,
-    event_type: string,
-    employee_email: string,
-    employee_name: string,
-    employee_id: string,
-    department: string,
-    project_id: string,
-    task_id: string,
-    simulator_id: string,
-    details: string
-)
+    timestamp: datetime, event_type: string, employee_email: string,
+    employee_name: string, employee_id: string, department: string,
+    project_id: string, task_id: string, simulator_id: string, details: string)
 
-// Enable streaming ingestion
+.create-merge table AnomalyAlerts (
+    scored_at: datetime, machine_id: string, anomaly_type: string,
+    anomaly_confidence_pct: real, estimated_rul_hours: int,
+    top_deviating_sensors: string, composite_score: real,
+    description: string, severity: string)
+
 .alter table MachineTelemetry policy streamingingestion enable
 .alter table ClockInEvents policy streamingingestion enable
+.alter table AnomalyAlerts policy streamingingestion enable
 
+// ----- HEALTH SCORING FUNCTIONS (all 20 machines) -------------------
 
-// ----- MATERIALIZED VIEW: Composite Anomaly Scores -------------------
-// These run continuously and maintain a rolling 5-minute window
-
-// === CNC Mill Bearing Wear Score (CNC-001, CNC-002) ===
-.create-or-alter materialized-view CNC_BearingWearScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'CNC Bearing Wear composite score', folder = 'Health')
+CNC_BearingWearScore(lookback:timespan = 30m) {
     MachineTelemetry
-    | where machine_id in ("CNC-001", "CNC-002")
-    | where timestamp > ago(5m)
-    | summarize
-        avg_spindle_temp = avgif(value, sensor_name == "Spindle Temperature"),
-        avg_spindle_speed = avgif(value, sensor_name == "Spindle Speed"),
+    | where machine_id in ("CNC-001", "CNC-002", "CNC-003", "CNC-005")
+    | where timestamp > ago(lookback)
+    | summarize avg_spindle_temp = avgif(value, sensor_name == "Spindle Temperature"),
         avg_vibration = avgif(value, sensor_name == "Spindle Vibration"),
-        avg_power = avgif(value, sensor_name == "Power Consumption"),
-        reading_count = count()
+        avg_power = avgif(value, sensor_name == "Power Consumption")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        temp_score = iff(isnotnull(avg_spindle_temp), (avg_spindle_temp - 30.0) / (75.0 - 30.0), 0.0),
-        speed_score = iff(isnotnull(avg_spindle_speed), 1.0 - (avg_spindle_speed - 3000.0) / (14000.0 - 3000.0), 0.0),
+    | extend temp_score = iff(isnotnull(avg_spindle_temp), (avg_spindle_temp - 30.0) / (75.0 - 30.0), 0.0),
         vib_score = iff(isnotnull(avg_vibration), avg_vibration / 0.25, 0.0),
         power_score = iff(isnotnull(avg_power), (avg_power - 5.0) / (35.0 - 5.0), 0.0)
-    | extend composite_score = (temp_score * 0.35) + (speed_score * 0.10) + (vib_score * 0.35) + (power_score * 0.20)
+    | extend composite_score = (temp_score * 0.35) + (vib_score * 0.35) + (power_score * 0.20)
     | extend alert = iff(composite_score > 0.65, "ALERT", "OK")
-    | project timestamp, machine_id, avg_spindle_temp, avg_spindle_speed, avg_vibration, avg_power,
-             temp_score, vib_score, power_score, composite_score, alert
+    | project timestamp, machine_id, avg_spindle_temp, avg_vibration, avg_power, composite_score, alert
 }
 
-// === CNC Mill Coolant Failure Score (CNC-001, CNC-002, CNC-003) ===
-.create-or-alter materialized-view CNC_CoolantFailScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'CNC Coolant Failure composite score', folder = 'Health')
+CNC_CoolantFailScore(lookback:timespan = 30m) {
     MachineTelemetry
-    | where machine_id in ("CNC-001", "CNC-002", "CNC-003")
-    | where timestamp > ago(5m)
-    | summarize
-        avg_coolant_flow = avgif(value, sensor_name == "Coolant Flow Rate"),
+    | where machine_id in ("CNC-001", "CNC-002", "CNC-003", "CNC-005")
+    | where timestamp > ago(lookback)
+    | summarize avg_coolant_flow = avgif(value, sensor_name == "Coolant Flow Rate"),
         avg_spindle_temp = avgif(value, sensor_name == "Spindle Temperature"),
         avg_coolant_temp = avgif(value, sensor_name == "Coolant Temperature")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        flow_score = iff(isnotnull(avg_coolant_flow), 1.0 - (avg_coolant_flow - 3.0) / (20.0 - 3.0), 0.0),
-        temp_score = iff(isnotnull(avg_spindle_temp), (avg_spindle_temp - 30.0) / (75.0 - 30.0), 0.0),
-        coolant_temp_score = iff(isnotnull(avg_coolant_temp), (avg_coolant_temp - 10.0) / (40.0 - 10.0), 0.0)
-    | extend composite_score = (flow_score * 0.40) + (temp_score * 0.40) + (coolant_temp_score * 0.20)
+    | extend flow_score = iff(isnotnull(avg_coolant_flow), 1.0 - (avg_coolant_flow - 3.0) / (20.0 - 3.0), 0.0),
+        temp_score = iff(isnotnull(avg_spindle_temp), (avg_spindle_temp - 30.0) / (75.0 - 30.0), 0.0)
+    | extend composite_score = (flow_score * 0.40) + (temp_score * 0.40)
     | extend alert = iff(composite_score > 0.60, "ALERT", "OK")
-    | project timestamp, machine_id, avg_coolant_flow, avg_spindle_temp, avg_coolant_temp,
-             flow_score, temp_score, composite_score, alert
+    | project timestamp, machine_id, avg_coolant_flow, avg_spindle_temp, composite_score, alert
 }
 
-// === Laser Cutter Nozzle Degradation (LSR-001) ===
-.create-or-alter materialized-view Laser_NozzleDegScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'Laser Nozzle Degradation score', folder = 'Health')
+Laser_NozzleDegScore(lookback:timespan = 30m) {
     MachineTelemetry
-    | where machine_id == "LSR-001"
-    | where timestamp > ago(5m)
-    | summarize
-        avg_nozzle_temp = avgif(value, sensor_name == "Nozzle Temperature"),
-        avg_beam_align = avgif(abs(value), sensor_name == "Beam Alignment"),
-        avg_laser_power = avgif(value, sensor_name == "Laser Power")
+    | where machine_id in ("LSR-001", "LSR-002")
+    | where timestamp > ago(lookback)
+    | summarize avg_nozzle_temp = avgif(value, sensor_name in ("Nozzle Temperature", "Laser Head Temperature")),
+        avg_beam_align = avgif(abs(value), sensor_name in ("Beam Alignment", "Focus Position Accuracy")),
+        avg_laser_power = avgif(value, sensor_name in ("Laser Power", "Laser Output Power"))
         by machine_id, bin(timestamp, 1m)
-    | extend
-        nozzle_temp_score = (avg_nozzle_temp - 30.0) / (100.0 - 30.0),
-        align_score = avg_beam_align / 0.2,
-        power_score = (avg_laser_power - 300.0) / (5000.0 - 300.0)
-    | extend composite_score = (nozzle_temp_score * 0.35) + (align_score * 0.35) + (power_score * 0.30)
+    | extend nozzle_temp_score = iff(isnotnull(avg_nozzle_temp), (avg_nozzle_temp - 30.0) / (100.0 - 30.0), 0.0),
+        align_score = iff(isnotnull(avg_beam_align), avg_beam_align / 0.2, 0.0)
+    | extend composite_score = (nozzle_temp_score * 0.35) + (align_score * 0.35)
     | extend alert = iff(composite_score > 0.65, "ALERT", "OK")
-    | project timestamp, machine_id, avg_nozzle_temp, avg_beam_align, avg_laser_power,
-             nozzle_temp_score, align_score, composite_score, alert
+    | project timestamp, machine_id, avg_nozzle_temp, avg_beam_align, composite_score, alert
 }
 
-// === Press Brake Hydraulic Leak (PRB-001) ===
-.create-or-alter materialized-view Press_HydLeakScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'Press Brake Hydraulic Leak score', folder = 'Health')
+Press_HydLeakScore(lookback:timespan = 30m) {
     MachineTelemetry
     | where machine_id == "PRB-001"
-    | where timestamp > ago(5m)
-    | summarize
-        avg_ram_pressure = avgif(value, sensor_name == "Ram Pressure"),
-        stdev_pressure = stdevif(value, sensor_name == "Ram Pressure"),
-        avg_oil_temp = avgif(value, sensor_name == "Hydraulic Oil Temperature"),
+    | where timestamp > ago(lookback)
+    | summarize avg_oil_temp = avgif(value, sensor_name == "Hydraulic Oil Temperature"),
         avg_oil_level = avgif(value, sensor_name == "Hydraulic Oil Level"),
         avg_power = avgif(value, sensor_name == "Power Consumption")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        pressure_var = iff(isnotnull(stdev_pressure), stdev_pressure / 50.0, 0.0),
-        oil_temp_score = (avg_oil_temp - 20.0) / (75.0 - 20.0),
-        oil_level_score = iff(isnotnull(avg_oil_level), 1.0 - (avg_oil_level - 50.0) / (100.0 - 50.0), 0.0),
-        power_score = (avg_power - 4.0) / (40.0 - 4.0)
-    | extend composite_score = (pressure_var * 0.30) + (oil_temp_score * 0.30) + (oil_level_score * 0.25) + (power_score * 0.15)
+    | extend oil_temp_score = iff(isnotnull(avg_oil_temp), (avg_oil_temp - 20.0) / (75.0 - 20.0), 0.0),
+        oil_level_score = iff(isnotnull(avg_oil_level), 1.0 - (avg_oil_level - 50.0) / (100.0 - 50.0), 0.0)
+    | extend composite_score = (oil_temp_score * 0.45) + (oil_level_score * 0.35)
     | extend alert = iff(composite_score > 0.55, "ALERT", "OK")
-    | project timestamp, machine_id, avg_ram_pressure, avg_oil_temp, avg_oil_level,
-             pressure_var, oil_temp_score, oil_level_score, composite_score, alert
+    | project timestamp, machine_id, avg_oil_temp, avg_oil_level, composite_score, alert
 }
 
-// === Welder Gas Contamination (WLD-001, WLD-002) ===
-.create-or-alter materialized-view Weld_GasContamScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'Welder Gas Contamination score', folder = 'Health')
+Weld_GasContamScore(lookback:timespan = 30m) {
     MachineTelemetry
     | where machine_id in ("WLD-001", "WLD-002")
-    | where timestamp > ago(5m)
-    | summarize
-        avg_arc_voltage = avgif(value, sensor_name == "Arc Voltage"),
-        stdev_arc_voltage = stdevif(value, sensor_name == "Arc Voltage"),
-        avg_interpass_temp = avgif(value, sensor_name has "Interpass" or sensor_name has "Torch", value),
-        avg_gas_flow = avgif(value, sensor_name == "Shielding Gas Flow"),
-        stdev_gas_flow = stdevif(value, sensor_name == "Shielding Gas Flow")
+    | where timestamp > ago(lookback)
+    | summarize avg_arc_voltage = avgif(value, sensor_name == "Arc Voltage"),
+        avg_interpass_temp = avgif(value, sensor_name in ("Interpass Temperature", "Torch Temperature")),
+        avg_gas_flow = avgif(value, sensor_name == "Shielding Gas Flow")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        arc_var = iff(isnotnull(stdev_arc_voltage), stdev_arc_voltage / 5.0, 0.0),
-        temp_score = iff(isnotnull(avg_interpass_temp), (avg_interpass_temp - 10.0) / (220.0 - 10.0), 0.0),
-        gas_var = iff(isnotnull(stdev_gas_flow), stdev_gas_flow / 3.0, 0.0)
-    | extend composite_score = (arc_var * 0.40) + (temp_score * 0.35) + (gas_var * 0.25)
+    | extend arc_score = iff(isnotnull(avg_arc_voltage), abs(avg_arc_voltage - 25.0) / 5.0, 0.0),
+        temp_score = iff(isnotnull(avg_interpass_temp), (avg_interpass_temp - 10.0) / (220.0 - 10.0), 0.0)
+    | extend composite_score = (arc_score * 0.40) + (temp_score * 0.35)
     | extend alert = iff(composite_score > 0.60, "ALERT", "OK")
-    | project timestamp, machine_id, avg_arc_voltage, avg_interpass_temp, avg_gas_flow,
-             arc_var, temp_score, gas_var, composite_score, alert
+    | project timestamp, machine_id, avg_arc_voltage, avg_interpass_temp, composite_score, alert
 }
 
-// === CMM Environmental Drift (CMM-001) ===
-.create-or-alter materialized-view CMM_EnvDriftScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'CMM Environmental Drift score', folder = 'Health')
+CMM_EnvDriftScore(lookback:timespan = 30m) {
     MachineTelemetry
     | where machine_id == "CMM-001"
-    | where timestamp > ago(5m)
-    | summarize
-        avg_enclosure_temp = avgif(value, sensor_name == "Enclosure Temperature"),
+    | where timestamp > ago(lookback)
+    | summarize avg_enclosure_temp = avgif(value, sensor_name == "Enclosure Temperature"),
         avg_floor_vib = avgif(value, sensor_name == "Floor Vibration"),
         avg_accuracy = avgif(value, sensor_name == "Measurement Accuracy Delta")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        temp_dev = abs(avg_enclosure_temp - 20.0) / 1.5,
-        vib_score = avg_floor_vib / 2.0,
-        accuracy_score = avg_accuracy / 4.0
-    | extend composite_score = (temp_dev * 0.35) + (accuracy_score * 0.35) + (vib_score * 0.30)
+    | extend temp_dev = iff(isnotnull(avg_enclosure_temp), abs(avg_enclosure_temp - 20.0) / 1.5, 0.0),
+        accuracy_score = iff(isnotnull(avg_accuracy), avg_accuracy / 4.0, 0.0)
+    | extend composite_score = (temp_dev * 0.35) + (accuracy_score * 0.35)
     | extend alert = iff(composite_score > 0.50, "ALERT", "OK")
-    | project timestamp, machine_id, avg_enclosure_temp, avg_floor_vib, avg_accuracy,
-             temp_dev, vib_score, accuracy_score, composite_score, alert
+    | project timestamp, machine_id, avg_enclosure_temp, avg_accuracy, composite_score, alert
 }
 
-// === Reflow Oven Profile Drift (RFL-001) ===
-.create-or-alter materialized-view Reflow_ProfileScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'Reflow Oven Profile Drift score', folder = 'Health')
+Reflow_ProfileScore(lookback:timespan = 30m) {
     MachineTelemetry
     | where machine_id == "RFL-001"
-    | where timestamp > ago(5m)
-    | summarize
-        avg_zone1 = avgif(value, sensor_name == "Preheat Zone Temperature"),
+    | where timestamp > ago(lookback)
+    | summarize avg_zone1 = avgif(value, sensor_name == "Preheat Zone Temperature"),
         avg_zone2 = avgif(value, sensor_name == "Soak Zone Temperature"),
         avg_zone3 = avgif(value, sensor_name == "Reflow Zone Temperature"),
-        avg_zone4 = avgif(value, sensor_name == "Cooling Zone Temperature"),
         avg_conveyor = avgif(value, sensor_name == "Conveyor Speed")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        zone12_delta = abs((avg_zone2 - avg_zone1) - 30.0) / 30.0,
-        zone23_delta = abs((avg_zone3 - avg_zone2) - 60.0) / 60.0,
-        zone3_dev = abs(avg_zone3 - 240.0) / 30.0,
-        conveyor_dev = abs(avg_conveyor - 60.0) / 40.0
-    | extend composite_score = (zone12_delta * 0.25) + (zone23_delta * 0.25) + (zone3_dev * 0.30) + (conveyor_dev * 0.20)
+    | extend zone3_dev = iff(isnotnull(avg_zone3), abs(avg_zone3 - 240.0) / 30.0, 0.0),
+        conveyor_dev = iff(isnotnull(avg_conveyor), abs(avg_conveyor - 60.0) / 40.0, 0.0)
+    | extend composite_score = (zone3_dev * 0.50) + (conveyor_dev * 0.30)
     | extend alert = iff(composite_score > 0.55, "ALERT", "OK")
-    | project timestamp, machine_id, avg_zone1, avg_zone2, avg_zone3, avg_zone4,
-             zone12_delta, zone23_delta, zone3_dev, composite_score, alert
+    | project timestamp, machine_id, avg_zone1, avg_zone2, avg_zone3, composite_score, alert
 }
 
-// === Metal 3D Printer O2 Ingress (ADD-001) ===
-.create-or-alter materialized-view Printer_O2Score on table MachineTelemetry {
+.create-or-alter function with (docstring = 'Metal 3D Printer O2 Ingress score', folder = 'Health')
+Printer_O2Score(lookback:timespan = 30m) {
     MachineTelemetry
     | where machine_id == "ADD-001"
-    | where timestamp > ago(5m)
-    | summarize
-        avg_o2 = avgif(value, sensor_name == "Inert Gas O2 Level"),
-        avg_powder_temp = avgif(value, sensor_name == "Powder Bed Temperature"),
-        avg_power = avgif(value, sensor_name == "Power Consumption")
+    | where timestamp > ago(lookback)
+    | summarize avg_o2 = avgif(value, sensor_name == "Inert Gas O2 Level"),
+        avg_powder_temp = avgif(value, sensor_name == "Powder Bed Temperature")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        o2_score = avg_o2 / 1000.0,
-        powder_temp_score = (avg_powder_temp - 30.0) / (160.0 - 30.0),
-        power_score = (avg_power - 4.0) / (40.0 - 4.0)
-    | extend composite_score = (o2_score * 0.50) + (powder_temp_score * 0.30) + (power_score * 0.20)
+    | extend o2_score = iff(isnotnull(avg_o2), avg_o2 / 1000.0, 0.0),
+        powder_temp_score = iff(isnotnull(avg_powder_temp), (avg_powder_temp - 30.0) / (160.0 - 30.0), 0.0)
+    | extend composite_score = (o2_score * 0.50) + (powder_temp_score * 0.30)
     | extend alert = iff(composite_score > 0.50, "ALERT", "OK")
-    | project timestamp, machine_id, avg_o2, avg_powder_temp, avg_power,
-             o2_score, powder_temp_score, composite_score, alert
+    | project timestamp, machine_id, avg_o2, avg_powder_temp, composite_score, alert
 }
 
-// === Crane Brake Wear (CRN-001) ===
-.create-or-alter materialized-view Crane_BrakeScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'Crane Brake Wear score', folder = 'Health')
+Crane_BrakeScore(lookback:timespan = 30m) {
     MachineTelemetry
     | where machine_id == "CRN-001"
-    | where timestamp > ago(5m)
-    | summarize
-        avg_brake_thickness = avgif(value, sensor_name == "Brake Pad Thickness"),
-        avg_motor_temp = avgif(value, sensor_name == "Hoist Motor Temperature"),
-        avg_load = avgif(value, sensor_name == "Hoist Load")
+    | where timestamp > ago(lookback)
+    | summarize avg_brake_thickness = avgif(value, sensor_name == "Brake Pad Thickness"),
+        avg_motor_temp = avgif(value, sensor_name == "Hoist Motor Temperature")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        brake_score = iff(isnotnull(avg_brake_thickness), 1.0 - (avg_brake_thickness - 2.0) / (12.0 - 2.0), 0.0),
-        motor_temp_score = (avg_motor_temp - 20.0) / (90.0 - 20.0),
-        load_score = avg_load / 50.0
-    | extend composite_score = (brake_score * 0.50) + (motor_temp_score * 0.35) + (load_score * 0.15)
+    | extend brake_score = iff(isnotnull(avg_brake_thickness), 1.0 - (avg_brake_thickness - 2.0) / (12.0 - 2.0), 0.0),
+        motor_temp_score = iff(isnotnull(avg_motor_temp), (avg_motor_temp - 20.0) / (90.0 - 20.0), 0.0)
+    | extend composite_score = (brake_score * 0.50) + (motor_temp_score * 0.35)
     | extend alert = iff(composite_score > 0.55, "ALERT", "OK")
-    | project timestamp, machine_id, avg_brake_thickness, avg_motor_temp, avg_load,
-             brake_score, motor_temp_score, composite_score, alert
+    | project timestamp, machine_id, avg_brake_thickness, avg_motor_temp, composite_score, alert
 }
 
-// === Hydraulic Test Bench Pump Cavitation (HTB-001) ===
-.create-or-alter materialized-view HydTest_CavitationScore on table MachineTelemetry {
+.create-or-alter function with (docstring = 'Hydraulic Test Bench Pump Cavitation score', folder = 'Health')
+HydTest_CavitationScore(lookback:timespan = 30m) {
     MachineTelemetry
     | where machine_id == "HTB-001"
-    | where timestamp > ago(5m)
-    | summarize
-        avg_pump_vib = avgif(value, sensor_name == "Pump Vibration"),
+    | where timestamp > ago(lookback)
+    | summarize avg_pump_vib = avgif(value, sensor_name == "Pump Vibration"),
         avg_flow = avgif(value, sensor_name == "Flow Rate"),
-        avg_oil_temp = avgif(value, sensor_name == "Oil Temperature"),
-        stdev_pressure = stdevif(value, sensor_name == "Test Pressure")
+        avg_oil_temp = avgif(value, sensor_name == "Oil Temperature")
         by machine_id, bin(timestamp, 1m)
-    | extend
-        vib_score = avg_pump_vib / 0.35,
-        flow_score = iff(isnotnull(avg_flow), 1.0 - (avg_flow - 5.0) / (100.0 - 5.0), 0.0),
-        temp_score = (avg_oil_temp - 20.0) / (75.0 - 20.0),
-        pressure_var = iff(isnotnull(stdev_pressure), stdev_pressure / 500.0, 0.0)
-    | extend composite_score = (vib_score * 0.35) + (flow_score * 0.25) + (temp_score * 0.25) + (pressure_var * 0.15)
+    | extend vib_score = iff(isnotnull(avg_pump_vib), avg_pump_vib / 0.35, 0.0),
+        flow_score = iff(isnotnull(avg_flow), 1.0 - (avg_flow - 5.0) / (100.0 - 5.0), 0.0)
+    | extend composite_score = (vib_score * 0.35) + (flow_score * 0.25)
     | extend alert = iff(composite_score > 0.55, "ALERT", "OK")
-    | project timestamp, machine_id, avg_pump_vib, avg_flow, avg_oil_temp,
-             vib_score, flow_score, temp_score, composite_score, alert
+    | project timestamp, machine_id, avg_pump_vib, avg_flow, composite_score, alert
 }
 
+.create-or-alter function with (docstring = 'EDM Wire Health score', folder = 'Health')
+EDM_WireHealthScore(lookback:timespan = 30m) {
+    MachineTelemetry
+    | where machine_id == "EDM-001"
+    | where timestamp > ago(lookback)
+    | summarize avg_wire_tension = avgif(value, sensor_name == "Wire Tension"),
+        avg_dielectric_cond = avgif(value, sensor_name == "Dielectric Conductivity")
+        by machine_id, bin(timestamp, 1m)
+    | extend tension_score = iff(isnotnull(avg_wire_tension), abs(avg_wire_tension - 15.0) / 10.0, 0.0),
+        cond_score = iff(isnotnull(avg_dielectric_cond), avg_dielectric_cond / 30.0, 0.0)
+    | extend composite_score = (tension_score * 0.40) + (cond_score * 0.35)
+    | extend alert = iff(composite_score > 0.55, "ALERT", "OK")
+    | project timestamp, machine_id, avg_wire_tension, avg_dielectric_cond, composite_score, alert
+}
 
-// ----- UNIFIED ALERT VIEW (for Activator + Dashboard) ----------------
+.create-or-alter function with (docstring = 'Lathe Spindle Health score', folder = 'Health')
+Lathe_SpindleScore(lookback:timespan = 30m) {
+    MachineTelemetry
+    | where machine_id in ("LTH-001", "LTH-002")
+    | where timestamp > ago(lookback)
+    | summarize avg_spindle_temp = avgif(value, sensor_name == "Spindle Temperature"),
+        avg_vibration = avgif(value, sensor_name == "Spindle Vibration"),
+        avg_chuck_pressure = avgif(value, sensor_name == "Chuck Pressure")
+        by machine_id, bin(timestamp, 1m)
+    | extend temp_score = iff(isnotnull(avg_spindle_temp), (avg_spindle_temp - 25.0) / (70.0 - 25.0), 0.0),
+        vib_score = iff(isnotnull(avg_vibration), avg_vibration / 0.20, 0.0)
+    | extend composite_score = (temp_score * 0.30) + (vib_score * 0.40)
+    | extend alert = iff(composite_score > 0.55, "ALERT", "OK")
+    | project timestamp, machine_id, avg_spindle_temp, avg_vibration, composite_score, alert
+}
 
-// Union all anomaly scores into one view for the Activator to monitor
-.create-or-alter function MachineHealthAlerts() {
-    let bearing = CNC_BearingWearScore | where alert == "ALERT" | extend rule = "CNC Bearing Wear", description = "Spindle vibration + temperature elevated while speed normal";
-    let coolant = CNC_CoolantFailScore | where alert == "ALERT" | extend rule = "CNC Coolant Failure", description = "Coolant flow dropping, spindle temperature rising";
-    let laser = Laser_NozzleDegScore | where alert == "ALERT" | extend rule = "Laser Nozzle Degradation", description = "Nozzle temp + beam alignment drift + power compensating";
-    let press = Press_HydLeakScore | where alert == "ALERT" | extend rule = "Press Hydraulic Leak", description = "Pressure variance + oil temp up + oil level dropping";
-    let weld = Weld_GasContamScore | where alert == "ALERT" | extend rule = "Welder Gas Contamination", description = "Arc voltage unstable + interpass temperature rising";
-    let cmm = CMM_EnvDriftScore | where alert == "ALERT" | extend rule = "CMM Environmental Drift", description = "Enclosure temp off 20C + floor vibration + accuracy degrading";
-    let reflow = Reflow_ProfileScore | where alert == "ALERT" | extend rule = "Reflow Profile Drift", description = "Zone temperature deltas outside IPC-7530 profile";
-    let printer = Printer_O2Score | where alert == "ALERT" | extend rule = "3D Printer O2 Ingress", description = "Oxygen level rising in build chamber";
-    let crane = Crane_BrakeScore | where alert == "ALERT" | extend rule = "Crane Brake Wear", description = "Brake pads thinning + motor temperature rising";
-    let hydtest = HydTest_CavitationScore | where alert == "ALERT" | extend rule = "Hydraulic Pump Cavitation", description = "Pump vibration up + flow dropping + pressure unstable";
-    union bearing, coolant, laser, press, weld, cmm, reflow, printer, crane, hydtest
+.create-or-alter function with (docstring = 'Paint Booth Environment score', folder = 'Health')
+PaintBooth_EnvScore(lookback:timespan = 30m) {
+    MachineTelemetry
+    | where machine_id in ("PNT-001", "PNT-002")
+    | where timestamp > ago(lookback)
+    | summarize avg_temp = avgif(value, sensor_name == "Booth Temperature"),
+        avg_humidity = avgif(value, sensor_name in ("Booth Humidity"))
+        by machine_id, bin(timestamp, 1m)
+    | extend temp_score = iff(isnotnull(avg_temp), abs(avg_temp - 22.0) / 5.0, 0.0),
+        humidity_score = iff(isnotnull(avg_humidity), abs(avg_humidity - 55.0) / 20.0, 0.0)
+    | extend composite_score = (temp_score * 0.40) + (humidity_score * 0.40)
+    | extend alert = iff(composite_score > 0.55, "ALERT", "OK")
+    | project timestamp, machine_id, avg_temp, avg_humidity, composite_score, alert
+}
+
+.create-or-alter function with (docstring = 'Assembly Station Health score', folder = 'Health')
+Assembly_StationScore(lookback:timespan = 30m) {
+    MachineTelemetry
+    | where machine_id == "ASM-001"
+    | where timestamp > ago(lookback)
+    | summarize avg_iron_temp = avgif(value, sensor_name == "Soldering Iron Temperature"),
+        avg_esd = avgif(value, sensor_name == "ESD Wrist Strap Voltage")
+        by machine_id, bin(timestamp, 1m)
+    | extend iron_score = iff(isnotnull(avg_iron_temp), abs(avg_iron_temp - 350.0) / 50.0, 0.0),
+        esd_score = iff(isnotnull(avg_esd), avg_esd / 5.0, 0.0)
+    | extend composite_score = (iron_score * 0.40) + (esd_score * 0.35)
+    | extend alert = iff(composite_score > 0.55, "ALERT", "OK")
+    | project timestamp, machine_id, avg_iron_temp, avg_esd, composite_score, alert
+}
+
+// ----- UNIFIED ALERT FUNCTIONS ---------------------------------------
+
+.create-or-alter function with (docstring = 'Unified machine health alerts across ALL 20 machines', folder = 'Health')
+MachineHealthAlerts(lookback:timespan = 30m) {
+    let bearing = CNC_BearingWearScore(lookback) | where alert == "ALERT" | extend rule = "CNC Bearing Wear", description = "Spindle vibration + temperature elevated";
+    let coolant = CNC_CoolantFailScore(lookback) | where alert == "ALERT" | extend rule = "CNC Coolant Failure", description = "Coolant flow dropping, temperature rising";
+    let laser = Laser_NozzleDegScore(lookback) | where alert == "ALERT" | extend rule = "Laser Nozzle Degradation", description = "Nozzle temp + beam alignment drift";
+    let press = Press_HydLeakScore(lookback) | where alert == "ALERT" | extend rule = "Press Hydraulic Leak", description = "Pressure variance + oil temp rising";
+    let weld = Weld_GasContamScore(lookback) | where alert == "ALERT" | extend rule = "Welder Gas Contamination", description = "Arc voltage unstable + interpass temp rising";
+    let cmm = CMM_EnvDriftScore(lookback) | where alert == "ALERT" | extend rule = "CMM Environmental Drift", description = "Enclosure temp off 20C + accuracy degrading";
+    let reflow = Reflow_ProfileScore(lookback) | where alert == "ALERT" | extend rule = "Reflow Profile Drift", description = "Zone temperatures outside IPC-7530 profile";
+    let printer = Printer_O2Score(lookback) | where alert == "ALERT" | extend rule = "3D Printer O2 Ingress", description = "Oxygen rising in build chamber";
+    let crane = Crane_BrakeScore(lookback) | where alert == "ALERT" | extend rule = "Crane Brake Wear", description = "Brake pads thinning + motor temp rising";
+    let hydtest = HydTest_CavitationScore(lookback) | where alert == "ALERT" | extend rule = "Hydraulic Pump Cavitation", description = "Pump vibration up + flow dropping";
+    let edm = EDM_WireHealthScore(lookback) | where alert == "ALERT" | extend rule = "EDM Wire Failure", description = "Wire tension + dielectric degradation";
+    let lathe = Lathe_SpindleScore(lookback) | where alert == "ALERT" | extend rule = "Lathe Spindle Failure", description = "Spindle vibration + chuck pressure anomaly";
+    let paint = PaintBooth_EnvScore(lookback) | where alert == "ALERT" | extend rule = "Paint Booth Environment", description = "Temperature/humidity/airflow out of spec";
+    let assembly = Assembly_StationScore(lookback) | where alert == "ALERT" | extend rule = "Assembly Station Issue", description = "Soldering temp or ESD anomaly";
+    union bearing, coolant, laser, press, weld, cmm, reflow, printer, crane, hydtest, edm, lathe, paint, assembly
     | project timestamp, machine_id, rule, composite_score, description, alert
     | order by timestamp desc
 }
 
-
-// ----- DASHBOARD QUERIES (for Real-Time Dashboard tiles) -------------
-
-// Latest sensor readings per machine (for individual machine drilldown)
-// Use with parameter: machine_id_param
-// MachineTelemetry
-// | where machine_id == machine_id_param
-// | where timestamp > ago(30m)
-// | project timestamp, sensor_name, value, unit, alert_level
-// | order by sensor_name, timestamp asc
-
-// Machine health overview (all machines, latest composite scores)
-// Uses the MachineHealthAlerts function
-// MachineHealthAlerts()
-// | summarize arg_max(timestamp, *) by machine_id, rule
-// | project machine_id, rule, composite_score, alert, timestamp
-
-// Time-series for a specific sensor on a specific machine (with threshold lines)
-// Use with parameters: machine_id_param, sensor_name_param
-// let sensor_def = datatable(normal_min:real, normal_max:real, warning_max:real, critical_max:real)
-//     [30, 55, 65, 75];  // replace with actual values from sensor_definitions
-// MachineTelemetry
-// | where machine_id == machine_id_param and sensor_name == sensor_name_param
-// | where timestamp > ago(1h)
-// | project timestamp, value
-// | extend normal_max = toscalar(sensor_def | project normal_max),
-//         warning_max = toscalar(sensor_def | project warning_max),
-//         critical_max = toscalar(sensor_def | project critical_max)
+.create-or-alter function with (docstring = 'Critical anomaly alerts for Activator monitoring', folder = 'Health')
+CriticalAnomalyAlerts() {
+    AnomalyAlerts
+    | where scored_at > ago(15m)
+    | where anomaly_confidence_pct >= 80.0
+    | project scored_at, machine_id, anomaly_type, anomaly_confidence_pct, estimated_rul_hours, severity, description
+    | order by anomaly_confidence_pct desc
+}
