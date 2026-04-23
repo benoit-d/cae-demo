@@ -114,12 +114,10 @@ else:
     eventhouse_id = eh["id"]
     print(f"Eventhouse: {eventhouse_id}")
 
-    # KQL schema: table creation + streaming ingestion + materialized views + functions
-    # Read schema from data/kql/ files if available, otherwise use inline minimal schema
-    kql_parts = []
-
-    # Part 1: Core tables + streaming
-    kql_parts.append("""
+    # KQL schema: tables + streaming ingestion only
+    # Materialized views have restrictions (no extend/project after summarize)
+    # so scoring views + functions are created separately via scripts/kql/*.kql
+    kql_schema = """
 .create-merge table MachineTelemetry (
     timestamp: datetime, machine_id: string, sensor_id: string,
     sensor_category: string, sensor_name: string, value: real,
@@ -132,31 +130,7 @@ else:
 
 .alter table MachineTelemetry policy streamingingestion enable
 .alter table ClockInEvents policy streamingingestion enable
-""")
-
-    # Part 2: Load materialized views + functions from Lakehouse kql files
-    for kql_file in ["scripts/kql/machine_health_monitoring.kql", "scripts/kql/anomaly_scoring.kql"]:
-        kql_path = f"{BASE}/{kql_file}"
-        try:
-            content = spark.read.text(kql_path).collect()
-            kql_text = "\n".join([row[0] for row in content])
-            # Strip the table creation section (already handled above) — keep only views/functions
-            # Skip lines before the first materialized-view or function definition
-            lines = kql_text.split("\n")
-            capture = False
-            filtered = []
-            for line in lines:
-                if ".create-or-alter materialized-view" in line or ".create-or-alter function" in line:
-                    capture = True
-                if capture:
-                    filtered.append(line)
-            if filtered:
-                kql_parts.append("\n".join(filtered))
-                print(f"  Loaded KQL views/functions from {kql_file}")
-        except Exception as e:
-            print(f"  KQL file {kql_file} not found in Lakehouse (will use tables-only schema): {e}")
-
-    kql_schema = "\n".join(kql_parts)
+"""
 
     # Build the KQL Database definition
     db_name = "CAEManufacturingKQLDB"
