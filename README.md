@@ -216,7 +216,7 @@ ws = FabricWorkspace(workspace_id=WORKSPACE_ID, repository_directory=workspace_d
         "Notebook", "Lakehouse", "Environment",
         "Eventhouse",
         "KQLDatabase", "KQLDashboard", "KQLQueryset",
-        "SemanticModel", "Report", "SQLDatabase",
+        "SQLDatabase",
         "DataPipeline",
     ], token_credential=_Cred())
 publish_all_items(ws)
