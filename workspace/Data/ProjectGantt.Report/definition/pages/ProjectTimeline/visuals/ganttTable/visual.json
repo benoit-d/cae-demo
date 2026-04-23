@@ -1,0 +1,101 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visual/1.0.0/schema.json",
+  "name": "ganttTable",
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": { "Entity": "Projects" }
+                  },
+                  "Property": "Project Name"
+                }
+              },
+              "queryRef": "Projects.Project Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": { "Entity": "Tasks" }
+                  },
+                  "Property": "Task Name"
+                }
+              },
+              "queryRef": "Tasks.Task Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": { "Entity": "Tasks" }
+                  },
+                  "Property": "Planned Start"
+                }
+              },
+              "queryRef": "Tasks.Planned Start"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": { "Entity": "Tasks" }
+                  },
+                  "Property": "Standard Duration"
+                }
+              },
+              "queryRef": "Tasks.Standard Duration"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": { "Entity": "Tasks" }
+                  },
+                  "Property": "Complete %"
+                }
+              },
+              "queryRef": "Tasks.Complete %"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": { "Entity": "Tasks" }
+                  },
+                  "Property": "Resource Login"
+                }
+              },
+              "queryRef": "Tasks.Resource Login"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": { "Entity": "Tasks" }
+                  },
+                  "Property": "Skill Requirement"
+                }
+              },
+              "queryRef": "Tasks.Skill Requirement"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {}
+  },
+  "position": {
+    "x": 30,
+    "y": 30,
+    "width": 1220,
+    "height": 660,
+    "z": 0,
+    "tabOrder": 0
+  }
+}
