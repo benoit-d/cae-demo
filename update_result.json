@@ -1,0 +1,11 @@
+{
+  "status": "Failed",
+  "createdTimeUtc": "2026-04-23T18:51:47.5147593",
+  "lastUpdatedTimeUtc": "2026-04-23T18:51:47.6169949",
+  "percentComplete": null,
+  "error": {
+    "errorCode": "Workload_FailedToParseFile",
+    "message": "Dataset Workload failed to import the dataset with dataset id 46bb72a0-9cde-4a0f-bdea-dd1cb5426557. TMDL Format Error:\r\n\tParsing error type - InvalidLineType\r\n\tDetailed error - Unexpected line type: ReferenceObject!\r\n\tDocument - './model'\r\n\tLine Number - 13\r\n\tLine - '\tref table employees'",
+    "isRetriable": false
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "definition": {
+    "parts": [
+      {
+        "payload": "eyIkc2NoZW1hIjoiaHR0cHM6Ly9kZXZlbG9wZXIubWljcm9zb2Z0LmNvbS9qc29uLXNjaGVtYXMvZmFicmljL2l0ZW0vc2VtYW50aWNNb2RlbC9kZWZpbml0aW9uUHJvcGVydGllcy8xLjAuMC9zY2hlbWEuanNvbiIsInZlcnNpb24iOiI0LjIiLCJzZXR0aW5ncyI6e319",
+        "payloadType": "InlineBase64",
+        "path": "definition.pbism"
+      },
+      {
+        "payload": "ZGF0YWJhc2UNCgljb21wYXRpYmlsaXR5TGV2ZWw6IDE2MDQ=",
+        "payloadType": "InlineBase64",
+        "path": "definition/database.tmdl"
+      },
+      {
+        "payload": "bW9kZWwgTW9kZWwNCgljdWx0dXJlOiBlbi1VUw0KCWRlZmF1bHRQb3dlckJJRGF0YVNvdXJjZVZlcnNpb246IHBvd2VyQklfVjMNCglzb3VyY2VRdWVyeUN1bHR1cmU6IGVuLVVTDQoJZGF0YUFjY2Vzc09wdGlvbnMNCgkJbGVnYWN5UmVkaXJlY3RzDQoJCXJldHVybkVycm9yVmFsdWVzQXNOdWxsDQoNCmFubm90YXRpb24gUEJJX1F1ZXJ5T3JkZXIgPSBbIkRpcmVjdExha2UgLSBDQUVNYW51ZmFjdHVyaW5nX1NRTERCIl0NCg0KYW5ub3RhdGlvbiBfX1BCSV9UaW1lSW50ZWxsaWdlbmNlRW5hYmxlZCA9IDENCg0KcmVmIHRhYmxlIGVtcGxveWVlcw0KcmVmIHRhYmxlIHByb2R1Y3Rpb25fbGluZXMNCnJlZiB0YWJsZSBtYWNoaW5lcw0KcmVmIHRhYmxlIG1hY2hpbmVfam9icw0KcmVmIHRhYmxlIHNpbXVsYXRvcnMNCnJlZiB0YWJsZSBtYWludGVuYW5jZV9oaXN0b3J5DQpyZWYgdGFibGUgcHJvamVjdHMNCnJlZiB0YWJsZSB0YXNrcw==",
+        "payloadType": "InlineBase64",
+        "path": "definition/model.tmdl"
+      },
+      {
+        "payload": "ZXhwcmVzc2lvbiAnRGlyZWN0TGFrZSAtIENBRU1hbnVmYWN0dXJpbmdfU1FMREInID0NCgkJbGV0DQoJCQlTb3VyY2UgPSBBenVyZVN0b3JhZ2UuRGF0YUxha2UoImh0dHBzOi8vb25lbGFrZS5kZnMuZmFicmljLm1pY3Jvc29mdC5jb20vMTYxYzQzYTQtNmExNC00YjhmLTgxZWItMDcwZjA5ODFhNjA5LzZjMzFjYWQzLTc0YTMtNGVhZS05MWYzLWUyYTRlZDg0NWU3ZSIsIFtIaWVyYXJjaGljYWxOYXZpZ2F0aW9uPXRydWVdKQ0KCQlpbg0KCQkJU291cmNl",
+        "payloadType": "InlineBase64",
+        "path": "definition/expressions.tmdl"
+      },
+      {
+        "payload": "cmVsYXRpb25zaGlwICdUYXNrcyB0byBQcm9qZWN0cycNCglyZWx5T25SZWZlcmVudGlhbEludGVncml0eQ0KCWZyb21Db2x1bW46IHRhc2tzLlBhcmVudF9Qcm9qZWN0X0lEDQoJdG9Db2x1bW46IHByb2plY3RzLlByb2plY3RfSUQ=",
+        "payloadType": "InlineBase64",
+        "path": "definition/relationships.tmdl"
+      },
+      {
+        "payload": "dGFibGUgZW1wbG95ZWVzDQoJc291cmNlTGluZWFnZVRhZzogW2hyXS5bZW1wbG95ZWVzXQ0KDQoJY29sdW1uIGVtcGxveWVlX2lkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJc3VtbWFyaXplQnk6IG5vbmUNCgkJc291cmNlQ29sdW1uOiBlbXBsb3llZV9pZA0KDQoJcGFydGl0aW9uIGVtcGxveWVlcyA9IGVudGl0eQ0KCQltb2RlOiBkaXJlY3RMYWtlDQoJCXNvdXJjZQ0KCQkJZW50aXR5TmFtZTogZW1wbG95ZWVzDQoJCQlzY2hlbWFOYW1lOiBocg0KCQkJZXhwcmVzc2lvblNvdXJjZTogJ0RpcmVjdExha2UgLSBDQUVNYW51ZmFjdHVyaW5nX1NRTERCJw==",
+        "payloadType": "InlineBase64",
+        "path": "definition/tables/employees.tmdl"
+      },
+      {
+        "payload": "dGFibGUgcHJvZHVjdGlvbl9saW5lcw0KCXNvdXJjZUxpbmVhZ2VUYWc6IFtlcnBdLltwcm9kdWN0aW9uX2xpbmVzXQ0KDQoJY29sdW1uIHByb2R1Y3Rpb25fbGluZV9pZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogcHJvZHVjdGlvbl9saW5lX2lkDQoNCglwYXJ0aXRpb24gcHJvZHVjdGlvbl9saW5lcyA9IGVudGl0eQ0KCQltb2RlOiBkaXJlY3RMYWtlDQoJCXNvdXJjZQ0KCQkJZW50aXR5TmFtZTogcHJvZHVjdGlvbl9saW5lcw0KCQkJc2NoZW1hTmFtZTogZXJwDQoJCQlleHByZXNzaW9uU291cmNlOiAnRGlyZWN0TGFrZSAtIENBRU1hbnVmYWN0dXJpbmdfU1FMREIn",
+        "payloadType": "InlineBase64",
+        "path": "definition/tables/production_lines.tmdl"
+      },
+      {
+        "payload": "dGFibGUgbWFjaGluZXMNCglzb3VyY2VMaW5lYWdlVGFnOiBbZXJwXS5bbWFjaGluZXNdDQoNCgljb2x1bW4gTWFjaGluZV9JRA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogTWFjaGluZV9JRA0KDQoJY29sdW1uIE1hY2hpbmVfTmFtZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogTWFjaGluZV9OYW1lDQoNCglwYXJ0aXRpb24gbWFjaGluZXMgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IG1hY2hpbmVzDQoJCQlzY2hlbWFOYW1lOiBlcnANCgkJCWV4cHJlc3Npb25Tb3VyY2U6ICdEaXJlY3RMYWtlIC0gQ0FFTWFudWZhY3R1cmluZ19TUUxEQic=",
+        "payloadType": "InlineBase64",
+        "path": "definition/tables/machines.tmdl"
+      },
+      {
+        "payload": "dGFibGUgbWFjaGluZV9qb2JzDQoJc291cmNlTGluZWFnZVRhZzogW2VycF0uW21hY2hpbmVfam9ic10NCg0KCWNvbHVtbiBKb2JfSUQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlzdW1tYXJpemVCeTogbm9uZQ0KCQlzb3VyY2VDb2x1bW46IEpvYl9JRA0KDQoJcGFydGl0aW9uIG1hY2hpbmVfam9icyA9IGVudGl0eQ0KCQltb2RlOiBkaXJlY3RMYWtlDQoJCXNvdXJjZQ0KCQkJZW50aXR5TmFtZTogbWFjaGluZV9qb2JzDQoJCQlzY2hlbWFOYW1lOiBlcnANCgkJCWV4cHJlc3Npb25Tb3VyY2U6ICdEaXJlY3RMYWtlIC0gQ0FFTWFudWZhY3R1cmluZ19TUUxEQic=",
+        "payloadType": "InlineBase64",
+        "path": "definition/tables/machine_jobs.tmdl"
+      },
+      {
+        "payload": "dGFibGUgc2ltdWxhdG9ycw0KCXNvdXJjZUxpbmVhZ2VUYWc6IFtlcnBdLltzaW11bGF0b3JzXQ0KDQoJY29sdW1uIFNpbXVsYXRvcl9JRA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogU2ltdWxhdG9yX0lEDQoNCglwYXJ0aXRpb24gc2ltdWxhdG9ycyA9IGVudGl0eQ0KCQltb2RlOiBkaXJlY3RMYWtlDQoJCXNvdXJjZQ0KCQkJZW50aXR5TmFtZTogc2ltdWxhdG9ycw0KCQkJc2NoZW1hTmFtZTogZXJwDQoJCQlleHByZXNzaW9uU291cmNlOiAnRGlyZWN0TGFrZSAtIENBRU1hbnVmYWN0dXJpbmdfU1FMREIn",
+        "payloadType": "InlineBase64",
+        "path": "definition/tables/simulators.tmdl"
+      },
+      {
+        "payload": "dGFibGUgbWFpbnRlbmFuY2VfaGlzdG9yeQ0KCXNvdXJjZUxpbmVhZ2VUYWc6IFtlcnBdLlttYWludGVuYW5jZV9oaXN0b3J5XQ0KDQoJY29sdW1uIE1haW50ZW5hbmNlX0lEDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJc3VtbWFyaXplQnk6IG5vbmUNCgkJc291cmNlQ29sdW1uOiBNYWludGVuYW5jZV9JRA0KDQoJcGFydGl0aW9uIG1haW50ZW5hbmNlX2hpc3RvcnkgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IG1haW50ZW5hbmNlX2hpc3RvcnkNCgkJCXNjaGVtYU5hbWU6IGVycA0KCQkJZXhwcmVzc2lvblNvdXJjZTogJ0RpcmVjdExha2UgLSBDQUVNYW51ZmFjdHVyaW5nX1NRTERCJw==",
+        "payloadType": "InlineBase64",
+        "path": "definition/tables/maintenance_history.tmdl"
+      },
+      {
+        "payload": "dGFibGUgcHJvamVjdHMNCglzb3VyY2VMaW5lYWdlVGFnOiBbZXJwXS5bcHJvamVjdHNdDQoNCgljb2x1bW4gUHJvamVjdF9JRA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogUHJvamVjdF9JRA0KDQoJY29sdW1uIFByb2plY3RfTmFtZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogUHJvamVjdF9OYW1lDQoNCglwYXJ0aXRpb24gcHJvamVjdHMgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IHByb2plY3RzDQoJCQlzY2hlbWFOYW1lOiBlcnANCgkJCWV4cHJlc3Npb25Tb3VyY2U6ICdEaXJlY3RMYWtlIC0gQ0FFTWFudWZhY3R1cmluZ19TUUxEQic=",
+        "payloadType": "InlineBase64",
+        "path": "definition/tables/projects.tmdl"
+      },
+      {
+        "payload": "dGFibGUgdGFza3MNCglzb3VyY2VMaW5lYWdlVGFnOiBbZXJwXS5bdGFza3NdDQoNCgljb2x1bW4gVGFza19JRA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogVGFza19JRA0KDQoJY29sdW1uIFRhc2tfTmFtZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogVGFza19OYW1lDQoNCgljb2x1bW4gUGFyZW50X1Byb2plY3RfSUQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlzdW1tYXJpemVCeTogbm9uZQ0KCQlzb3VyY2VDb2x1bW46IFBhcmVudF9Qcm9qZWN0X0lEDQoNCgljb2x1bW4gU3RhbmRhcmRfRHVyYXRpb24NCgkJZGF0YVR5cGU6IGludDY0DQoJCWZvcm1hdFN0cmluZzogMA0KCQlzdW1tYXJpemVCeTogc3VtDQoJCXNvdXJjZUNvbHVtbjogU3RhbmRhcmRfRHVyYXRpb24NCg0KCWNvbHVtbiBDYWxjdWxhdGVkX1N0YXJ0X0RhdGUNCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWZvcm1hdFN0cmluZzogR2VuZXJhbCBEYXRlDQoJCXN1bW1hcml6ZUJ5OiBub25lDQoJCXNvdXJjZUNvbHVtbjogQ2FsY3VsYXRlZF9TdGFydF9EYXRlDQoNCgljb2x1bW4gQ2FsY3VsYXRlZF9FbmRfRGF0ZQ0KCQlkYXRhVHlwZTogZGF0ZVRpbWUNCgkJZm9ybWF0U3RyaW5nOiBHZW5lcmFsIERhdGUNCgkJc3VtbWFyaXplQnk6IG5vbmUNCgkJc291cmNlQ29sdW1uOiBDYWxjdWxhdGVkX0VuZF9EYXRlDQoNCgljb2x1bW4gSXNfTWlsZXN0b25lDQoJCWRhdGFUeXBlOiBib29sZWFuDQoJCWZvcm1hdFN0cmluZzogIiIiVFJVRSIiOyIiVFJVRSIiOyIiRkFMU0UiIiINCgkJc3VtbWFyaXplQnk6IG5vbmUNCgkJc291cmNlQ29sdW1uOiBJc19NaWxlc3RvbmUNCg0KCXBhcnRpdGlvbiB0YXNrcyA9IGVudGl0eQ0KCQltb2RlOiBkaXJlY3RMYWtlDQoJCXNvdXJjZQ0KCQkJZW50aXR5TmFtZTogdGFza3MNCgkJCXNjaGVtYU5hbWU6IGVycA0KCQkJZXhwcmVzc2lvblNvdXJjZTogJ0RpcmVjdExha2UgLSBDQUVNYW51ZmFjdHVyaW5nX1NRTERCJw==",
+        "payloadType": "InlineBase64",
+        "path": "definition/tables/tasks.tmdl"
+      }
+    ],
+    "format": "TMDL"
+  },
+  "type": "SemanticModel",
+  "folderId": "645a5345-2ccb-4926-9453-0a03184c936b",
+  "displayName": "CAEManufacturing"
+}

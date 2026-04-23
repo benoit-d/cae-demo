@@ -1,0 +1,18 @@
+
+Key                           Value
+---                           -----
+Cache-Control                 {no-store, must-revalidate, no-cache}
+Pragma                        {no-cache}
+Location                      {https://wabi-west-us3-a-primary-redirect.analysis.win…
+Retry-After                   {20}
+x-ms-operation-id             {5ec00d75-2689-437f-b107-41af6c15d605}
+Strict-Transport-Security     {max-age=31536000; includeSubDomains}
+X-Frame-Options               {deny}
+X-Content-Type-Options        {nosniff}
+RequestId                     {3991f2d6-b3c7-4648-9076-e032bab7fe83}
+Access-Control-Expose-Headers {RequestId,Location,Retry-After,x-ms-operation-id}
+request-redirected            {true}
+home-cluster-uri              {https://wabi-west-us3-a-primary-redirect.analysis.win…
+Date                          {Thu, 23 Apr 2026 18:41:52 GMT}
+Content-Type                  {application/json; charset=utf-8}
+

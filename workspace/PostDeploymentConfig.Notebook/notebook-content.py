@@ -867,9 +867,12 @@ relationship 'Jobs to Projects'
                         break
                     time.sleep(3)
                 print(f"  Update: {st}")
-            else:
-                print("  Updated (no polling needed)")
-            SM_SETUP_OK = True
+                if st == "failed":
+                    detail = pr.json().get("error", {}).get("message", pr.text[:500])
+                    print(f"  Error: {detail}")
+                    SM_SETUP_OK = False
+                else:
+                    SM_SETUP_OK = True
         else:
             print(f"  Failed: {resp.text[:300]}")
             SM_SETUP_OK = False
@@ -907,6 +910,12 @@ relationship 'Jobs to Projects'
                         break
                     time.sleep(3)
                 print(f"  Creation: {st}")
+                if st == "failed":
+                    detail = pr.json().get("error", {}).get("message", pr.text[:500])
+                    print(f"  Error: {detail}")
+                    SM_SETUP_OK = False
+                else:
+                    SM_SETUP_OK = True
             else:
                 print("  Created (no polling needed)")
             SM_SETUP_OK = True
