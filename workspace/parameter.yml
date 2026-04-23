@@ -1,0 +1,2 @@
+# No parameters needed — all item names are consistent across deployments.
+# This file exists to suppress the fabric-cicd "parameter.yml not found" warning.
