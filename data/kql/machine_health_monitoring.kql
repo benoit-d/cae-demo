@@ -37,7 +37,32 @@
 .alter table ClockInEvents policy streamingingestion enable
 
 
-// ----- MATERIALIZED VIEW: Composite Anomaly Scores -------------------
+// ----- ANOMALY DETECTION: Composite Scoring Rules --------------------
+// 
+// APPROACH A (current): KQL Materialized Views
+//   Weighted composite scores using normalized sensor values.
+//   Pros: No training needed, explainable, runs natively in KQL.
+//   Cons: Hand-tuned weights, linear combinations only.
+//
+// APPROACH B (future): ML Model
+//   Train an Isolation Forest, Autoencoder, or Multivariate Anomaly
+//   Detector on historical "normal" telemetry data. Score incoming
+//   batches and flag outliers. The model captures non-linear
+//   cross-variable correlations naturally.
+//   To implement:
+//     1. Collect 2+ weeks of normal telemetry in MachineTelemetry table
+//     2. Train model in a Spark notebook (sklearn or Azure AI Anomaly Detector)
+//     3. Register model in MLflow / Fabric ML experiment
+//     4. Replace these materialized views with a scoring notebook
+//        called by the TelemetryPipeline that writes anomaly scores
+//        to a new MachineTelemetryScores table
+//     5. Update MachineHealthAlerts() to read from scores table
+//
+// The materialized views below can be replaced by the ML approach
+// without changing the downstream Activator or Dashboard — they both
+// consume MachineHealthAlerts() which is the stable interface.
+// ---------------------------------------------------------------------
+
 // These run continuously and maintain a rolling 5-minute window
 
 // === CNC Mill Bearing Wear Score (MCH-001, MCH-002) ===
@@ -255,6 +280,15 @@
 
 
 // ----- UNIFIED ALERT VIEW (for Activator + Dashboard) ----------------
+// This function is the STABLE INTERFACE consumed by:
+//   - MachineHealthActivator (Reflex/Activator)
+//   - Real-Time Dashboard alert tiles
+//   - CapacityManagementAgent notebook
+//
+// If switching to ML-based scoring (Approach B), update the internals
+// of this function to read from the ML scores table instead of the
+// materialized views. The downstream consumers don't need to change.
+// ---------------------------------------------------------------------
 
 // Union all anomaly scores into one view for the Activator to monitor
 .create-or-alter function MachineHealthAlerts() {
