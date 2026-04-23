@@ -234,6 +234,8 @@ if lh:
 shutil.rmtree(clone_dir, ignore_errors=True)
 ```
 
+> **Note:** You will see a `Parameter file not found` warning during publishing — this is expected and harmless. No parameter file is needed.
+
 ### 2. Create a Fabric SQL Database
 
 In the workspace, click **+ New item > SQL Database** and name it `CAEManufacturing_SQLDB`.
