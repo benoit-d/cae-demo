@@ -165,9 +165,12 @@ cae-demo/
 │   ├── hr/           # employees, skills, schedules, restrictions, time off, contractors
 │   ├── plm/          # simulators, BOMs, projects, tasks, part specs, machine capabilities
 │   ├── mes/          # machine_jobs (MES scheduling)
-│   ├── kql/          # KQL scripts: anomaly scoring views + functions
 │   └── telemetry/    # sensor_definitions.csv (107 sensors × 20 machines)
-└── scripts/          # Local Python tools
+└── scripts/          # Local Python tools + KQL scripts
+    ├── kql/                        # KQL anomaly scoring views + functions
+    │   ├── machine_health_monitoring.kql
+    │   ├── anomaly_scoring.kql
+    │   └── dashboard_spec.json
     ├── generate_project_data.py    # Regenerate 8 projects with scheduling constraints
     ├── telemetry_normal.py         # Standalone telemetry generator
     ├── telemetry_fault_injection.py # CNC mill fault profile
@@ -225,11 +228,17 @@ resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_
 items = resp.json().get("value", [])
 lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
 if lh:
-    for folder in ["erp", "hr", "telemetry", "plm", "mes", "kql"]:
+    for folder in ["erp", "hr", "telemetry", "plm", "mes"]:
         src = os.path.join(data_dir, folder)
         if not os.path.isdir(src): continue
         for f in sorted(glob.glob(os.path.join(src, "*"))):
             dest = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/data/{folder}/{os.path.basename(f)}"
+            notebookutils.fs.cp(f"file://{f}", dest)
+    # Upload KQL scripts
+    kql_src = os.path.join(clone_dir, "scripts", "kql")
+    if os.path.isdir(kql_src):
+        for f in sorted(glob.glob(os.path.join(kql_src, "*"))):
+            dest = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/scripts/kql/{os.path.basename(f)}"
             notebookutils.fs.cp(f"file://{f}", dest)
 
 shutil.rmtree(clone_dir, ignore_errors=True)

@@ -130,7 +130,7 @@ else:
 """)
 
     # Part 2: Load materialized views + functions from Lakehouse kql files
-    for kql_file in ["data/kql/machine_health_monitoring.kql", "data/kql/anomaly_scoring.kql"]:
+    for kql_file in ["scripts/kql/machine_health_monitoring.kql", "scripts/kql/anomaly_scoring.kql"]:
         kql_path = f"{BASE}/{kql_file}"
         try:
             content = spark.read.text(kql_path).collect()
