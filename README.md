@@ -165,6 +165,7 @@ cae-demo/
 │   ├── hr/           # employees, skills, schedules, restrictions, time off, contractors
 │   ├── plm/          # simulators, BOMs, projects, tasks, part specs, machine capabilities
 │   ├── mes/          # machine_jobs (MES scheduling)
+│   ├── kql/          # KQL scripts: anomaly scoring views + functions
 │   └── telemetry/    # sensor_definitions.csv (107 sensors × 20 machines)
 └── scripts/          # Local Python tools
     ├── generate_project_data.py    # Regenerate 8 projects with scheduling constraints
@@ -224,7 +225,7 @@ resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_
 items = resp.json().get("value", [])
 lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
 if lh:
-    for folder in ["erp", "hr", "telemetry", "plm", "mes"]:
+    for folder in ["erp", "hr", "telemetry", "plm", "mes", "kql"]:
         src = os.path.join(data_dir, folder)
         if not os.path.isdir(src): continue
         for f in sorted(glob.glob(os.path.join(src, "*"))):

@@ -1,0 +1,238 @@
+{
+  "title": "CAE Manufacturing - Machine Health Monitor",
+  "description": "Real-time machine health monitoring with multivariate anomaly detection. Fabric teal (#0078D4) for normal, red (#E81123) for alert.",
+  "pages": [
+    {
+      "id": "overview",
+      "name": "Fleet Overview",
+      "tiles": [
+        {
+          "id": "health-summary",
+          "title": "Machine Health Status",
+          "type": "table",
+          "query": "MachineHealthAlerts()\n| summarize arg_max(timestamp, *) by machine_id\n| project machine_id, rule, composite_score = round(composite_score, 2), alert\n| order by composite_score desc",
+          "notes": "Conditional formatting: alert=ALERT rows in #E81123 red, OK rows in #0078D4 teal"
+        },
+        {
+          "id": "active-alerts",
+          "title": "Active Alerts (Last 15 min)",
+          "type": "table",
+          "query": "MachineHealthAlerts()\n| where timestamp > ago(15m)\n| project timestamp, machine_id, rule, Score=round(composite_score,2), description\n| order by timestamp desc"
+        },
+        {
+          "id": "alert-timeline",
+          "title": "Alerts Over Time",
+          "type": "timechart",
+          "query": "MachineHealthAlerts()\n| where timestamp > ago(1h)\n| summarize alerts = count() by bin(timestamp, 1m)\n| render timechart",
+          "notes": "Line color: #E81123"
+        },
+        {
+          "id": "fleet-scores",
+          "title": "Composite Health Scores - All Machines",
+          "type": "barchart",
+          "query": "MachineHealthAlerts()\n| summarize max_score = max(composite_score) by machine_id\n| order by max_score desc\n| render barchart",
+          "notes": "Bar color: #0078D4 for score < 0.55, #FF8C00 for 0.55-0.65, #E81123 for > 0.65"
+        }
+      ]
+    },
+    {
+      "id": "cnc-detail",
+      "name": "CNC Mills (CNC-001/002)",
+      "tiles": [
+        {
+          "id": "cnc-spindle-temp",
+          "title": "Spindle Temperature",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id in ('CNC-001','CNC-002')\n| where sensor_name == 'Spindle Temperature'\n| where timestamp > ago(30m)\n| project timestamp, value, machine_id\n| render timechart",
+          "thresholds": {
+            "normal_max": 55,
+            "warning_max": 65,
+            "critical_max": 75
+          },
+          "notes": "Line: #0078D4 teal when < normal_max, turns #E81123 red when > warning_max. Threshold lines: normal=#107C10 green dashed, warning=#FF8C00 orange dashed, critical=#E81123 red solid."
+        },
+        {
+          "id": "cnc-vibration",
+          "title": "Spindle Vibration",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id in ('CNC-001','CNC-002')\n| where sensor_name == 'Spindle Vibration'\n| where timestamp > ago(30m)\n| project timestamp, value, machine_id\n| render timechart",
+          "thresholds": {
+            "normal_max": 0.08,
+            "warning_max": 0.15,
+            "critical_max": 0.25
+          }
+        },
+        {
+          "id": "cnc-coolant-flow",
+          "title": "Coolant Flow Rate",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id in ('CNC-001','CNC-002')\n| where sensor_name == 'Coolant Flow Rate'\n| where timestamp > ago(30m)\n| project timestamp, value, machine_id\n| render timechart",
+          "thresholds": {
+            "normal_min": 8,
+            "warning_min": 6,
+            "critical_min": 4
+          },
+          "notes": "Inverted thresholds - alert when BELOW threshold"
+        },
+        {
+          "id": "cnc-bearing-score",
+          "title": "Bearing Wear Composite Score",
+          "type": "timechart",
+          "query": "CNC_BearingWearScore\n| where timestamp > ago(30m)\n| project timestamp, composite_score, machine_id\n| render timechart",
+          "thresholds": {
+            "alert_threshold": 0.65
+          },
+          "notes": "Area fill: #0078D4 teal below 0.65, #E81123 red above. Alert line: #E81123 dashed at 0.65."
+        },
+        {
+          "id": "cnc-power",
+          "title": "Power Consumption",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id in ('CNC-001','CNC-002')\n| where sensor_name == 'Power Consumption'\n| where timestamp > ago(30m)\n| project timestamp, value, machine_id\n| render timechart",
+          "thresholds": {
+            "normal_max": 25,
+            "warning_max": 30,
+            "critical_max": 35
+          }
+        },
+        {
+          "id": "cnc-axis-accuracy",
+          "title": "Axis Position Accuracy",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id == 'CNC-001'\n| where sensor_name == 'Axis Position Accuracy'\n| where timestamp > ago(30m)\n| project timestamp, value\n| render timechart",
+          "thresholds": {
+            "normal_band": [-0.005, 0.005],
+            "warning_band": [-0.01, 0.01],
+            "critical_band": [-0.02, 0.02]
+          },
+          "notes": "Band chart: green band for normal, orange for warning, red for critical"
+        }
+      ]
+    },
+    {
+      "id": "laser-detail",
+      "name": "Laser Cutter (LSR-001)",
+      "tiles": [
+        {
+          "id": "laser-nozzle-temp",
+          "title": "Nozzle Temperature",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id == 'LSR-001'\n| where sensor_name == 'Nozzle Temperature'\n| where timestamp > ago(30m)\n| project timestamp, value\n| render timechart",
+          "thresholds": { "normal_max": 80, "warning_max": 90, "critical_max": 100 }
+        },
+        {
+          "id": "laser-beam-align",
+          "title": "Beam Alignment",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id == 'LSR-001'\n| where sensor_name == 'Beam Alignment'\n| where timestamp > ago(30m)\n| project timestamp, value\n| render timechart",
+          "thresholds": { "normal_band": [-0.05, 0.05], "warning_band": [-0.1, 0.1] }
+        },
+        {
+          "id": "laser-nozzle-score",
+          "title": "Nozzle Degradation Score",
+          "type": "timechart",
+          "query": "Laser_NozzleDegScore\n| where timestamp > ago(30m)\n| project timestamp, composite_score\n| render timechart",
+          "thresholds": { "alert_threshold": 0.65 }
+        }
+      ]
+    },
+    {
+      "id": "welder-detail",
+      "name": "Welders (WLD-001/007)",
+      "tiles": [
+        {
+          "id": "weld-arc-voltage",
+          "title": "Arc Voltage",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id in ('WLD-001','WLD-002')\n| where sensor_name == 'Arc Voltage'\n| where timestamp > ago(30m)\n| project timestamp, value, machine_id\n| render timechart"
+        },
+        {
+          "id": "weld-gas-flow",
+          "title": "Shielding Gas Flow",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id in ('WLD-001','WLD-002')\n| where sensor_name == 'Shielding Gas Flow'\n| where timestamp > ago(30m)\n| project timestamp, value, machine_id\n| render timechart"
+        },
+        {
+          "id": "weld-gas-score",
+          "title": "Gas Contamination Score",
+          "type": "timechart",
+          "query": "Weld_GasContamScore\n| where timestamp > ago(30m)\n| project timestamp, composite_score, machine_id\n| render timechart",
+          "thresholds": { "alert_threshold": 0.60 }
+        }
+      ]
+    },
+    {
+      "id": "cmm-detail",
+      "name": "CMM (CMM-001)",
+      "tiles": [
+        {
+          "id": "cmm-enclosure-temp",
+          "title": "Enclosure Temperature (target: 20.0 +/- 0.5 C)",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id == 'CMM-001'\n| where sensor_name == 'Enclosure Temperature'\n| where timestamp > ago(30m)\n| project timestamp, value\n| render timechart",
+          "thresholds": { "normal_band": [19.5, 20.5], "warning_band": [19.0, 21.0] },
+          "notes": "ISO 10360: CMM accuracy requires 20C +/- 0.5C"
+        },
+        {
+          "id": "cmm-accuracy",
+          "title": "Measurement Accuracy Delta",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id == 'CMM-001'\n| where sensor_name == 'Measurement Accuracy Delta'\n| where timestamp > ago(30m)\n| project timestamp, value\n| render timechart",
+          "thresholds": { "normal_max": 1.5, "warning_max": 2.5, "critical_max": 4.0 }
+        },
+        {
+          "id": "cmm-env-score",
+          "title": "Environmental Drift Score",
+          "type": "timechart",
+          "query": "CMM_EnvDriftScore\n| where timestamp > ago(30m)\n| project timestamp, composite_score\n| render timechart",
+          "thresholds": { "alert_threshold": 0.50 }
+        }
+      ]
+    },
+    {
+      "id": "reflow-detail",
+      "name": "Reflow Oven (RFL-001)",
+      "tiles": [
+        {
+          "id": "reflow-profile",
+          "title": "Reflow Profile - All Zones",
+          "type": "timechart",
+          "query": "MachineTelemetry\n| where machine_id == 'RFL-001'\n| where sensor_name has 'Zone'\n| where timestamp > ago(30m)\n| project timestamp, value, sensor_name\n| render timechart",
+          "notes": "IPC-7530 compliant profile: Preheat 140-160, Soak 160-190, Reflow 230-250, Cool 25-60"
+        },
+        {
+          "id": "reflow-profile-score",
+          "title": "Profile Drift Score",
+          "type": "timechart",
+          "query": "Reflow_ProfileScore\n| where timestamp > ago(30m)\n| project timestamp, composite_score\n| render timechart",
+          "thresholds": { "alert_threshold": 0.55 }
+        }
+      ]
+    }
+  ],
+  "theme": {
+    "background": "#1B1A19",
+    "card_background": "#252423",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#A19F9D",
+    "accent_normal": "#0078D4",
+    "accent_warning": "#FF8C00",
+    "accent_critical": "#E81123",
+    "accent_good": "#107C10",
+    "threshold_normal": "#107C10",
+    "threshold_warning": "#FF8C00",
+    "threshold_critical": "#E81123",
+    "grid_lines": "#3B3A39",
+    "notes": "Dark theme matching Fabric Real-Time Dashboard. Machine tiles switch from teal (#0078D4) to red (#E81123) when composite score exceeds threshold. Threshold lines are always visible as dashed reference lines."
+  },
+  "setup_instructions": [
+    "1. Open CAEManufacturingEH Eventhouse in the workspace",
+    "2. Run the table creation and materialized view commands from data/kql/machine_health_monitoring.kql",
+    "3. Create a Real-Time Dashboard in the workspace",
+    "4. Add a data source pointing to the KQL Database in CAEManufacturingEH",
+    "5. Create tiles using the queries from this spec",
+    "6. Apply the theme colors and conditional formatting as described",
+    "7. Set auto-refresh to 30 seconds",
+    "8. The Activator should monitor the MachineHealthAlerts() function and trigger when any alert appears"
+  ]
+}

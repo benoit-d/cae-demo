@@ -1,0 +1,55 @@
+// ----------------------------------------------------------------------------
+// CAE Manufacturing Demo — Anomaly Scoring Rules
+// Target: v2 storyline, Demo 1 (CNC-003 spindle bearing) and Demo 2 (CNC-001 catastrophic)
+// Emits: anomaly_confidence_pct, estimated_rul_hours, failure_mode
+// ----------------------------------------------------------------------------
+
+// ---- F1: Confidence scoring for vibration-based bearing failures on CNC mills ----
+.create-or-alter function with (docstring = 'Vibration bearing anomaly confidence 0..100')
+    ConfidenceVibrationBearing(vibration_g:real, warning_max:real, critical_max:real) {
+    let over_warning = (vibration_g - warning_max) / (critical_max - warning_max);
+    case(
+        vibration_g < warning_max, 0.0,
+        vibration_g >= critical_max, 99.9,
+        round(60.0 + 40.0 * over_warning, 1)
+    )
+}
+
+// ---- F2: RUL estimator for vibration bearing trend (Weibull-style approximation) ----
+.create-or-alter function with (docstring = 'Estimated Remaining Useful Life in hours')
+    EstimateRULBearing(vibration_g:real, trend_slope_g_per_hour:real) {
+    let critical_at = 0.25;  // mill critical vibration threshold
+    let hours_to_critical = (critical_at - vibration_g) / iff(trend_slope_g_per_hour <= 0, 0.001, trend_slope_g_per_hour);
+    toint(max_of(0.0, min_of(720.0, hours_to_critical)))
+}
+
+// ---- F3: Machine_Health_Scored — one row per machine with ranking anomalies ----
+.create-or-alter function with (docstring = 'Top anomalies per machine with confidence + RUL + failure_mode')
+    MachineHealthScored(window:timespan = 15m) {
+    machine_telemetry
+    | where ingestion_time() > ago(window)
+    | summarize vib=avg(vibration_g), temp=avg(spindle_temp_c), spd=avg(spindle_rpm) by machine_id, bin(ingestion_time(), 1m)
+    | order by machine_id asc, ingestion_time() asc
+    | extend trend = series_fit_line(vib).slope
+    | join kind=inner (sensor_definitions | where sensor_category == 'Vibration' | project machine_id, warning_max, critical_max, failure_mode) on machine_id
+    | extend anomaly_confidence_pct = ConfidenceVibrationBearing(vib, warning_max, critical_max)
+    | extend estimated_rul_hours = EstimateRULBearing(vib, trend)
+    | where anomaly_confidence_pct >= 50.0
+    | project machine_id, ingestion_time(), vib, trend, anomaly_confidence_pct, estimated_rul_hours, failure_mode
+}
+
+// ---- F4: Demo-1 replay hook — CNC-003 bearing anomaly, Monday 06:47 ----
+.create-or-alter function with (docstring = 'Demo 1 deterministic replay: CNC-003 bearing fault')
+    Demo1_CNC003() {
+    print machine_id='CNC-003', anomaly_confidence_pct=94.7, estimated_rul_hours=68,
+          failure_mode='Spindle bearing', severity='High',
+          detected_at=datetime(2026-04-27T06:47:00-04:00)
+}
+
+// ---- F5: Demo-2 replay hook — CNC-001 catastrophic, Friday 18:00 ----
+.create-or-alter function with (docstring = 'Demo 2 deterministic replay: CNC-001 catastrophic failure')
+    Demo2_CNC001() {
+    print machine_id='CNC-001', anomaly_confidence_pct=99.2, estimated_rul_hours=4,
+          failure_mode='Catastrophic spindle seizure + coolant loss', severity='Critical',
+          detected_at=datetime(2026-05-01T18:00:00-04:00)
+}
