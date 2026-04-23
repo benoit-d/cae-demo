@@ -302,28 +302,25 @@ After the tables are created, deploy the **16 health scoring functions** by runn
 | `MachineHealthAlerts` | All 20 | Unified alert view |
 | `CriticalAnomalyAlerts` | All 20 | ≥80% confidence alerts |
 
-### 5. Create Semantic Model (DirectQuery)
+### 5. Semantic Model (DirectLake — automated)
 
-Create a semantic model on top of the SQL Database for Power BI reports:
+The **PostDeploymentConfig** notebook automatically creates a `CAEManufacturing` semantic model using the Fabric REST API with TMDL format. It uses **DirectLake** mode pointing at the SQL Database via OneLake, and includes:
 
-1. In the workspace, click **+ New item > Semantic Model** and name it `CAEManufacturing`
-2. Select the **CAEManufacturing_SQLDB** SQL Database as the data source
-3. Add the following tables from their schemas:
-   - `hr.employees`
-   - `erp.production_lines`, `erp.machines`, `erp.maintenance_history`
-   - `plm.simulators`, `plm.projects`, `plm.tasks`
-   - `mes.machine_jobs`
-4. The relationships should auto-detect from the SQL FK constraints. Verify:
-   - `Employees.production_line_id` → `Production Lines.production_line_id`
-   - `Machines.production_line_id` → `Production Lines.production_line_id`
-   - `Projects.Simulator_ID` → `Simulators.simulator_id`
-   - `Tasks.Parent_Project_ID` → `Projects.Project_ID`
-   - `Tasks.Machine_ID` → `Machines.machine_id`
-   - `Maintenance History.machine_id` → `Machines.machine_id`
-   - `Machine Jobs.machine_id` → `Machines.machine_id`
-   - `Machine Jobs.project_id` → `Projects.Project_ID`
+**8 tables:**
+- `hr.employees`, `erp.production_lines`, `erp.machines`, `erp.maintenance_history`
+- `plm.simulators`, `plm.projects`, `plm.tasks`, `mes.machine_jobs`
 
-> **Reference**: TMDL definition files are in `scripts/tmdl/` for advanced users who prefer to create the model via REST API with `format: "TMDL"`.
+**8 relationships** (all with `relyOnReferentialIntegrity`):
+- `employees.production_line_id` → `production_lines.production_line_id`
+- `machines.production_line_id` → `production_lines.production_line_id`
+- `projects.Simulator_ID` → `simulators.simulator_id`
+- `tasks.Parent_Project_ID` → `projects.Project_ID`
+- `tasks.Machine_ID` → `machines.machine_id`
+- `maintenance_history.machine_id` → `machines.machine_id`
+- `machine_jobs.machine_id` → `machines.machine_id`
+- `machine_jobs.project_id` → `projects.Project_ID`
+
+> **Note**: SQL FK constraints do NOT auto-propagate to DirectLake semantic models — relationships must be defined explicitly in TMDL. The PostDeploymentConfig handles this automatically.
 
 ### 6. Create Gantt Report
 
@@ -394,6 +391,7 @@ Run `python scripts/validate_data.py` to verify.
 | Lakehouse as staging only | CSVs upload there during deployment, then get loaded into SQL DB |
 | Single-shot notebooks for data pipelines | No long-running Spark executors; pipeline calls notebook every 1 min |
 | Constraints added after bulk insert | Avoids FK ordering issues during initial data load |
+| Semantic model created via REST API with TMDL | fabric-cicd doesn't pass `format=TMDL`; REST API supports full DirectLake TMDL definitions including relationships |
 | Separate simulators (products) from machines (equipment) | Telemetry monitors manufacturing machines, not the simulators being built |
 
 ## License

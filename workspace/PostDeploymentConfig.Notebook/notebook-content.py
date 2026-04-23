@@ -20,6 +20,10 @@
 # - **mes** — machine jobs (Manufacturing Execution System)
 # - **telemetry** — sensor definitions
 # 
+# Also creates:
+# - **KQL Database** inside the Eventhouse (MachineTelemetry, ClockInEvents, AnomalyAlerts tables)
+# - **Semantic Model** (DirectLake) with 8 tables and 8 relationships
+# 
 # ## Prerequisites
 # 1. SolutionInstaller has run (Lakehouse has CSVs in Files/)
 # 2. A Fabric SQL Database exists in the workspace
@@ -612,6 +616,295 @@ for _, table_name in ALL_TABLES:
 cursor.close()
 conn.close()
 
+print("\nSQL data verified.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 8 - Create or update Semantic Model with DirectLake + relationships
+import base64
+
+SM_NAME = "CAEManufacturing"
+
+# Find the SQL Database item ID for the DirectLake expression
+sqldb = next((i for i in items if i.get("displayName") == "CAEManufacturing_SQLDB" and i.get("type") == "SQLDatabase"), None)
+if not sqldb:
+    print("WARNING: CAEManufacturing_SQLDB not found. Skipping Semantic Model setup.")
+    SM_SETUP_OK = False
+else:
+    sqldb_id = sqldb["id"]
+    onelake_path = f"https://onelake.dfs.fabric.microsoft.com/{WORKSPACE_ID}/{sqldb_id}"
+    print(f"SQL Database ID: {sqldb_id}")
+    print(f"OneLake path:    {onelake_path}")
+
+    # Build TMDL definition files
+    # The expression points to the SQL DB via DirectLake (OneLake path)
+    tmdl_pbism = json.dumps({
+        "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json",
+        "version": "4.2",
+        "settings": {}
+    })
+
+    tmdl_database = "database\n\tcompatibilityLevel: 1604"
+
+    tmdl_model = f"""model Model
+\tculture: en-US
+\tdefaultPowerBIDataSourceVersion: powerBI_V3
+\tsourceQueryCulture: en-US
+\tdataAccessOptions
+\t\tlegacyRedirects
+\t\treturnErrorValuesAsNull
+
+\tannotation PBI_QueryOrder = ["DirectLake - CAEManufacturing_SQLDB"]
+
+\tannotation __PBI_TimeIntelligenceEnabled = 1
+
+\tref table employees
+\tref table production_lines
+\tref table machines
+\tref table machine_jobs
+\tref table simulators
+\tref table maintenance_history
+\tref table projects
+\tref table tasks"""
+
+    tmdl_expressions = f"""expression 'DirectLake - CAEManufacturing_SQLDB' =
+\t\tlet
+\t\t\tSource = AzureStorage.DataLake("{onelake_path}", [HierarchicalNavigation=true])
+\t\tin
+\t\t\tSource"""
+
+    tmdl_relationships = """relationship 'Employees to Production Lines'
+\trelyOnReferentialIntegrity
+\tfromColumn: employees.production_line_id
+\ttoColumn: production_lines.production_line_id
+
+relationship 'Machines to Production Lines'
+\trelyOnReferentialIntegrity
+\tfromColumn: machines.production_line_id
+\ttoColumn: production_lines.production_line_id
+
+relationship 'Projects to Simulators'
+\trelyOnReferentialIntegrity
+\tfromColumn: projects.Simulator_ID
+\ttoColumn: simulators.simulator_id
+
+relationship 'Tasks to Projects'
+\trelyOnReferentialIntegrity
+\tfromColumn: tasks.Parent_Project_ID
+\ttoColumn: projects.Project_ID
+
+relationship 'Tasks to Machines'
+\trelyOnReferentialIntegrity
+\tfromColumn: tasks.Machine_ID
+\ttoColumn: machines.machine_id
+
+relationship 'Maintenance to Machines'
+\trelyOnReferentialIntegrity
+\tfromColumn: maintenance_history.machine_id
+\ttoColumn: machines.machine_id
+
+relationship 'Jobs to Machines'
+\trelyOnReferentialIntegrity
+\tfromColumn: machine_jobs.machine_id
+\ttoColumn: machines.machine_id
+
+relationship 'Jobs to Projects'
+\trelyOnReferentialIntegrity
+\tfromColumn: machine_jobs.project_id
+\ttoColumn: projects.Project_ID"""
+
+    def make_table_tmdl(table_name, schema_name, columns):
+        """Generate a DirectLake table TMDL with columns."""
+        lines = [f"table {table_name}"]
+        lines.append(f"\tsourceLineageTag: [{schema_name}].[{table_name}]")
+        lines.append("")
+        for col_name, dtype in columns:
+            lines.append(f"\tcolumn {col_name}")
+            lines.append(f"\t\tdataType: {dtype}")
+            if dtype in ("double", "int64"):
+                if dtype == "int64":
+                    lines.append(f"\t\tformatString: 0")
+                lines.append(f"\t\tsummarizeBy: {'sum' if dtype in ('double','int64') and col_name not in ('Complete_Percentage','Standard_Duration','quantity') else 'none'}")
+            else:
+                lines.append(f"\t\tsummarizeBy: none")
+            if dtype == "dateTime":
+                lines.append(f"\t\tformatString: General Date")
+            lines.append(f"\t\tsourceColumn: {col_name}")
+            lines.append("")
+        lines.append(f"\tpartition {table_name} = entity")
+        lines.append(f"\t\tmode: directLake")
+        lines.append(f"\t\tsource")
+        lines.append(f"\t\t\tentityName: {table_name}")
+        lines.append(f"\t\t\tschemaName: {schema_name}")
+        lines.append(f"\t\t\texpressionSource: 'DirectLake - CAEManufacturing_SQLDB'")
+        return "\n".join(lines)
+
+    # Table definitions: (column_name, dataType)
+    TABLE_DEFS = {
+        "employees": ("hr", [
+            ("employee_id","string"),("first_name","string"),("last_name","string"),
+            ("email","string"),("teams_email","string"),("role","string"),
+            ("department","string"),("employee_type","string"),("hire_date","dateTime"),
+            ("shift_preference","string"),("employment_status","string"),
+            ("manager_email","string"),("phone","string"),("location","string"),
+            ("badge_number","string"),("union_member","string"),("production_line_id","string"),
+        ]),
+        "production_lines": ("erp", [
+            ("production_line_id","string"),("line_name","string"),("building","string"),
+            ("description","string"),("manager_email","string"),
+        ]),
+        "machines": ("erp", [
+            ("machine_id","string"),("machine_type","string"),("machine_name","string"),
+            ("manufacturer","string"),("model","string"),("serial_number","string"),
+            ("production_line_id","string"),("location","string"),("zone","string"),
+            ("install_date","dateTime"),("last_service_date","dateTime"),
+            ("status","string"),("next_pm_date","dateTime"),("tolerance_mm","double"),
+        ]),
+        "machine_jobs": ("mes", [
+            ("job_id","string"),("machine_id","string"),("part_spec_id","string"),
+            ("part_name","string"),("project_id","string"),("quantity","int64"),
+            ("tolerance_mm","double"),("planned_start","string"),("planned_end","string"),
+            ("status","string"),("priority","string"),("due_date","dateTime"),
+        ]),
+        "simulators": ("plm", [
+            ("simulator_id","string"),("simulator_model","string"),("bay_id","string"),
+            ("bay_name","string"),("status","string"),("customer","string"),
+            ("aircraft_type","string"),("serial_number","string"),
+            ("build_start_date","dateTime"),("target_delivery_date","dateTime"),
+        ]),
+        "maintenance_history": ("erp", [
+            ("maintenance_id","string"),("machine_id","string"),("maintenance_type","string"),
+            ("system_affected","string"),("description","string"),
+            ("reported_date","dateTime"),("started_date","dateTime"),("completed_date","dateTime"),
+            ("downtime_hours","double"),("root_cause","string"),
+            ("technician_email","string"),("parts_replaced","string"),("cost_usd","double"),
+        ]),
+        "projects": ("plm", [
+            ("Project_ID","string"),("Project_Name","string"),("Simulator_ID","string"),
+            ("Initial_Planned_Start","dateTime"),("Modified_Planned_Start","dateTime"),
+            ("Standard_Duration","int64"),("Actual_End","dateTime"),
+            ("Resource_Login","string"),("Complete_Percentage","int64"),
+            ("Last_Modified_By","string"),("Last_Modified_On","dateTime"),
+            ("Customer","string"),("Customer_Type","string"),("Contract_Reference","string"),
+            ("Contract_Value_USD","double"),("Penalty_Per_Day_USD","double"),
+            ("Penalty_Cap_USD","double"),("Hard_Deadline","dateTime"),
+            ("Is_Critical_Path","string"),
+        ]),
+        "tasks": ("plm", [
+            ("Task_ID","string"),("Task_Name","string"),("Parent_Project_ID","string"),
+            ("FS_Task_ID","string"),("Task_Type","string"),("Milestone","int64"),
+            ("Skill_Requirement","string"),("Initial_Planned_Start","dateTime"),
+            ("Modified_Planned_Start","dateTime"),("Actual_Start","dateTime"),
+            ("Standard_Duration","int64"),("Actual_End","dateTime"),
+            ("Resource_Login","string"),("Complete_Percentage","int64"),
+            ("Last_Modified_By","string"),("Last_Modified_On","dateTime"),
+            ("Machine_ID","string"),
+        ]),
+    }
+
+    # Assemble all definition parts
+    def b64(text):
+        return base64.b64encode(text.encode("utf-8")).decode("utf-8")
+
+    parts = [
+        {"path": "definition.pbism", "payload": b64(tmdl_pbism), "payloadType": "InlineBase64"},
+        {"path": "definition/database.tmdl", "payload": b64(tmdl_database), "payloadType": "InlineBase64"},
+        {"path": "definition/model.tmdl", "payload": b64(tmdl_model), "payloadType": "InlineBase64"},
+        {"path": "definition/expressions.tmdl", "payload": b64(tmdl_expressions), "payloadType": "InlineBase64"},
+        {"path": "definition/relationships.tmdl", "payload": b64(tmdl_relationships), "payloadType": "InlineBase64"},
+    ]
+    for tbl_name, (schema, cols) in TABLE_DEFS.items():
+        tmdl = make_table_tmdl(tbl_name, schema, cols)
+        parts.append({"path": f"definition/tables/{tbl_name}.tmdl", "payload": b64(tmdl), "payloadType": "InlineBase64"})
+
+    # Check if semantic model already exists
+    existing_sm = next((i for i in items if i.get("displayName") == SM_NAME and i.get("type") == "SemanticModel"), None)
+
+    if existing_sm:
+        print(f"\nSemantic Model '{SM_NAME}' exists ({existing_sm['id']}). Updating definition...")
+        update_url = f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items/{existing_sm['id']}/updateDefinition"
+        resp = requests.post(update_url, json={"definition": {"parts": parts}}, headers=headers)
+        print(f"  Status: {resp.status_code}")
+        if resp.status_code in (200, 202):
+            if "Location" in resp.headers:
+                poll_url = resp.headers["Location"]
+                for _ in range(30):
+                    pr = requests.get(poll_url, headers=headers)
+                    st = pr.json().get("status", "").lower()
+                    if st != "running":
+                        break
+                    time.sleep(3)
+                print(f"  Update: {st}")
+            else:
+                print("  Updated (no polling needed)")
+            SM_SETUP_OK = True
+        else:
+            print(f"  Failed: {resp.text[:300]}")
+            SM_SETUP_OK = False
+    else:
+        print(f"\nCreating Semantic Model '{SM_NAME}'...")
+        # Find Data folder
+        data_folder_id = None
+        try:
+            folders_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/folders", headers=headers)
+            data_folder = next((f for f in folders_resp.json().get("value", []) if f["displayName"] == "Data"), None)
+            if data_folder:
+                data_folder_id = data_folder["id"]
+        except Exception:
+            pass
+
+        create_payload = {
+            "displayName": SM_NAME,
+            "type": "SemanticModel",
+            "definition": {"parts": parts},
+        }
+        if data_folder_id:
+            create_payload["folderId"] = data_folder_id
+
+        create_url = f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items"
+        resp = requests.post(create_url, json=create_payload, headers=headers)
+        print(f"  Status: {resp.status_code}")
+
+        if resp.status_code in (200, 201, 202):
+            if "Location" in resp.headers:
+                poll_url = resp.headers["Location"]
+                for _ in range(30):
+                    pr = requests.get(poll_url, headers=headers)
+                    st = pr.json().get("status", "").lower()
+                    if st != "running":
+                        break
+                    time.sleep(3)
+                print(f"  Creation: {st}")
+            else:
+                print("  Created (no polling needed)")
+            SM_SETUP_OK = True
+        else:
+            print(f"  Failed: {resp.text[:300]}")
+            SM_SETUP_OK = False
+
+    if SM_SETUP_OK:
+        print(f"\n  Semantic Model: {SM_NAME}")
+        print(f"  Tables: {', '.join(TABLE_DEFS.keys())}")
+        print(f"  Relationships: 8 (DirectLake with relyOnReferentialIntegrity)")
+        print(f"  Data source: DirectLake -> {onelake_path}")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 9 - Summary
 print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
@@ -621,6 +914,9 @@ print("  erp.*       -  7 tables (production lines, machines, inventory, ...)")
 print("  plm.*       -  7 tables (simulators, BOM, projects, tasks, parts, ...)")
 print("  mes.*       -  1 table  (machine_jobs)")
 print("  telemetry.* -  1 table  (sensor_definitions)")
+if 'SM_SETUP_OK' in dir() and SM_SETUP_OK:
+    print(f"\nSemantic Model: {SM_NAME}")
+    print("  8 tables (DirectLake) + 8 relationships")
 print("\nNext: Open GetStarted notebook.")
 
 # METADATA ********************

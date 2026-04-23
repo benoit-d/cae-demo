@@ -1,0 +1,1241 @@
+=== TOTAL PARTS: 14 ===
+
+--- FILE: definition.pbism ---
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json",
+  "version": "4.2",
+  "settings": {}
+}
+---
+
+--- FILE: definition/tables/employees.tmdl ---
+table employees
+	lineageTag: 6cbe9864-7f3b-4b09-abd0-8d5f4bf4f34c
+	sourceLineageTag: [hr].[employees]
+
+	column employee_id
+		dataType: string
+		lineageTag: 872d68fd-127f-4dfc-8ccc-b635131c20d2
+		sourceLineageTag: employee_id
+		summarizeBy: none
+		sourceColumn: employee_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_name
+		dataType: string
+		lineageTag: 71903003-5c20-4cdc-b72c-8265c401f11b
+		sourceLineageTag: first_name
+		summarizeBy: none
+		sourceColumn: first_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_name
+		dataType: string
+		lineageTag: 46a4644e-da2a-4ad3-9232-21d57f6435b7
+		sourceLineageTag: last_name
+		summarizeBy: none
+		sourceColumn: last_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column email
+		dataType: string
+		lineageTag: 4635a6a2-6941-4b25-866e-217586315178
+		sourceLineageTag: email
+		summarizeBy: none
+		sourceColumn: email
+
+		annotation SummarizationSetBy = Automatic
+
+	column teams_email
+		dataType: string
+		lineageTag: bb0984ac-ee9d-4da6-bc1e-7798e9bd6bc3
+		sourceLineageTag: teams_email
+		summarizeBy: none
+		sourceColumn: teams_email
+
+		annotation SummarizationSetBy = Automatic
+
+	column role
+		dataType: string
+		lineageTag: 078c1a63-f18f-4bdd-9ffa-00d69effd07f
+		sourceLineageTag: role
+		summarizeBy: none
+		sourceColumn: role
+
+		annotation SummarizationSetBy = Automatic
+
+	column department
+		dataType: string
+		lineageTag: 80eb0dcc-e139-4aae-9e1b-fff79d24ed78
+		sourceLineageTag: department
+		summarizeBy: none
+		sourceColumn: department
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_type
+		dataType: string
+		lineageTag: 8b4126cc-ef6b-4507-a47e-c9334af08fd2
+		sourceLineageTag: employee_type
+		summarizeBy: none
+		sourceColumn: employee_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column hire_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fb3b3987-17e3-46f4-9fce-d1185554dcd1
+		sourceLineageTag: hire_date
+		summarizeBy: none
+		sourceColumn: hire_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column shift_preference
+		dataType: string
+		lineageTag: 4f0a709e-b08b-435c-a830-25e5a826d140
+		sourceLineageTag: shift_preference
+		summarizeBy: none
+		sourceColumn: shift_preference
+
+		annotation SummarizationSetBy = Automatic
+
+	column employment_status
+		dataType: string
+		lineageTag: 78e2da0b-64f4-4b1e-9b35-6ad9817bef5b
+		sourceLineageTag: employment_status
+		summarizeBy: none
+		sourceColumn: employment_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column manager_email
+		dataType: string
+		lineageTag: 2763cce4-f2e8-4c3e-9f24-1501a2eebed7
+		sourceLineageTag: manager_email
+		summarizeBy: none
+		sourceColumn: manager_email
+
+		annotation SummarizationSetBy = Automatic
+
+	column phone
+		dataType: string
+		lineageTag: b83e8837-cf92-405e-b792-af240280d12e
+		sourceLineageTag: phone
+		summarizeBy: none
+		sourceColumn: phone
+
+		annotation SummarizationSetBy = Automatic
+
+	column location
+		dataType: string
+		lineageTag: 676b0562-3f9f-4e9d-b8aa-8e54724ecd6a
+		sourceLineageTag: location
+		summarizeBy: none
+		sourceColumn: location
+
+		annotation SummarizationSetBy = Automatic
+
+	column badge_number
+		dataType: string
+		lineageTag: c566df6c-5455-44f1-bb03-eb3842390352
+		sourceLineageTag: badge_number
+		summarizeBy: none
+		sourceColumn: badge_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column union_member
+		dataType: string
+		lineageTag: f6149b55-2359-4af9-8e4e-7561ccbec664
+		sourceLineageTag: union_member
+		summarizeBy: none
+		sourceColumn: union_member
+
+		annotation SummarizationSetBy = Automatic
+
+	column production_line_id
+		dataType: string
+		lineageTag: dfdd9a64-b895-4b70-8530-f3b3ab54db75
+		sourceLineageTag: production_line_id
+		summarizeBy: none
+		sourceColumn: production_line_id
+
+		annotation SummarizationSetBy = Automatic
+
+	partition employees = entity
+		mode: directLake
+		source
+			entityName: employees
+			schemaName: hr
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+
+---
+
+--- FILE: definition/tables/production_lines.tmdl ---
+table production_lines
+	lineageTag: cb9536d0-4516-46c0-8f9e-8cd7d4074767
+	sourceLineageTag: [erp].[production_lines]
+
+	column production_line_id
+		dataType: string
+		lineageTag: f641d92e-48c0-4392-85d1-e64c013ee290
+		sourceLineageTag: production_line_id
+		summarizeBy: none
+		sourceColumn: production_line_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column line_name
+		dataType: string
+		lineageTag: 227a6bde-4ba3-43af-b71b-a00996b78c0c
+		sourceLineageTag: line_name
+		summarizeBy: none
+		sourceColumn: line_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column building
+		dataType: string
+		lineageTag: f31fab7b-efaf-4551-b4a6-90fbc467b447
+		sourceLineageTag: building
+		summarizeBy: none
+		sourceColumn: building
+
+		annotation SummarizationSetBy = Automatic
+
+	column description
+		dataType: string
+		lineageTag: 958ca60f-0287-45be-a217-9cb3693ce5eb
+		sourceLineageTag: description
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	column manager_email
+		dataType: string
+		lineageTag: 33e861b1-5513-447c-bbec-0bd62dad12b2
+		sourceLineageTag: manager_email
+		summarizeBy: none
+		sourceColumn: manager_email
+
+		annotation SummarizationSetBy = Automatic
+
+	partition production_lines = entity
+		mode: directLake
+		source
+			entityName: production_lines
+			schemaName: erp
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+
+---
+
+--- FILE: definition/tables/machines.tmdl ---
+table machines
+	lineageTag: b082f6cb-fdc0-4a1b-86f2-2be39da5cb6a
+	sourceLineageTag: [erp].[machines]
+
+	column machine_id
+		dataType: string
+		lineageTag: b973c11f-c35f-40b0-894f-2e12993b410c
+		sourceLineageTag: machine_id
+		summarizeBy: none
+		sourceColumn: machine_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column machine_type
+		dataType: string
+		lineageTag: f1b060b2-66f1-46a8-8006-99c65a692495
+		sourceLineageTag: machine_type
+		summarizeBy: none
+		sourceColumn: machine_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column machine_name
+		dataType: string
+		lineageTag: b2c11ea7-e809-4825-935d-0556cf7e88f1
+		sourceLineageTag: machine_name
+		summarizeBy: none
+		sourceColumn: machine_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column manufacturer
+		dataType: string
+		lineageTag: 056c931f-6e9f-46c0-ab14-66aa7ff9ecaf
+		sourceLineageTag: manufacturer
+		summarizeBy: none
+		sourceColumn: manufacturer
+
+		annotation SummarizationSetBy = Automatic
+
+	column model
+		dataType: string
+		lineageTag: 0cc3f761-5b5d-4df0-9e9b-59354afe4a66
+		sourceLineageTag: model
+		summarizeBy: none
+		sourceColumn: model
+
+		annotation SummarizationSetBy = Automatic
+
+	column serial_number
+		dataType: string
+		lineageTag: 1e05a905-2cfe-40c8-88eb-2f7d17c3b9e1
+		sourceLineageTag: serial_number
+		summarizeBy: none
+		sourceColumn: serial_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column production_line_id
+		dataType: string
+		lineageTag: 19689d39-c82d-4981-ac00-1768587c68ba
+		sourceLineageTag: production_line_id
+		summarizeBy: none
+		sourceColumn: production_line_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column location
+		dataType: string
+		lineageTag: 5cc8e4ac-a925-4ddd-b5fc-f2e91713ab49
+		sourceLineageTag: location
+		summarizeBy: none
+		sourceColumn: location
+
+		annotation SummarizationSetBy = Automatic
+
+	column zone
+		dataType: string
+		lineageTag: 6e1fe1be-21da-472d-9107-f42c7f418835
+		sourceLineageTag: zone
+		summarizeBy: none
+		sourceColumn: zone
+
+		annotation SummarizationSetBy = Automatic
+
+	column install_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ab583243-724d-4c52-9436-b07c2e88c0ad
+		sourceLineageTag: install_date
+		summarizeBy: none
+		sourceColumn: install_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_service_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1fcfdec1-491b-41c8-8e78-ca1c2fe4c0be
+		sourceLineageTag: last_service_date
+		summarizeBy: none
+		sourceColumn: last_service_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: ea95e6ca-4a60-4ae9-9124-523fcf80a65f
+		sourceLineageTag: status
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column next_pm_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9b26bea5-92d1-4d58-9aca-ce80069f7198
+		sourceLineageTag: next_pm_date
+		summarizeBy: none
+		sourceColumn: next_pm_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column tolerance_mm
+		dataType: double
+		lineageTag: f4cd448a-0c53-460c-a367-33bc88602e46
+		sourceLineageTag: tolerance_mm
+		summarizeBy: sum
+		sourceColumn: tolerance_mm
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition machines = entity
+		mode: directLake
+		source
+			entityName: machines
+			schemaName: erp
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+
+---
+
+--- FILE: definition/tables/machine_jobs.tmdl ---
+table machine_jobs
+	lineageTag: f4a9c83c-3c32-4aa1-afac-77549e1e18ee
+	sourceLineageTag: [mes].[machine_jobs]
+
+	column job_id
+		dataType: string
+		lineageTag: 7ecdecd6-075f-439e-b58c-203094bd9498
+		sourceLineageTag: job_id
+		summarizeBy: none
+		sourceColumn: job_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column machine_id
+		dataType: string
+		lineageTag: 27469d97-b0e1-4b12-b254-45c5f0537560
+		sourceLineageTag: machine_id
+		summarizeBy: none
+		sourceColumn: machine_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column part_spec_id
+		dataType: string
+		lineageTag: 615a5651-fcbf-4c1b-9aba-3a2820b77c9c
+		sourceLineageTag: part_spec_id
+		summarizeBy: none
+		sourceColumn: part_spec_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column part_name
+		dataType: string
+		lineageTag: 16eb5404-501a-4024-9ba3-6b817cc2afd3
+		sourceLineageTag: part_name
+		summarizeBy: none
+		sourceColumn: part_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column project_id
+		dataType: string
+		lineageTag: 45c194aa-fd0f-4f77-b7d1-798e86880584
+		sourceLineageTag: project_id
+		summarizeBy: none
+		sourceColumn: project_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantity
+		dataType: int64
+		formatString: 0
+		lineageTag: c4e7aa0f-277a-49f0-a20e-55b493b8badc
+		sourceLineageTag: quantity
+		summarizeBy: sum
+		sourceColumn: quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column tolerance_mm
+		dataType: double
+		lineageTag: 4e4980ad-df43-499b-b7f1-ca97c4d3dc72
+		sourceLineageTag: tolerance_mm
+		summarizeBy: sum
+		sourceColumn: tolerance_mm
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column planned_start
+		dataType: string
+		lineageTag: c208f2b2-479e-4b80-892f-7f08401289f7
+		sourceLineageTag: planned_start
+		summarizeBy: none
+		sourceColumn: planned_start
+
+		annotation SummarizationSetBy = Automatic
+
+	column planned_end
+		dataType: string
+		lineageTag: 764febfe-b37f-4598-981c-a03c64694130
+		sourceLineageTag: planned_end
+		summarizeBy: none
+		sourceColumn: planned_end
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 9f84a2aa-ef4d-4917-b68b-96721b7e8a46
+		sourceLineageTag: status
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column priority
+		dataType: string
+		lineageTag: 1bae882c-6b13-436e-bae2-1f5fde4951e2
+		sourceLineageTag: priority
+		summarizeBy: none
+		sourceColumn: priority
+
+		annotation SummarizationSetBy = Automatic
+
+	column due_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 48530561-711f-49e6-96ad-88d1f7f706e9
+		sourceLineageTag: due_date
+		summarizeBy: none
+		sourceColumn: due_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition machine_jobs = entity
+		mode: directLake
+		source
+			entityName: machine_jobs
+			schemaName: mes
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+
+---
+
+--- FILE: definition/tables/simulators.tmdl ---
+table simulators
+	lineageTag: e4bb2678-822a-4584-b465-2f60fc9f01bf
+	sourceLineageTag: [plm].[simulators]
+
+	column simulator_id
+		dataType: string
+		lineageTag: a036d13f-f659-4a53-9519-9d4a8b282cda
+		sourceLineageTag: simulator_id
+		summarizeBy: none
+		sourceColumn: simulator_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column simulator_model
+		dataType: string
+		lineageTag: 893dcf3e-75be-4ac1-86c4-192f83927861
+		sourceLineageTag: simulator_model
+		summarizeBy: none
+		sourceColumn: simulator_model
+
+		annotation SummarizationSetBy = Automatic
+
+	column bay_id
+		dataType: string
+		lineageTag: 29af78a6-eee2-4a3f-858f-39e916c24972
+		sourceLineageTag: bay_id
+		summarizeBy: none
+		sourceColumn: bay_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column bay_name
+		dataType: string
+		lineageTag: abddd1c7-00ac-4e58-965b-6b5b3eaa425a
+		sourceLineageTag: bay_name
+		summarizeBy: none
+		sourceColumn: bay_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 877b34f6-94f8-4cb7-95cd-bfbde3169548
+		sourceLineageTag: status
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer
+		dataType: string
+		lineageTag: b7bcf9a3-2d6f-4a6a-bd35-151bb22e92a9
+		sourceLineageTag: customer
+		summarizeBy: none
+		sourceColumn: customer
+
+		annotation SummarizationSetBy = Automatic
+
+	column aircraft_type
+		dataType: string
+		lineageTag: f2c010ed-3c7b-419a-8197-03264d49f6dd
+		sourceLineageTag: aircraft_type
+		summarizeBy: none
+		sourceColumn: aircraft_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column serial_number
+		dataType: string
+		lineageTag: 6dde9420-3e4c-4be6-856c-9fcfd91de813
+		sourceLineageTag: serial_number
+		summarizeBy: none
+		sourceColumn: serial_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column build_start_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3d8434fa-ec4b-4bcc-bf43-dbf259957361
+		sourceLineageTag: build_start_date
+		summarizeBy: none
+		sourceColumn: build_start_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_delivery_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6872d0c3-d60b-4251-ab02-10577c2f4254
+		sourceLineageTag: target_delivery_date
+		summarizeBy: none
+		sourceColumn: target_delivery_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition simulators = entity
+		mode: directLake
+		source
+			entityName: simulators
+			schemaName: plm
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+
+---
+
+--- FILE: definition/tables/maintenance_history.tmdl ---
+table maintenance_history
+	lineageTag: 9b3a0119-2942-4d3a-9302-c953acfcb0ad
+	sourceLineageTag: [erp].[maintenance_history]
+
+	column maintenance_id
+		dataType: string
+		lineageTag: dd90380c-fcac-4f9b-af48-74e971369110
+		sourceLineageTag: maintenance_id
+		summarizeBy: none
+		sourceColumn: maintenance_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column machine_id
+		dataType: string
+		lineageTag: 70ff3951-df15-4b50-937c-ebb201327e73
+		sourceLineageTag: machine_id
+		summarizeBy: none
+		sourceColumn: machine_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column maintenance_type
+		dataType: string
+		lineageTag: 4352d666-942f-4d47-9cdf-748a1c19f65f
+		sourceLineageTag: maintenance_type
+		summarizeBy: none
+		sourceColumn: maintenance_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column system_affected
+		dataType: string
+		lineageTag: c665a70e-24a9-4e28-a806-73a4851db7b4
+		sourceLineageTag: system_affected
+		summarizeBy: none
+		sourceColumn: system_affected
+
+		annotation SummarizationSetBy = Automatic
+
+	column description
+		dataType: string
+		lineageTag: 3c9a21d8-beed-460b-9713-a1778d7d63a2
+		sourceLineageTag: description
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	column reported_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e3147091-0425-45e6-9948-11d6de24eadf
+		sourceLineageTag: reported_date
+		summarizeBy: none
+		sourceColumn: reported_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column started_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f08740e8-ed10-4cfd-868b-d32001f205de
+		sourceLineageTag: started_date
+		summarizeBy: none
+		sourceColumn: started_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column completed_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: eea0ab12-91ea-428f-a69f-1b9f86968561
+		sourceLineageTag: completed_date
+		summarizeBy: none
+		sourceColumn: completed_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column downtime_hours
+		dataType: double
+		lineageTag: eacaafdd-8c9d-4567-b5ee-8758107aecc6
+		sourceLineageTag: downtime_hours
+		summarizeBy: sum
+		sourceColumn: downtime_hours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column root_cause
+		dataType: string
+		lineageTag: 553e0637-abc8-4bdc-86e4-2ad216016db2
+		sourceLineageTag: root_cause
+		summarizeBy: none
+		sourceColumn: root_cause
+
+		annotation SummarizationSetBy = Automatic
+
+	column technician_email
+		dataType: string
+		lineageTag: 39fe6104-655f-4c94-a0d7-2a2191dab1fc
+		sourceLineageTag: technician_email
+		summarizeBy: none
+		sourceColumn: technician_email
+
+		annotation SummarizationSetBy = Automatic
+
+	column parts_replaced
+		dataType: string
+		lineageTag: 93bdea0a-4262-4eef-82dd-923feca0c73d
+		sourceLineageTag: parts_replaced
+		summarizeBy: none
+		sourceColumn: parts_replaced
+
+		annotation SummarizationSetBy = Automatic
+
+	column cost_usd
+		dataType: double
+		lineageTag: b4d78f30-2823-4617-b6ff-142b69870412
+		sourceLineageTag: cost_usd
+		summarizeBy: sum
+		sourceColumn: cost_usd
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition maintenance_history = entity
+		mode: directLake
+		source
+			entityName: maintenance_history
+			schemaName: erp
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+
+---
+
+--- FILE: definition/tables/projects.tmdl ---
+table projects
+	lineageTag: 24fddfa1-1d52-46c2-b66c-ad7696cff2d6
+	sourceLineageTag: [plm].[projects]
+
+	column Project_ID
+		dataType: string
+		lineageTag: 61d2f3f7-9f93-4601-a036-ffca775e453c
+		sourceLineageTag: Project_ID
+		summarizeBy: none
+		sourceColumn: Project_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Project_Name
+		dataType: string
+		lineageTag: e1313c41-c102-4b3e-b55f-b20cc278b437
+		sourceLineageTag: Project_Name
+		summarizeBy: none
+		sourceColumn: Project_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Simulator_ID
+		dataType: string
+		lineageTag: 255cfe89-2e64-4933-986e-fa7e4c2239e6
+		sourceLineageTag: Simulator_ID
+		summarizeBy: none
+		sourceColumn: Simulator_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Initial_Planned_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f395fb0f-985b-4c7d-9f10-922200ea1923
+		sourceLineageTag: Initial_Planned_Start
+		summarizeBy: none
+		sourceColumn: Initial_Planned_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified_Planned_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3f271a25-858b-4499-983c-ec9d312309b0
+		sourceLineageTag: Modified_Planned_Start
+		summarizeBy: none
+		sourceColumn: Modified_Planned_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Standard_Duration
+		dataType: int64
+		formatString: 0
+		lineageTag: 28e83f62-c3a5-4e0a-9bac-d32761351bfc
+		sourceLineageTag: Standard_Duration
+		summarizeBy: none
+		sourceColumn: Standard_Duration
+
+		annotation SummarizationSetBy = Automatic
+
+	column Actual_End
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 02785c74-f3c9-46a6-9175-be62586d9831
+		sourceLineageTag: Actual_End
+		summarizeBy: none
+		sourceColumn: Actual_End
+
+		annotation SummarizationSetBy = Automatic
+
+	column Resource_Login
+		dataType: string
+		lineageTag: f62ca935-91e4-4eed-8603-5fbee60b610e
+		sourceLineageTag: Resource_Login
+		summarizeBy: none
+		sourceColumn: Resource_Login
+
+		annotation SummarizationSetBy = Automatic
+
+	column Complete_Percentage
+		dataType: int64
+		formatString: 0
+		lineageTag: 53ed8f4c-bf8b-4e8a-97ec-4816fd9c7301
+		sourceLineageTag: Complete_Percentage
+		summarizeBy: none
+		sourceColumn: Complete_Percentage
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Modified_By
+		dataType: string
+		lineageTag: ed4a7f5f-50e7-4b2c-8f67-38de1f0b695e
+		sourceLineageTag: Last_Modified_By
+		summarizeBy: none
+		sourceColumn: Last_Modified_By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Modified_On
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: eef55afe-767d-48e7-8778-2dbbb16f5805
+		sourceLineageTag: Last_Modified_On
+		summarizeBy: none
+		sourceColumn: Last_Modified_On
+
+		annotation SummarizationSetBy = Automatic
+
+	column Customer
+		dataType: string
+		lineageTag: 8a20558c-d986-4af2-8aeb-74d0fa1fa0a2
+		sourceLineageTag: Customer
+		summarizeBy: none
+		sourceColumn: Customer
+
+		annotation SummarizationSetBy = Automatic
+
+	column Customer_Type
+		dataType: string
+		lineageTag: e4b64794-507e-4015-baba-074153fe6bd2
+		sourceLineageTag: Customer_Type
+		summarizeBy: none
+		sourceColumn: Customer_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Contract_Reference
+		dataType: string
+		lineageTag: 21b0790b-963d-42ff-869f-51830be6d4ca
+		sourceLineageTag: Contract_Reference
+		summarizeBy: none
+		sourceColumn: Contract_Reference
+
+		annotation SummarizationSetBy = Automatic
+
+	column Contract_Value_USD
+		dataType: double
+		lineageTag: 45d90a12-0342-48f2-ad55-75e4a83a70a4
+		sourceLineageTag: Contract_Value_USD
+		summarizeBy: none
+		sourceColumn: Contract_Value_USD
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Penalty_Per_Day_USD
+		dataType: double
+		lineageTag: 4b1e7a19-a4e2-4eb1-8007-300e572c568f
+		sourceLineageTag: Penalty_Per_Day_USD
+		summarizeBy: none
+		sourceColumn: Penalty_Per_Day_USD
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Penalty_Cap_USD
+		dataType: double
+		lineageTag: f72066a2-71a1-4c9a-b7c1-55e0e89ffb6a
+		sourceLineageTag: Penalty_Cap_USD
+		summarizeBy: none
+		sourceColumn: Penalty_Cap_USD
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Hard_Deadline
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ab03d4bb-8e7a-4732-bed8-1baa49b534eb
+		sourceLineageTag: Hard_Deadline
+		summarizeBy: none
+		sourceColumn: Hard_Deadline
+
+		annotation SummarizationSetBy = Automatic
+
+	column Is_Critical_Path
+		dataType: string
+		lineageTag: 066f41e5-12ec-4c50-b40e-aede25e38c70
+		sourceLineageTag: Is_Critical_Path
+		summarizeBy: none
+		sourceColumn: Is_Critical_Path
+
+		annotation SummarizationSetBy = Automatic
+
+	partition projects = entity
+		mode: directLake
+		source
+			entityName: projects
+			schemaName: plm
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+
+---
+
+--- FILE: definition/tables/tasks.tmdl ---
+table tasks
+	lineageTag: bbbc8861-b321-4094-8b78-5bfd21568765
+	sourceLineageTag: [plm].[tasks]
+
+	column Task_ID
+		dataType: string
+		lineageTag: 5153bfa7-c334-41d7-9e61-d9a32b462c9e
+		sourceLineageTag: Task_ID
+		summarizeBy: none
+		sourceColumn: Task_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Task_Name
+		dataType: string
+		lineageTag: 89d16959-17ad-4a4d-9486-126f269e8541
+		sourceLineageTag: Task_Name
+		summarizeBy: none
+		sourceColumn: Task_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Parent_Project_ID
+		dataType: string
+		lineageTag: 06fbe368-086a-4fed-96d3-535e5e7a1b04
+		sourceLineageTag: Parent_Project_ID
+		summarizeBy: none
+		sourceColumn: Parent_Project_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column FS_Task_ID
+		dataType: string
+		lineageTag: b589de88-12dd-4368-b9de-c639b7b2bb1d
+		sourceLineageTag: FS_Task_ID
+		summarizeBy: none
+		sourceColumn: FS_Task_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Task_Type
+		dataType: string
+		lineageTag: 736929e9-2a43-415c-913d-9a79e60cee19
+		sourceLineageTag: Task_Type
+		summarizeBy: none
+		sourceColumn: Task_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Milestone
+		dataType: int64
+		formatString: 0
+		lineageTag: 5a15631e-fed1-4c3b-8ba2-d7119e0094e7
+		sourceLineageTag: Milestone
+		summarizeBy: sum
+		sourceColumn: Milestone
+
+		annotation SummarizationSetBy = Automatic
+
+	column Skill_Requirement
+		dataType: string
+		lineageTag: cf75c9f1-05b9-4789-8fd3-2eaa249f3d5d
+		sourceLineageTag: Skill_Requirement
+		summarizeBy: none
+		sourceColumn: Skill_Requirement
+
+		annotation SummarizationSetBy = Automatic
+
+	column Initial_Planned_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5d8f1e9c-b2be-4067-9773-974936acb265
+		sourceLineageTag: Initial_Planned_Start
+		summarizeBy: none
+		sourceColumn: Initial_Planned_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified_Planned_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c94a96b2-4a95-455c-85c2-2c0de4f4838d
+		sourceLineageTag: Modified_Planned_Start
+		summarizeBy: none
+		sourceColumn: Modified_Planned_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Actual_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 08d1a229-727a-456a-9267-8aa0c9e1d344
+		sourceLineageTag: Actual_Start
+		summarizeBy: none
+		sourceColumn: Actual_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Standard_Duration
+		dataType: int64
+		formatString: 0
+		lineageTag: 7c371a6a-6077-4098-9621-9bdc0e7a2ef2
+		sourceLineageTag: Standard_Duration
+		summarizeBy: sum
+		sourceColumn: Standard_Duration
+
+		annotation SummarizationSetBy = Automatic
+
+	column Actual_End
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7ef12389-c7e8-4f94-b432-c3ab859056c4
+		sourceLineageTag: Actual_End
+		summarizeBy: none
+		sourceColumn: Actual_End
+
+		annotation SummarizationSetBy = Automatic
+
+	column Resource_Login
+		dataType: string
+		lineageTag: 35627d2b-0d0f-4e5c-bb9c-92e1ac349832
+		sourceLineageTag: Resource_Login
+		summarizeBy: none
+		sourceColumn: Resource_Login
+
+		annotation SummarizationSetBy = Automatic
+
+	column Complete_Percentage
+		dataType: int64
+		formatString: 0
+		lineageTag: d6c6e70b-713b-4aa4-ba0f-f1a460a602a9
+		sourceLineageTag: Complete_Percentage
+		summarizeBy: sum
+		sourceColumn: Complete_Percentage
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Modified_By
+		dataType: string
+		lineageTag: 6b775efe-28ac-4b33-a6d1-9b3ad55c75e1
+		sourceLineageTag: Last_Modified_By
+		summarizeBy: none
+		sourceColumn: Last_Modified_By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Modified_On
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 44fdec9a-60e0-4f97-88eb-55cd25573761
+		sourceLineageTag: Last_Modified_On
+		summarizeBy: none
+		sourceColumn: Last_Modified_On
+
+		annotation SummarizationSetBy = Automatic
+
+	column Machine_ID
+		dataType: string
+		lineageTag: 332812c5-831c-4736-bd2c-bdb7882d05d1
+		sourceLineageTag: Machine_ID
+		summarizeBy: none
+		sourceColumn: Machine_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition tasks = entity
+		mode: directLake
+		source
+			entityName: tasks
+			schemaName: plm
+			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
+
+
+---
+
+--- FILE: definition/relationships.tmdl ---
+relationship 'Employees to Production Lines'
+	relyOnReferentialIntegrity
+	fromColumn: employees.production_line_id
+	toColumn: production_lines.production_line_id
+
+relationship 'Machines to Production Lines'
+	relyOnReferentialIntegrity
+	fromColumn: machines.production_line_id
+	toColumn: production_lines.production_line_id
+
+relationship 'Projects to Simulators'
+	relyOnReferentialIntegrity
+	fromColumn: projects.Simulator_ID
+	toColumn: simulators.simulator_id
+
+relationship 'Tasks to Projects'
+	relyOnReferentialIntegrity
+	fromColumn: tasks.Parent_Project_ID
+	toColumn: projects.Project_ID
+
+relationship 'Tasks to Machines'
+	relyOnReferentialIntegrity
+	fromColumn: tasks.Machine_ID
+	toColumn: machines.machine_id
+
+relationship 'Maintenance to Machines'
+	relyOnReferentialIntegrity
+	fromColumn: maintenance_history.machine_id
+	toColumn: machines.machine_id
+
+relationship 'Jobs to Machines'
+	relyOnReferentialIntegrity
+	fromColumn: machine_jobs.machine_id
+	toColumn: machines.machine_id
+
+relationship 'Jobs to Projects'
+	relyOnReferentialIntegrity
+	fromColumn: machine_jobs.project_id
+	toColumn: projects.Project_ID
+
+
+---
+
+--- FILE: definition/expressions.tmdl ---
+expression 'DirectLake - CAEManufacturing_SQLDB' =
+		let
+		    Source = AzureStorage.DataLake("https://onelake.dfs.fabric.microsoft.com/161c43a4-6a14-4b8f-81eb-070f0981a609/6c31cad3-74a3-4eae-91f3-e2a4ed845e7e", [HierarchicalNavigation=true])
+		in
+		    Source
+	lineageTag: 1b6641d9-40c9-428c-9c9b-7a5c16cd6538
+
+	annotation PBI_IncludeFutureArtifacts = False
+
+	annotation PBI_RemovedChildren = [{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[erp].[purchase_orders]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[hr].[time_off]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[hr].[skills_certifications]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[erp].[contract_clauses]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[hr].[work_restrictions]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[telemetry].[sensor_definitions]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[erp].[inventory]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[plm].[machine_capabilities]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[plm].[bill_of_materials]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[plm].[part_specs]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[erp].[production_line_dependencies]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[plm].[task_type_durations]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[hr].[contractor_agreements]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[hr].[machine_certifications]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[hr].[employee_schedules]"}},"objectType":"Table"},{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[hr].[collective_agreements]"}},"objectType":"Table"}]
+
+
+---
+
+--- FILE: definition/model.tmdl ---
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["DirectLake - CAEManufacturing_SQLDB"]
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["DirectLakeOnOneLakeInWeb","WebModelingEdit"]
+
+ref table employees
+ref table production_lines
+ref table machines
+ref table machine_jobs
+ref table simulators
+ref table maintenance_history
+ref table projects
+ref table tasks
+
+
+---
+
+--- FILE: definition/database.tmdl ---
+database
+	compatibilityLevel: 1604
+
+
+---
+
+--- FILE: .platform ---
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Manufacturing_semantic"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "00000000-0000-0000-0000-000000000000"
+  }
+}
+---
+
+
