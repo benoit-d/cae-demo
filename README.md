@@ -17,31 +17,41 @@ The AI agent reasons across all data sources to:
 ## Architecture
 
 ```
-                        ┌─────────────────────────────────────────┐
-                        │         Microsoft Fabric Workspace       │
-                        ├─────────────────────────────────────────┤
-                        │                                         │
-  Manufacturing         │   ┌──────────────────────────────┐  │
-  Machines (20)    ────►│   │  Eventhouse (KQL DB)        │  │
-  Telemetry             │   │  via Kusto streaming API    │  │
-                        │   └──────────────────────────────┘  │
-  Workforce             │          │                            │
-  Clock-in/out     ────►│          │                            │
-  Task events           │          ▼                            │
-                        │                     ┌──────────────┐   │
-                        │                     │  Power BI     │   │
-  Reference Data        │   ┌─────────────┐   │  Dashboards   │   │
-  HR, BOM, Inventory───►│   │ SQL Database │──►│  Gantt Chart  │   │
-  Projects, Tasks       │   │  hr.* erp.*  │   └──────────────┘   │
-                        │   │  plm.* mes.* │          │          │
-                        │   └──────┬───────┘          │          │
-                        │          │                  │          │
-                        │          ▼                  ▼          │
-                        │   ┌─────────────────────────────┐      │
-                        │   │  AI Agent (Foundry)          │      │
-                        │   │  Capacity Management         │      │
-                        │   └─────────────────────────────┘      │
-                        └─────────────────────────────────────────┘
+                        ┌──────────────────────────────────────────────┐
+                        │           Microsoft Fabric Workspace          │
+                        ├──────────────────────────────────────────────┤
+                        │                                              │
+  Manufacturing         │   ┌──────────────────────────────┐           │
+  Machines (20)    ────►│   │  Eventhouse (KQL DB)         │           │
+  Telemetry             │   │  MachineTelemetry            │           │
+  (Kusto streaming)     │   │  ClockInEvents               │           │
+                        │   │  AnomalyAlerts               │           │
+  Workforce             │   └──────────┬───────────────────┘           │
+  Clock-in/out     ────►│              │                               │
+  Task events           │              │ 16 KQL health                 │
+                        │              │ scoring functions              │
+                        │              ▼                               │
+                        │   ┌─────────────────────┐   ┌────────────┐  │
+                        │   │  AnomalyDetection   │   │ Power BI   │  │
+                        │   │  (ML Z-score model) │   │ Dashboards │  │
+  Reference Data        │   └────────┬────────────┘   │ Gantt Chart│  │
+  HR, BOM, Inventory───►│            │                └────────────┘  │
+  Projects, Tasks       │            ▼                     ▲          │
+                        │   ┌─────────────────────┐        │          │
+                        │   │  Activator (Reflex)  │  ┌─────────────┐ │
+                        │   │  confidence >= 80%   │  │ SQL Database│ │
+                        │   └────────┬────────────┘  │ hr.* erp.*  │ │
+                        │            │               │ plm.* mes.* │ │
+                        │            ▼               └──────┬──────┘ │
+                        │   ┌─────────────────────┐         │        │
+                        │   │ AlertNotification   │         ▼        │
+                        │   │ Agent               │  ┌────────────┐  │
+                        │   │ (Teams + Foundry)   │  │ Capacity   │  │
+                        │   └─────────────────────┘  │ Mgmt Agent │  │
+                        │            │               └────────────┘  │
+                        │            ▼                               │
+                        │      Microsoft Teams                      │
+                        └──────────────────────────────────────────────┘
 ```
 
 ## Data Stores
@@ -53,7 +63,8 @@ The AI agent reasons across all data sources to:
 | **SQL Database** | `plm` | simulators, bill_of_materials, projects, tasks, task_type_durations, part_specs, machine_capabilities | Product lifecycle management |
 | **SQL Database** | `mes` | machine_jobs | Manufacturing execution |
 | **SQL Database** | `telemetry` | sensor_definitions | Sensor metadata (107 sensors × 20 machines) |
-| **Eventhouse** (KQL) | — | MachineTelemetry, ClockInEvents | Real-time event data |
+| **Eventhouse** (KQL) | — | MachineTelemetry, ClockInEvents, AnomalyAlerts | Real-time event data + ML anomaly alerts |
+| **Eventhouse** (KQL) | — | 16 health scoring functions | Composite anomaly scores per machine type |
 | **Lakehouse** | — | CSV files in Files/ | Staging only (deployment) |
 
 ## Manufacturing Machines (20)
@@ -146,19 +157,22 @@ cae-demo/
 │   └── SolutionInstaller.ipynb          # Import into Fabric → Run All
 ├── workspace/                           # Published by fabric-cicd
 │   ├── GetStarted.Notebook/             # Guided walkthrough
-│   ├── PostDeploymentConfig.Notebook/   # Creates SQL tables, loads data
+│   ├── PostDeploymentConfig.Notebook/   # Creates SQL tables, loads data, KQL DB
 │   ├── Data/
 │   │   └── CAEManufacturing_LH.Lakehouse/       # Staging Lakehouse
 │   ├── RTI/                                      # Real-Time Intelligence
-│   │   └── CAEManufacturingEH.Eventhouse/        # Telemetry store
+│   │   ├── CAEManufacturingEH.Eventhouse/        # Telemetry store
+│   │   └── AnomalyDetection.Notebook/            # ML Z-score anomaly scoring
 │   ├── Pipelines/                                # Scheduled data pipelines
-│   │   ├── TelemetryPipeline.DataPipeline/       # 1-min schedule
-│   │   ├── ClockInPipeline.DataPipeline/         # 1-min schedule
+│   │   ├── TelemetryPipeline.DataPipeline/       # 1-min telemetry ingestion
+│   │   ├── ClockInPipeline.DataPipeline/         # 1-min clock-in ingestion
+│   │   ├── AlertPipeline.DataPipeline/           # 5-min anomaly detection + notification
 │   │   ├── SimulatorTelemetryEmulator.Notebook/  # Single-shot telemetry emitter
 │   │   ├── ClockInEventEmulator.Notebook/        # Single-shot clock-in emitter
-│   │   └── TelemetryFaultInjection.Notebook/     # Manual — CNC mill failure demo
+│   │   └── TelemetryFaultInjection.Notebook/     # Manual — CNC-001 bearing failure demo
 │   └── Agent/
-│       └── CapacityManagementAgent.Notebook/     # AI agent querying SQL DB
+│       ├── CapacityManagementAgent.Notebook/     # AI agent querying SQL DB + KQL
+│       └── AlertNotificationAgent.Notebook/      # Teams webhook + Foundry agent
 ├── data/
 │   ├── erp/          # production lines, machines, inventory, purchase orders, maintenance
 │   ├── hr/           # employees, skills, schedules, restrictions, time off, contractors
@@ -166,10 +180,10 @@ cae-demo/
 │   ├── mes/          # machine_jobs (MES scheduling)
 │   └── telemetry/    # sensor_definitions.csv (107 sensors × 20 machines)
 └── scripts/          # Local Python tools + KQL scripts
-    ├── kql/                        # KQL anomaly scoring views + functions
-    │   ├── machine_health_monitoring.kql
-    │   ├── anomaly_scoring.kql
-    │   └── dashboard_spec.json
+    ├── kql/                        # KQL health scoring functions (16 functions)
+    │   ├── machine_health_monitoring.kql   # All functions + table definitions
+    │   ├── anomaly_scoring.kql             # Confidence + RUL estimation
+    │   └── dashboard_spec.json             # Real-time dashboard spec
     ├── generate_project_data.py    # Regenerate 8 projects with scheduling constraints
     ├── telemetry_normal.py         # Standalone telemetry generator
     ├── telemetry_fault_injection.py # CNC mill fault profile
@@ -265,7 +279,28 @@ This creates 5 schemas (`hr`, `erp`, `plm`, `mes`, `telemetry`) with 24 tables, 
 
 ### 4. KQL Database Setup
 
-The **PostDeploymentConfig** notebook automatically creates the KQL Database inside the Eventhouse via the Fabric API. It creates `MachineTelemetry` and `ClockInEvents` tables with streaming ingestion enabled.
+The **PostDeploymentConfig** notebook automatically creates the KQL Database inside the Eventhouse via the Fabric API. It creates `MachineTelemetry`, `ClockInEvents`, and `AnomalyAlerts` tables with streaming ingestion enabled.
+
+After the tables are created, deploy the **16 health scoring functions** by running the commands in `scripts/kql/machine_health_monitoring.kql` in the KQL Database query editor. These functions provide composite anomaly scores for every machine type:
+
+| Function | Machines | Failure Mode |
+|---|---|---|
+| `CNC_BearingWearScore` | CNC-001/002/003/005 | Spindle bearing wear |
+| `CNC_CoolantFailScore` | CNC-001/002/003/005 | Coolant system failure |
+| `Laser_NozzleDegScore` | LSR-001/002 | Nozzle degradation |
+| `Press_HydLeakScore` | PRB-001 | Hydraulic leak |
+| `Weld_GasContamScore` | WLD-001/002 | Gas contamination |
+| `CMM_EnvDriftScore` | CMM-001 | Environmental drift |
+| `Reflow_ProfileScore` | RFL-001 | Thermal profile drift |
+| `Printer_O2Score` | ADD-001 | O₂ ingress |
+| `Crane_BrakeScore` | CRN-001 | Brake pad wear |
+| `HydTest_CavitationScore` | HTB-001 | Pump cavitation |
+| `EDM_WireHealthScore` | EDM-001 | Wire/dielectric degradation |
+| `Lathe_SpindleScore` | LTH-001/002 | Spindle vibration |
+| `PaintBooth_EnvScore` | PNT-001/002 | Booth environment |
+| `Assembly_StationScore` | ASM-001 | ESD/soldering anomaly |
+| `MachineHealthAlerts` | All 20 | Unified alert view |
+| `CriticalAnomalyAlerts` | All 20 | ≥80% confidence alerts |
 
 ### 5. Create Semantic Model (DirectQuery)
 
@@ -307,16 +342,31 @@ Create a semantic model on top of the SQL Database for Power BI reports:
      | Legend | Tasks → Skill Requirement |
    - Add a slicer for `Projects → Project Name` to filter by project
 
-### 7. Configure Activator (optional)
+### 7. Configure Activator
 
-Create a new **Reflex** item in the Fabric workspace. Connect it to the KQL Database and set it to monitor anomaly scores. Configure trigger: any row with `composite_score > threshold`. Add a Teams notification action.
+A **MachineHealthActivator** Reflex item is already created in the RTI folder. Configure it in the Fabric UI:
+
+1. Open the Activator and connect it to the KQL Database (`CAEManufacturingKQLDB`)
+2. Set the monitoring query to: `CriticalAnomalyAlerts()` or monitor the `AnomalyAlerts` table directly
+3. Trigger condition: `anomaly_confidence_pct >= 80`
+4. Action: Send a Teams notification or invoke the `AlertNotificationAgent` notebook
+
+The **AlertPipeline** (5-min schedule) also runs the full detection + notification chain automatically:
+1. **AnomalyDetection** notebook computes Z-score baselines and writes alerts to `AnomalyAlerts`
+2. **AlertNotificationAgent** reads alerts and sends Teams Adaptive Cards
+
+To enable Teams notifications, set `TEAMS_WEBHOOK_URL` in the AlertNotificationAgent notebook config cell.
+To enable AI root-cause analysis, set `FOUNDRY_AGENT_ENDPOINT`.
 
 ### 8. Demo
 
-- **Pipelines** ingest machine telemetry (1-min) and clock-in events (10-min) directly into the KQL Database via Kusto streaming API
-- Run **Simulation/TelemetryFaultInjection** manually to simulate a CNC mill spindle bearing failure
-- Open **Agent/CapacityManagementAgent** to see the AI reason across all sources
-- Build a **Power BI Gantt chart** from `plm.projects` + `plm.tasks`
+1. **Start telemetry**: TelemetryPipeline runs every 1 min, ingesting sensor data from all 20 machines into KQL via Kusto streaming API
+2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-001 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)
+3. **Watch detection**: The 16 KQL health scoring functions produce composite scores in real-time. `CNC_BearingWearScore` will climb from ~0.2 to 0.99 as the fault progresses
+4. **ML scoring**: `AnomalyDetection` notebook (or AlertPipeline) runs Z-score analysis and writes to `AnomalyAlerts` with confidence %, RUL estimate, and severity
+5. **Notification**: `AlertNotificationAgent` sends a Teams Adaptive Card with machine ID, failure mode, confidence, and a link to the Fabric dashboard
+6. **AI reasoning**: Open `CapacityManagementAgent` to see the agent query both SQL DB and KQL Eventhouse for scheduling impact, worker reassignment, and parts availability
+7. **Power BI**: View the Gantt chart from `plm.projects` + `plm.tasks` and the real-time machine health dashboard
 
 ![Gantt Chart](docs/screenshots/07-gantt-powerbi.png)
 
@@ -340,7 +390,7 @@ Run `python scripts/validate_data.py` to verify.
 | Decision | Rationale |
 |---|---|
 | SQL Database for all reference/project tables | CRUD for write-back (schedule updates, task completions), DirectQuery for Power BI, agent-friendly |
-| Eventhouse for telemetry + events | Sub-second queries on time-series data, native KQL |
+| Eventhouse for telemetry + events + anomaly alerts | Sub-second queries on time-series data, native KQL, real-time scoring functions |
 | Lakehouse as staging only | CSVs upload there during deployment, then get loaded into SQL DB |
 | Single-shot notebooks for data pipelines | No long-running Spark executors; pipeline calls notebook every 1 min |
 | Constraints added after bulk insert | Avoids FK ordering issues during initial data load |
