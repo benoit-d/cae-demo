@@ -3,7 +3,7 @@
     {
       "id": "a0a0a0a0-1111-2222-3333-444455556666",
       "name": "TelemetryCustomApp",
-      "type": "CustomApp",
+      "type": "CustomEndpoint",
       "properties": {
         "endpoint": {
           "endpointType": "EventHub"
@@ -32,5 +32,5 @@
   ],
   "streams": [],
   "operators": [],
-  "compatibilityLevel": "1.0"
+  "compatibilityLevel": "1.1"
 }
