@@ -154,6 +154,17 @@ else:
         KQL_SETUP_OK = True
     else:
         print(f"Creating KQL Database '{db_name}'...")
+        # Discover RTI folder so the DB is created inside it (can't be moved after)
+        rti_folder_id = None
+        try:
+            folders_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/folders", headers=headers)
+            rti_folder = next((f for f in folders_resp.json().get("value", []) if f["displayName"] == "RTI"), None)
+            if rti_folder:
+                rti_folder_id = rti_folder["id"]
+                print(f"  RTI folder: {rti_folder_id}")
+        except Exception:
+            pass
+
         create_url = f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/kqlDatabases"
         payload = {
             "displayName": db_name,
@@ -164,6 +175,8 @@ else:
                 ]
             }
         }
+        if rti_folder_id:
+            payload["folderId"] = rti_folder_id
         resp = requests.post(create_url, json=payload, headers=headers)
         print(f"  Status: {resp.status_code}")
 
@@ -193,28 +206,6 @@ else:
         else:
             print(f"  Failed: {resp.text[:200]}")
             KQL_SETUP_OK = False
-
-    # Move KQL Database to RTI folder (if it exists and DB was just created)
-    if KQL_SETUP_OK:
-        try:
-            folders_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/folders", headers=headers)
-            rti_folder = next((f for f in folders_resp.json().get("value", []) if f["displayName"] == "RTI"), None)
-            if rti_folder:
-                # Re-fetch items to get the KQL DB GUID
-                items_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=headers)
-                kqldb_item = next((i for i in items_resp.json().get("value", []) if i.get("displayName") == db_name and i.get("type") == "KQLDatabase"), None)
-                if kqldb_item and kqldb_item.get("folderId", "") != rti_folder["id"]:
-                    move_resp = requests.post(
-                        f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items/{kqldb_item['id']}/move",
-                        json={"targetFolderId": rti_folder["id"]},
-                        headers=headers
-                    )
-                    if move_resp.status_code == 200:
-                        print(f"  Moved KQL Database to RTI/ folder")
-                    else:
-                        print(f"  Could not move to RTI folder: {move_resp.status_code}")
-        except Exception as e:
-            print(f"  RTI folder move skipped: {e}")
 
 # METADATA ********************
 
