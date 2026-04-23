@@ -1,0 +1,378 @@
+# Fabric notebook source
+
+# METADATA ********************
+
+# META {
+# META   "kernel_info": {
+# META     "name": "synapse_pyspark"
+# META   },
+# META   "dependencies": {}
+# META }
+
+# MARKDOWN ********************
+
+# # ML Anomaly Detection — Baseline & Scoring
+# 
+# Builds per-machine/sensor statistical baselines from historical telemetry,
+# then scores the latest readings using a Z-score + composite approach.
+# Anomalies are written to the `AnomalyAlerts` table in the KQL Database
+# for the Activator to monitor.
+# 
+# **Designed to run on a schedule (every 5 minutes) via a Data Pipeline.**
+# 
+# ## Approach
+# 1. Query last 24h of telemetry from KQL to compute baseline stats (mean, stddev)
+# 2. Query last 5min of telemetry and compute Z-scores per sensor
+# 3. Combine Z-scores into a composite anomaly confidence per machine
+# 4. Write rows with confidence >= 50% to `AnomalyAlerts` table
+# 5. The Activator monitors `AnomalyAlerts` and triggers when confidence >= 80%
+
+# METADATA ********************
+
+# META {
+# META   "language": "markdown",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# === CONFIGURATION ===
+KQL_URI = ""  # Leave empty to auto-discover from Eventhouse
+BASELINE_WINDOW = "24h"   # How far back to compute baseline stats
+SCORING_WINDOW = "5m"     # Recent window to score
+ALERT_THRESHOLD = 50.0    # Minimum confidence % to write to AnomalyAlerts
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+import json, os, requests, math
+from datetime import datetime, timezone
+import notebookutils
+
+# Discover workspace and Eventhouse
+TOKEN_FABRIC = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
+TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
+
+WORKSPACE_ID = os.environ.get("TRIDENT_WORKSPACE_ID", "")
+if not WORKSPACE_ID:
+    try:
+        ctx = notebookutils.runtime.context
+        WORKSPACE_ID = ctx.get("currentWorkspaceId", "") or ctx.get("workspaceId", "")
+    except Exception:
+        pass
+
+fab_headers = {"Authorization": f"Bearer {TOKEN_FABRIC}"}
+resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=fab_headers)
+items = resp.json().get("value", [])
+
+if not KQL_URI:
+    eh = next((i for i in items if i.get("displayName") == "CAEManufacturingEH"), None)
+    if eh:
+        eh_props = requests.get(
+            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventhouses/{eh['id']}",
+            headers=fab_headers
+        ).json()
+        KQL_URI = eh_props.get("properties", {}).get("queryServiceUri", "")
+        print(f"KQL URI: {KQL_URI}")
+    else:
+        raise RuntimeError("CAEManufacturingEH not found")
+
+DB_NAME = "CAEManufacturingKQLDB"
+
+def kql_query(query):
+    """Run a KQL query and return results as list of dicts."""
+    resp = requests.post(
+        f"{KQL_URI}/v1/rest/query",
+        headers={"Authorization": f"Bearer {TOKEN_KQL}", "Content-Type": "application/json"},
+        json={"db": DB_NAME, "csl": query}
+    )
+    if resp.status_code != 200:
+        print(f"KQL query failed: {resp.status_code} {resp.text[:200]}")
+        return []
+    data = resp.json()
+    tables = data.get("Tables", [])
+    if not tables:
+        return []
+    cols = [c["ColumnName"] for c in tables[0].get("Columns", [])]
+    rows = tables[0].get("Rows", [])
+    return [dict(zip(cols, row)) for row in rows]
+
+def kql_mgmt(command):
+    """Run a KQL management command."""
+    resp = requests.post(
+        f"{KQL_URI}/v1/rest/mgmt",
+        headers={"Authorization": f"Bearer {TOKEN_KQL}", "Content-Type": "application/json"},
+        json={"db": DB_NAME, "csl": command}
+    )
+    return resp.status_code, resp.text[:200]
+
+print("Connected to KQL Database")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 1: Ensure AnomalyAlerts table exists with streaming ingestion
+create_cmd = """
+.create-merge table AnomalyAlerts (
+    scored_at: datetime,
+    machine_id: string,
+    anomaly_type: string,
+    anomaly_confidence_pct: real,
+    estimated_rul_hours: int,
+    top_deviating_sensors: string,
+    composite_score: real,
+    description: string,
+    severity: string
+)
+"""
+status, msg = kql_mgmt(create_cmd)
+print(f"AnomalyAlerts table: {status}")
+
+status2, _ = kql_mgmt(".alter table AnomalyAlerts policy streamingingestion enable")
+print(f"Streaming policy: {status2}")
+
+# Retention: keep 30 days of anomaly alerts
+status3, _ = kql_mgmt(".alter table AnomalyAlerts policy retention softdelete = 30d recoverability = enabled")
+print(f"Retention policy: {status3}")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 2: Compute baselines — mean and stddev per machine/sensor over baseline window
+print(f"Computing baselines over last {BASELINE_WINDOW}...")
+
+baselines = kql_query(f"""
+    MachineTelemetry
+    | where timestamp > ago({BASELINE_WINDOW})
+    | summarize
+        mean_val = avg(value),
+        stddev_val = stdev(value),
+        reading_count = count()
+        by machine_id, sensor_name, unit
+    | where reading_count >= 5
+    | order by machine_id, sensor_name
+""")
+
+print(f"  {len(baselines)} machine-sensor baselines computed")
+
+# Index baselines for fast lookup
+baseline_map = {}
+for b in baselines:
+    key = f"{b['machine_id']}|{b['sensor_name']}"
+    baseline_map[key] = {
+        "mean": b["mean_val"],
+        "stddev": b["stddev_val"] if b["stddev_val"] and b["stddev_val"] > 0 else 0.001,
+        "count": b["reading_count"],
+        "unit": b["unit"]
+    }
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 3: Score recent readings with Z-scores
+print(f"Scoring recent {SCORING_WINDOW} of telemetry...")
+
+recent = kql_query(f"""
+    MachineTelemetry
+    | where timestamp > ago({SCORING_WINDOW})
+    | summarize avg_val = avg(value), latest_alert = take_any(alert_level)
+        by machine_id, sensor_name, unit
+    | order by machine_id, sensor_name
+""")
+
+print(f"  {len(recent)} recent machine-sensor readings to score")
+
+# Compute Z-scores and group by machine
+machine_scores = {}
+for r in recent:
+    key = f"{r['machine_id']}|{r['sensor_name']}"
+    bl = baseline_map.get(key)
+    if not bl:
+        continue
+
+    z_score = abs(r["avg_val"] - bl["mean"]) / bl["stddev"]
+
+    if r["machine_id"] not in machine_scores:
+        machine_scores[r["machine_id"]] = []
+    machine_scores[r["machine_id"]].append({
+        "sensor_name": r["sensor_name"],
+        "avg_val": r["avg_val"],
+        "baseline_mean": bl["mean"],
+        "baseline_stddev": bl["stddev"],
+        "z_score": z_score,
+        "unit": r["unit"],
+        "latest_alert": r["latest_alert"]
+    })
+
+print(f"  {len(machine_scores)} machines scored")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 4: Compute composite anomaly confidence per machine
+# Map known failure modes to machines
+FAILURE_MODES = {
+    "CNC-001": "Spindle bearing wear",
+    "CNC-002": "Spindle bearing wear",
+    "CNC-003": "Spindle bearing wear",
+    "CNC-005": "Spindle bearing wear",
+    "LSR-001": "Laser nozzle degradation",
+    "LSR-002": "Laser head overheating",
+    "PRB-001": "Hydraulic leak / seal failure",
+    "WLD-001": "Shielding gas contamination",
+    "WLD-002": "Wire feed anomaly",
+    "CMM-001": "Environmental drift / accuracy loss",
+    "RFL-001": "Thermal profile drift",
+    "ADD-001": "O2 ingress / chamber contamination",
+    "CRN-001": "Brake pad wear",
+    "HTB-001": "Pump cavitation",
+    "EDM-001": "Wire tension / dielectric degradation",
+    "LTH-001": "Spindle vibration anomaly",
+    "LTH-002": "Spindle vibration anomaly",
+    "PNT-001": "Booth environment deviation",
+    "PNT-002": "Booth environment deviation",
+    "ASM-001": "ESD / soldering anomaly",
+}
+
+anomaly_alerts = []
+scored_at = datetime.now(timezone.utc).isoformat()
+
+for machine_id, sensors in machine_scores.items():
+    # Composite: weighted average of Z-scores (higher Z = more anomalous)
+    # Cap individual Z-scores at 5 to avoid one outlier dominating
+    z_scores = [min(s["z_score"], 5.0) for s in sensors]
+    if not z_scores:
+        continue
+
+    avg_z = sum(z_scores) / len(z_scores)
+    max_z = max(z_scores)
+
+    # Confidence: blend of avg and max Z-scores
+    # Z=2 => ~50%, Z=3 => ~75%, Z=4 => ~90%, Z=5 => ~95%
+    confidence = min(99.9, max(0.0, (avg_z * 0.4 + max_z * 0.6) * 20.0))
+
+    # RUL estimate: rough inverse relationship to confidence
+    if confidence >= 90:
+        rul = 4
+    elif confidence >= 80:
+        rul = 24
+    elif confidence >= 70:
+        rul = 72
+    elif confidence >= 50:
+        rul = 168
+    else:
+        rul = 720
+
+    # Top deviating sensors (sorted by Z-score)
+    top_sensors = sorted(sensors, key=lambda s: s["z_score"], reverse=True)[:3]
+    top_str = "; ".join(
+        f"{s['sensor_name']}: {s['avg_val']:.2f} {s['unit']} (Z={s['z_score']:.1f})"
+        for s in top_sensors
+    )
+
+    severity = "Critical" if confidence >= 85 else "High" if confidence >= 70 else "Medium" if confidence >= 50 else "Low"
+
+    if confidence >= ALERT_THRESHOLD:
+        anomaly_alerts.append({
+            "scored_at": scored_at,
+            "machine_id": machine_id,
+            "anomaly_type": FAILURE_MODES.get(machine_id, "Unknown"),
+            "anomaly_confidence_pct": round(confidence, 1),
+            "estimated_rul_hours": rul,
+            "top_deviating_sensors": top_str,
+            "composite_score": round(avg_z, 3),
+            "description": f"{FAILURE_MODES.get(machine_id, 'Anomaly')} detected on {machine_id} with {confidence:.0f}% confidence. Top sensor: {top_sensors[0]['sensor_name']} (Z={top_sensors[0]['z_score']:.1f})",
+            "severity": severity,
+        })
+
+print(f"\n{'='*60}")
+print(f"  ANOMALY SCORING RESULTS")
+print(f"{'='*60}")
+print(f"  Machines scored:  {len(machine_scores)}")
+print(f"  Alerts generated: {len(anomaly_alerts)}")
+for a in sorted(anomaly_alerts, key=lambda x: x["anomaly_confidence_pct"], reverse=True):
+    print(f"  {a['severity']:8s} {a['machine_id']:8s} {a['anomaly_confidence_pct']:5.1f}%  RUL:{a['estimated_rul_hours']:>4d}h  {a['anomaly_type']}")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 5: Write anomaly alerts to KQL via streaming ingestion
+if anomaly_alerts:
+    def esc_csv(v):
+        s = str(v).replace('"', '""')
+        return f'"{s}"' if ',' in s or '"' in s or ';' in s else s
+
+    csv_lines = []
+    for a in anomaly_alerts:
+        csv_lines.append(",".join([
+            a["scored_at"],
+            a["machine_id"],
+            esc_csv(a["anomaly_type"]),
+            str(a["anomaly_confidence_pct"]),
+            str(a["estimated_rul_hours"]),
+            esc_csv(a["top_deviating_sensors"]),
+            str(a["composite_score"]),
+            esc_csv(a["description"]),
+            a["severity"],
+        ]))
+
+    csv_payload = "\n".join(csv_lines)
+
+    ingest_url = f"{KQL_URI}/v1/rest/ingest/{DB_NAME}/AnomalyAlerts?streamFormat=Csv"
+    ingest_headers = {
+        "Authorization": f"Bearer {TOKEN_KQL}",
+        "Content-Type": "text/csv",
+    }
+    ingest_resp = requests.post(ingest_url, headers=ingest_headers, data=csv_payload)
+
+    if ingest_resp.status_code == 200:
+        print(f"\nIngested {len(anomaly_alerts)} anomaly alerts to KQL")
+    else:
+        print(f"\nIngestion failed ({ingest_resp.status_code}): {ingest_resp.text[:300]}")
+else:
+    print("\nNo anomalies above threshold — all machines nominal")
+
+print(f"\nDone. Next run in {SCORING_WINDOW}.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }

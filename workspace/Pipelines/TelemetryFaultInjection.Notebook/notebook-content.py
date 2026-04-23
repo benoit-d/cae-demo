@@ -11,13 +11,21 @@
 
 # MARKDOWN ********************
 
-# # Machine Fault Injection - MCH-001 (5-Axis CNC Mill)
+# # Telemetry Fault Injection
 # 
-# Simulates a spindle bearing failure on the DMG MORI 5-axis CNC mill.
-# Spindle vibration increases, spindle temperature rises, coolant flow drops,
-# axis accuracy degrades - triggering Warning then Critical alerts.
+# Simulates progressive machine failures by injecting degrading sensor
+# readings directly into the KQL Database via Kusto streaming ingestion.
 # 
-# Run this manually during a demo. 10 batches over 10 minutes.
+# **Fault Profiles:**
+# - **CNC-001**: Spindle bearing failure — vibration increases, temperature rises,
+#   coolant flow drops, axis accuracy degrades, power consumption climbs
+# - *(Extensible to other machines via TARGET_MACHINE and FAULTS config)*
+# 
+# Run manually during a demo. Default: 10 batches over 10 minutes.
+# Each batch sends one reading per sensor, then sleeps for INTERVAL seconds.
+# 
+# The injected data triggers the KQL health-scoring functions
+# (CNC_BearingWearScore, CNC_CoolantFailScore) which feed MachineHealthAlerts().
 
 # METADATA ********************
 
@@ -28,8 +36,11 @@
 
 # CELL ********************
 
-EVENTHUB_CONNECTION_STRING = ""  # SimulatorTelemetryStream connection string
-TARGET_MACHINE = "MCH-001"      # 5-Axis CNC Milling Center
+# === CONFIGURATION ===
+TARGET_MACHINE = "CNC-001"      # Machine to inject faults on
+KQL_URI = ""                    # Leave empty to auto-discover from Eventhouse
+INTERVAL = 60                   # Seconds between batches
+DURATION_MIN = 10.0             # Total fault injection duration in minutes
 
 # METADATA ********************
 
@@ -68,6 +79,22 @@ sensor_defs = [row.asDict() for row in
     .filter(f"machine_id = '{TARGET_MACHINE}'").collect()]
 print(f"{len(sensor_defs)} sensors loaded for {TARGET_MACHINE}")
 
+# Auto-discover KQL URI from Eventhouse
+TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
+if not KQL_URI:
+    eh = next((i for i in items_list if i.get("displayName") == "CAEManufacturingEH"), None)
+    if eh:
+        eh_props = requests.get(
+            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventhouses/{eh['id']}",
+            headers=headers
+        ).json()
+        KQL_URI = eh_props.get("properties", {}).get("queryServiceUri", "")
+        print(f"Auto-discovered KQL URI: {KQL_URI}")
+    else:
+        raise RuntimeError("CAEManufacturingEH not found and KQL_URI not set")
+
+DB_NAME = "CAEManufacturingKQLDB"
+
 # Fault profile: spindle bearing failure on CNC mill
 FAULTS = {
     "Spindle Vibration":       {"start": 0,  "rate": 0.015},    # g increase per minute
@@ -76,9 +103,6 @@ FAULTS = {
     "Axis Position Accuracy":  {"start": 5,  "rate": 0.001},    # mm drift per minute
     "Power Consumption":       {"start": 2,  "rate": 2.0},      # kW rise per minute
 }
-
-INTERVAL = 60
-DURATION_MIN = 10.0
 
 # METADATA ********************
 
@@ -126,30 +150,42 @@ try:
                 "unit": s["unit"], "alert_level": lvl, "is_anomaly": lvl != "Normal",
             })
 
-        if EVENTHUB_CONNECTION_STRING:
-            from azure.eventhub import EventHubProducerClient, EventData
-            p = EventHubProducerClient.from_connection_string(EVENTHUB_CONNECTION_STRING)
-            with p:
-                b = p.create_batch()
-                for e in events:
-                    b.add(EventData(json.dumps(e)))
-                p.send_batch(b)
-        else:
-            spark.createDataFrame(events).write.format("delta").mode("append").save(f"{BASE}/Tables/machine_telemetry_raw")
+        # Send to KQL Database via Kusto streaming ingestion
+        csv_lines = []
+        for e in events:
+            csv_lines.append(
+                f"{e['timestamp']},{e['machine_id']},{e['sensor_id']},"
+                f"{e['sensor_category']},{e['sensor_name']},{e['value']},"
+                f"{e['unit']},{e['alert_level']},{e['is_anomaly']}"
+            )
+        csv_payload = "\n".join(csv_lines)
+
+        ingest_url = f"{KQL_URI}/v1/rest/ingest/{DB_NAME}/MachineTelemetry?streamFormat=Csv"
+        ingest_headers = {
+            "Authorization": f"Bearer {TOKEN_KQL}",
+            "Content-Type": "text/csv",
+        }
+        ingest_resp = requests.post(ingest_url, headers=ingest_headers, data=csv_payload)
 
         w = sum(1 for e in events if e["alert_level"] == "Warning")
         c = sum(1 for e in events if e["alert_level"] == "Critical")
         batch_num += 1
-        print(f"  [{elapsed:5.1f} min] batch {batch_num}  Normal:{len(events)-w-c}  Warn:{w}  Crit:{c}")
+
+        status = "OK" if ingest_resp.status_code == 200 else f"FAIL({ingest_resp.status_code})"
+        print(f"  [{elapsed:5.1f} min] batch {batch_num}  Normal:{len(events)-w-c}  Warn:{w}  Crit:{c}  KQL:{status}")
         for e in events:
             if e["alert_level"] != "Normal":
                 print(f"      {e['sensor_name']}: {e['value']} {e['unit']} [{e['alert_level']}]")
+
+        if ingest_resp.status_code != 200:
+            print(f"      Ingestion error: {ingest_resp.text[:200]}")
 
         time.sleep(INTERVAL)
 except KeyboardInterrupt:
     pass
 
-print(f"\nFault injection complete. {batch_num} batches.")
+print(f"\nFault injection complete. {batch_num} batches sent to KQL.")
+print(f"Check alerts: MachineHealthAlerts() | where machine_id == '{TARGET_MACHINE}'")
 
 # METADATA ********************
 

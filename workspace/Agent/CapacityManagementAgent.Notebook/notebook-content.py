@@ -87,15 +87,17 @@ print(f"Connected to {SQL_DBNAME}")
 
 # CELL ********************
 
-# Agent tool functions - query the SQL Database
+# Agent tool functions - query the SQL Database and KQL Eventhouse
 
 def get_manufacturing_floor_status():
     rows = sql_query("""
-        SELECT p.Project_ID, p.Project_Name, p.Simulator_ID, m.customer,
+        SELECT p.Project_ID, p.Project_Name, p.Simulator_ID,
+               s.customer, s.status AS sim_status,
                p.Modified_Planned_Start, p.Standard_Duration,
-               p.Complete_Percentage, m.status AS sim_status
-        FROM erp.projects p
-        LEFT JOIN erp.machines m ON p.Simulator_ID = m.simulator_id
+               p.Complete_Percentage, p.Hard_Deadline,
+               p.Contract_Value_USD, p.Penalty_Per_Day_USD
+        FROM plm.projects p
+        LEFT JOIN plm.simulators s ON p.Simulator_ID = s.simulator_id
         ORDER BY p.Modified_Planned_Start
     """)
     return json.dumps(rows, default=str)
@@ -106,8 +108,8 @@ def get_active_tasks(project_id=None):
         SELECT t.Task_ID, t.Task_Name, t.Parent_Project_ID,
                t.Skill_Requirement, t.Modified_Planned_Start,
                t.Standard_Duration, t.Actual_Start, t.Actual_End,
-               t.Complete_Percentage, t.Resource_Login
-        FROM erp.tasks t
+               t.Complete_Percentage, t.Resource_Login, t.Machine_ID
+        FROM plm.tasks t
         WHERE t.Complete_Percentage < 100 {where}
         ORDER BY t.Modified_Planned_Start
     """)
@@ -119,19 +121,19 @@ def get_available_employees(skill=None):
         SELECT e.employee_id, e.email, e.first_name, e.last_name,
                e.department, e.employee_type, e.shift_preference,
                sc.skill_category, sc.skill_name, sc.certification_level,
-               pl.limitation_type, pl.description AS limitation_desc
+               wr.limitation_type, wr.description AS limitation_desc
         FROM hr.employees e
         LEFT JOIN hr.skills_certifications sc ON e.employee_id = sc.employee_id
             AND sc.is_current = 'Yes' {skill_filter}
-        LEFT JOIN hr.physical_limitations pl ON e.employee_id = pl.employee_id
+        LEFT JOIN hr.work_restrictions wr ON e.employee_id = wr.employee_id
         WHERE e.employment_status = 'Active' AND e.employee_id != 'EMP-050'
         ORDER BY e.employee_id
     """)
     return json.dumps(rows, default=str)
 
 def get_scheduling_constraints():
-    agreements = sql_query("SELECT * FROM hr.employee_agreements")
-    contractors = sql_query("SELECT * FROM hr.contractual_workforce")
+    agreements = sql_query("SELECT * FROM hr.collective_agreements")
+    contractors = sql_query("SELECT * FROM hr.contractor_agreements")
     return json.dumps({"agreements": agreements, "contractors": contractors}, default=str)
 
 def get_parts_availability(part_numbers):
@@ -140,15 +142,60 @@ def get_parts_availability(part_numbers):
     pos = sql_query(f"SELECT * FROM erp.purchase_orders WHERE part_number IN ({pn_list})")
     return json.dumps({"inventory": inv, "purchase_orders": pos}, default=str)
 
+def get_machine_health():
+    """Query KQL Eventhouse for real-time machine health alerts."""
+    TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
+    WORKSPACE_ID_LOCAL = os.environ.get("TRIDENT_WORKSPACE_ID", "")
+    if not WORKSPACE_ID_LOCAL:
+        try:
+            ctx = notebookutils.runtime.context
+            WORKSPACE_ID_LOCAL = ctx.get("currentWorkspaceId", "") or ctx.get("workspaceId", "")
+        except Exception:
+            pass
+    fab_token = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
+    fab_headers = {"Authorization": f"Bearer {fab_token}"}
+    resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID_LOCAL}/items", headers=fab_headers)
+    items = resp.json().get("value", [])
+    eh = next((i for i in items if i.get("displayName") == "CAEManufacturingEH"), None)
+    if not eh:
+        return json.dumps({"error": "Eventhouse not found"})
+    eh_props = requests.get(
+        f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID_LOCAL}/eventhouses/{eh['id']}",
+        headers=fab_headers
+    ).json()
+    kql_uri = eh_props.get("properties", {}).get("queryServiceUri", "")
+    query = "MachineHealthAlerts(30m) | take 50"
+    kql_resp = requests.post(
+        f"{kql_uri}/v1/rest/query",
+        headers={"Authorization": f"Bearer {TOKEN_KQL}", "Content-Type": "application/json"},
+        json={"db": "CAEManufacturingKQLDB", "csl": query}
+    )
+    return kql_resp.text
+
+def get_machine_certifications(machine_id=None):
+    where = f"WHERE mc.machine_id = '{machine_id}'" if machine_id else ""
+    rows = sql_query(f"""
+        SELECT mc.cert_id, mc.employee_id, mc.machine_id, mc.cert_level,
+               mc.cert_date, mc.expiry_date, mc.is_current,
+               e.first_name, e.last_name, e.email
+        FROM hr.machine_certifications mc
+        JOIN hr.employees e ON mc.employee_id = e.employee_id
+        {where}
+        ORDER BY mc.machine_id, mc.cert_level DESC
+    """)
+    return json.dumps(rows, default=str)
+
 TOOLS = {
     "get_manufacturing_floor_status": get_manufacturing_floor_status,
     "get_active_tasks": get_active_tasks,
     "get_available_employees": get_available_employees,
     "get_scheduling_constraints": get_scheduling_constraints,
     "get_parts_availability": get_parts_availability,
+    "get_machine_health": get_machine_health,
+    "get_machine_certifications": get_machine_certifications,
 }
 
-print(f"{len(TOOLS)} agent tools registered (all querying SQL Database).")
+print(f"{len(TOOLS)} agent tools registered.")
 
 # METADATA ********************
 
