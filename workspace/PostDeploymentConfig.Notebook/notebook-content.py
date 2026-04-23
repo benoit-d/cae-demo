@@ -342,7 +342,7 @@ DDL = [
         clause_id NVARCHAR(10) NOT NULL, project_id NVARCHAR(10) NOT NULL,
         contract_reference NVARCHAR(20), clause_type NVARCHAR(30),
         clause_text NVARCHAR(500), penalty_per_day_usd FLOAT,
-        penalty_cap_usd FLOAT, trigger NVARCHAR(200))""",
+        penalty_cap_usd FLOAT, [trigger] NVARCHAR(200))""",
     """CREATE TABLE erp.sensor_definitions (
         sensor_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10) NOT NULL,
         sensor_category NVARCHAR(30), sensor_name NVARCHAR(50),
