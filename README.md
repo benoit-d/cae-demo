@@ -257,7 +257,7 @@ Copy the **JDBC connection string** from SQL Database > Settings > Connection st
 
 ### 3. Run PostDeploymentConfig
 
-Open the deployed `PostDeploymentConfig` notebook. Paste the JDBC connection string in the config cell. Run All.
+Open the deployed `PostDeploymentConfig` notebook. A default JDBC connection string is pre-configured — just Run All. To use a different SQL Database, paste your JDBC connection string in the config cell before running.
 
 ![PostDeploymentConfig](docs/screenshots/03-postdeployment-run-all.png)
 
@@ -267,11 +267,51 @@ This creates 5 schemas (`hr`, `erp`, `plm`, `mes`, `telemetry`) with 24 tables, 
 
 The **PostDeploymentConfig** notebook automatically creates the KQL Database inside the Eventhouse via the Fabric API. It creates `MachineTelemetry` and `ClockInEvents` tables with streaming ingestion enabled.
 
-### 5. Configure Activator (optional)
+### 5. Create Semantic Model (DirectQuery)
+
+Create a semantic model on top of the SQL Database for Power BI reports:
+
+1. In the workspace, click **+ New item > Semantic Model** and name it `CAEManufacturing`
+2. Select the **CAEManufacturing_SQLDB** SQL Database as the data source
+3. Add the following tables from their schemas:
+   - `hr.employees`
+   - `erp.production_lines`, `erp.machines`, `erp.maintenance_history`
+   - `plm.simulators`, `plm.projects`, `plm.tasks`
+   - `mes.machine_jobs`
+4. The relationships should auto-detect from the SQL FK constraints. Verify:
+   - `Employees.production_line_id` → `Production Lines.production_line_id`
+   - `Machines.production_line_id` → `Production Lines.production_line_id`
+   - `Projects.Simulator_ID` → `Simulators.simulator_id`
+   - `Tasks.Parent_Project_ID` → `Projects.Project_ID`
+   - `Tasks.Machine_ID` → `Machines.machine_id`
+   - `Maintenance History.machine_id` → `Machines.machine_id`
+   - `Machine Jobs.machine_id` → `Machines.machine_id`
+   - `Machine Jobs.project_id` → `Projects.Project_ID`
+
+> **Reference**: TMDL definition files are in `scripts/tmdl/` for advanced users who prefer to create the model via REST API with `format: "TMDL"`.
+
+### 6. Create Gantt Report
+
+1. In the workspace, click **+ New item > Report** and connect it to the `CAEManufacturing` semantic model
+2. **Page 1 — Project Overview**: Add a Card visual (# Projects) and a Bar chart (completion % by project)
+3. **Page 2 — Project Timeline (Gantt)**:
+   - Get the **Gantt** custom visual from AppSource (by MAQ Software)
+   - Map the fields:
+     | Gantt Field | Column |
+     |---|---|
+     | Task | Tasks → Task Name |
+     | Start Date | Tasks → Planned Start (Modified_Planned_Start) |
+     | Duration | Tasks → Standard Duration |
+     | % Complete | Tasks → Complete % |
+     | Resource | Tasks → Resource Login |
+     | Legend | Tasks → Skill Requirement |
+   - Add a slicer for `Projects → Project Name` to filter by project
+
+### 7. Configure Activator (optional)
 
 Create a new **Reflex** item in the Fabric workspace. Connect it to the KQL Database and set it to monitor anomaly scores. Configure trigger: any row with `composite_score > threshold`. Add a Teams notification action.
 
-### 6. Demo
+### 8. Demo
 
 - **Pipelines** ingest machine telemetry (1-min) and clock-in events (10-min) directly into the KQL Database via Kusto streaming API
 - Run **Simulation/TelemetryFaultInjection** manually to simulate a CNC mill spindle bearing failure

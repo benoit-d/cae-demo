@@ -38,7 +38,11 @@
 
 # === CONFIGURATION ===
 SQL_JDBC_CONNECTION_STRING = ""
-# Example: "jdbc:sqlserver://xxxxx.database.fabric.microsoft.com:1433;database={MyDB-guid};encrypt=true;trustServerCertificate=false;authentication=ActiveDirectoryInteractive"
+# Paste your JDBC connection string above, or leave empty to use the default below.
+_DEFAULT_JDBC = "jdbc:sqlserver://glhdjewslwruzpuscihr6nmsre-urbryfqunkhuxapla4hqtangbe.database.fabric.microsoft.com:1433;database={CAEManufacturing_SQLDB-6c31cad3-74a3-4eae-91f3-e2a4ed845e7e};encrypt=true;trustServerCertificate=false;authentication=ActiveDirectoryInteractive"
+if not SQL_JDBC_CONNECTION_STRING:
+    SQL_JDBC_CONNECTION_STRING = _DEFAULT_JDBC
+    print(f"Using default JDBC connection string")
 
 # METADATA ********************
 
