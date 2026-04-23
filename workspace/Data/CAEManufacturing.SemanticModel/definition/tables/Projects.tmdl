@@ -1,0 +1,80 @@
+table Projects
+
+	column Project_ID
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: Project_ID
+
+	column 'Project Name'
+		dataType: string
+		sourceColumn: Project_Name
+
+	column Simulator_ID
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Simulator_ID
+
+	column 'Planned Start'
+		dataType: dateTime
+		sourceColumn: Modified_Planned_Start
+
+	column 'Standard Duration'
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: Standard_Duration
+
+	column 'Actual End'
+		dataType: dateTime
+		sourceColumn: Actual_End
+
+	column 'Complete %'
+		dataType: int64
+		sourceColumn: Complete_Percentage
+
+	column Customer
+		dataType: string
+		sourceColumn: Customer
+
+	column 'Customer Type'
+		dataType: string
+		sourceColumn: Customer_Type
+
+	column 'Contract Value USD'
+		dataType: double
+		sourceColumn: Contract_Value_USD
+
+	column 'Penalty Per Day USD'
+		dataType: double
+		sourceColumn: Penalty_Per_Day_USD
+
+	column 'Hard Deadline'
+		dataType: dateTime
+		sourceColumn: Hard_Deadline
+
+	column 'Is Critical Path'
+		dataType: string
+		sourceColumn: Is_Critical_Path
+
+	/// Total contract value across projects
+	measure 'Total Contract Value' = SUM(Projects[Contract Value USD])
+		formatString: \$#,##0
+
+	/// Average completion
+	measure 'Avg Completion %' = AVERAGE(Projects[Complete %])
+		formatString: 0.0%
+
+	/// Count of active projects
+	measure '# Projects' = COUNTROWS(Projects)
+		formatString: #,##0
+
+	partition Projects = m
+		mode: directQuery
+		source =
+			let
+				Source = SQLDB,
+				projects = Source{[Schema="plm", Item="projects"]}[Data]
+			in
+				projects
+

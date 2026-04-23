@@ -1,0 +1,71 @@
+table 'Machine Jobs'
+
+	column job_id
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: job_id
+
+	column machine_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: machine_id
+
+	column part_spec_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: part_spec_id
+
+	column 'Part Name'
+		dataType: string
+		sourceColumn: part_name
+
+	column project_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: project_id
+
+	column Quantity
+		dataType: int64
+		sourceColumn: quantity
+
+	column 'Tolerance mm'
+		dataType: double
+		sourceColumn: tolerance_mm
+
+	column 'Planned Start'
+		dataType: string
+		sourceColumn: planned_start
+
+	column 'Planned End'
+		dataType: string
+		sourceColumn: planned_end
+
+	column Status
+		dataType: string
+		sourceColumn: status
+
+	column Priority
+		dataType: string
+		sourceColumn: priority
+
+	column 'Due Date'
+		dataType: dateTime
+		sourceColumn: due_date
+
+	/// Total queued jobs
+	measure '# Jobs' = COUNTROWS('Machine Jobs')
+		formatString: #,##0
+
+	partition 'Machine Jobs' = m
+		mode: directQuery
+		source =
+			let
+				Source = SQLDB,
+				jobs = Source{[Schema="mes", Item="machine_jobs"]}[Data]
+			in
+				jobs
+

@@ -1,0 +1,79 @@
+table Employees
+
+	column employee_id
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: employee_id
+
+	column 'First Name'
+		dataType: string
+		sourceColumn: first_name
+
+	column 'Last Name'
+		dataType: string
+		sourceColumn: last_name
+
+	column Email
+		dataType: string
+		sourceColumn: email
+
+	column Role
+		dataType: string
+		sourceColumn: role
+
+	column Department
+		dataType: string
+		sourceColumn: department
+
+	column 'Employee Type'
+		dataType: string
+		sourceColumn: employee_type
+
+	column 'Hire Date'
+		dataType: dateTime
+		sourceColumn: hire_date
+
+	column 'Shift Preference'
+		dataType: string
+		sourceColumn: shift_preference
+
+	column 'Employment Status'
+		dataType: string
+		sourceColumn: employment_status
+
+	column Location
+		dataType: string
+		sourceColumn: location
+
+	column 'Badge Number'
+		dataType: string
+		sourceColumn: badge_number
+
+	column 'Union Member'
+		dataType: string
+		sourceColumn: union_member
+
+	column production_line_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: production_line_id
+
+	/// Full display name
+	measure 'Employee Name' = SELECTEDVALUE(Employees[First Name]) & " " & SELECTEDVALUE(Employees[Last Name])
+		formatString: 0
+
+	/// Total headcount
+	measure '# Employees' = COUNTROWS(Employees)
+		formatString: #,##0
+
+	partition Employees = m
+		mode: directQuery
+		source =
+			let
+				Source = SQLDB,
+				employees = Source{[Schema="hr", Item="employees"]}[Data]
+			in
+				employees
+

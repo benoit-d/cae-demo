@@ -1,0 +1,67 @@
+table Machines
+
+	column machine_id
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: machine_id
+
+	column 'Machine Type'
+		dataType: string
+		sourceColumn: machine_type
+
+	column 'Machine Name'
+		dataType: string
+		sourceColumn: machine_name
+
+	column Manufacturer
+		dataType: string
+		sourceColumn: manufacturer
+
+	column Model
+		dataType: string
+		sourceColumn: model
+
+	column production_line_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: production_line_id
+
+	column Location
+		dataType: string
+		sourceColumn: location
+
+	column Zone
+		dataType: string
+		sourceColumn: zone
+
+	column 'Install Date'
+		dataType: dateTime
+		sourceColumn: install_date
+
+	column Status
+		dataType: string
+		sourceColumn: status
+
+	column 'Next PM Date'
+		dataType: dateTime
+		sourceColumn: next_pm_date
+
+	column 'Tolerance mm'
+		dataType: double
+		sourceColumn: tolerance_mm
+
+	/// Total machine count
+	measure '# Machines' = COUNTROWS(Machines)
+		formatString: #,##0
+
+	partition Machines = m
+		mode: directQuery
+		source =
+			let
+				Source = SQLDB,
+				machines = Source{[Schema="erp", Item="machines"]}[Data]
+			in
+				machines
+

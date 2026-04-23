@@ -1,0 +1,29 @@
+table 'Production Lines'
+
+	column production_line_id
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: production_line_id
+
+	column 'Line Name'
+		dataType: string
+		sourceColumn: line_name
+
+	column Building
+		dataType: string
+		sourceColumn: building
+
+	column Description
+		dataType: string
+		sourceColumn: description
+
+	partition 'Production Lines' = m
+		mode: directQuery
+		source =
+			let
+				Source = SQLDB,
+				production_lines = Source{[Schema="erp", Item="production_lines"]}[Data]
+			in
+				production_lines
+

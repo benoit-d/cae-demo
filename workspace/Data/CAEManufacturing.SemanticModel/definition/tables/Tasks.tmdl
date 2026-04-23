@@ -1,0 +1,83 @@
+table Tasks
+
+	column Task_ID
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: Task_ID
+
+	column 'Task Name'
+		dataType: string
+		sourceColumn: Task_Name
+
+	column Parent_Project_ID
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Parent_Project_ID
+
+	column 'Task Type'
+		dataType: string
+		sourceColumn: Task_Type
+
+	column Milestone
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: Milestone
+
+	column 'Skill Requirement'
+		dataType: string
+		sourceColumn: Skill_Requirement
+
+	column 'Planned Start'
+		dataType: dateTime
+		sourceColumn: Modified_Planned_Start
+
+	column 'Actual Start'
+		dataType: dateTime
+		sourceColumn: Actual_Start
+
+	column 'Standard Duration'
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: Standard_Duration
+
+	column 'Actual End'
+		dataType: dateTime
+		sourceColumn: Actual_End
+
+	column 'Complete %'
+		dataType: int64
+		sourceColumn: Complete_Percentage
+
+	column 'Resource Login'
+		dataType: string
+		sourceColumn: Resource_Login
+
+	column Machine_ID
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Machine_ID
+
+	/// Total tasks
+	measure '# Tasks' = COUNTROWS(Tasks)
+		formatString: #,##0
+
+	/// Tasks completed
+	measure '# Tasks Completed' = CALCULATE(COUNTROWS(Tasks), Tasks[Complete %] = 100)
+		formatString: #,##0
+
+	/// Tasks in progress
+	measure '# Tasks In Progress' = CALCULATE(COUNTROWS(Tasks), Tasks[Complete %] > 0 && Tasks[Complete %] < 100)
+		formatString: #,##0
+
+	partition Tasks = m
+		mode: directQuery
+		source =
+			let
+				Source = SQLDB,
+				tasks = Source{[Schema="plm", Item="tasks"]}[Data]
+			in
+				tasks
+

@@ -1,0 +1,45 @@
+table Simulators
+
+	column simulator_id
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: simulator_id
+
+	column 'Simulator Model'
+		dataType: string
+		sourceColumn: simulator_model
+
+	column 'Bay Name'
+		dataType: string
+		sourceColumn: bay_name
+
+	column Status
+		dataType: string
+		sourceColumn: status
+
+	column Customer
+		dataType: string
+		sourceColumn: customer
+
+	column 'Aircraft Type'
+		dataType: string
+		sourceColumn: aircraft_type
+
+	column 'Build Start Date'
+		dataType: dateTime
+		sourceColumn: build_start_date
+
+	column 'Target Delivery Date'
+		dataType: dateTime
+		sourceColumn: target_delivery_date
+
+	partition Simulators = m
+		mode: directQuery
+		source =
+			let
+				Source = SQLDB,
+				simulators = Source{[Schema="plm", Item="simulators"]}[Data]
+			in
+				simulators
+

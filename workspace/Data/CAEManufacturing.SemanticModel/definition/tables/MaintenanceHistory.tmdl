@@ -1,0 +1,63 @@
+table 'Maintenance History'
+
+	column maintenance_id
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: maintenance_id
+
+	column machine_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: machine_id
+
+	column 'Maintenance Type'
+		dataType: string
+		sourceColumn: maintenance_type
+
+	column 'System Affected'
+		dataType: string
+		sourceColumn: system_affected
+
+	column Description
+		dataType: string
+		sourceColumn: description
+
+	column 'Reported Date'
+		dataType: dateTime
+		sourceColumn: reported_date
+
+	column 'Completed Date'
+		dataType: dateTime
+		sourceColumn: completed_date
+
+	column 'Downtime Hours'
+		dataType: double
+		sourceColumn: downtime_hours
+
+	column 'Root Cause'
+		dataType: string
+		sourceColumn: root_cause
+
+	column 'Cost USD'
+		dataType: double
+		sourceColumn: cost_usd
+
+	/// Total maintenance cost
+	measure 'Total Maintenance Cost' = SUM('Maintenance History'[Cost USD])
+		formatString: \$#,##0
+
+	/// Total downtime
+	measure 'Total Downtime Hours' = SUM('Maintenance History'[Downtime Hours])
+		formatString: #,##0.0
+
+	partition 'Maintenance History' = m
+		mode: directQuery
+		source =
+			let
+				Source = SQLDB,
+				maintenance = Source{[Schema="erp", Item="maintenance_history"]}[Data]
+			in
+				maintenance
+
