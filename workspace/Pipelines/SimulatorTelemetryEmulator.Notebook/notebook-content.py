@@ -13,16 +13,13 @@
 
 # # Simulator Telemetry - Single Batch
 # 
-# Generates ONE batch of normal sensor readings for 3 simulators and sends
-# them to the SimulatorTelemetryStream Eventstream.
+# Generates ONE batch of normal sensor readings for all machines and ingests
+# directly into the KQL Database via the Kusto streaming ingestion API.
 # 
 # **This notebook is designed to be called by a Data Pipeline on a 1-minute schedule.**
 # It does not loop or sleep - it sends one batch and exits.
 # 
-# To set up:
-# 1. Create a Data Pipeline in the workspace
-# 2. Add a Notebook activity pointing to this notebook
-# 3. Set the schedule to run every 1 minute
+# No EventHub or Eventstream needed - uses the Kusto REST API directly.
 
 # METADATA ********************
 
@@ -33,11 +30,9 @@
 
 # CELL ********************
 
-# Configuration - set the Eventstream connection string
-# Get this from: Eventstream > Custom App source > Connection String
-# Or leave empty to write to the Lakehouse staging area as fallback
-
-EVENTHUB_CONNECTION_STRING = ""  # Paste your Eventstream connection string here
+# Configuration
+# Leave KQL_URI empty to auto-discover from the Eventhouse in the workspace
+KQL_URI = ""  # e.g. "https://xyz.z0.kusto.fabric.microsoft.com"
 
 # METADATA ********************
 
@@ -114,22 +109,47 @@ for s in sensor_defs:
         "is_anomaly": False,
     })
 
-# Send to Eventstream or fallback to Lakehouse
-if EVENTHUB_CONNECTION_STRING:
-    from azure.eventhub import EventHubProducerClient, EventData
-    producer = EventHubProducerClient.from_connection_string(EVENTHUB_CONNECTION_STRING)
-    with producer:
-        batch = producer.create_batch()
-        for e in events:
-            batch.add(EventData(json.dumps(e)))
-        producer.send_batch(batch)
-    print(f"Sent {len(events)} events to Eventstream at {ts}")
+# Send to Eventhouse KQL Database via streaming ingestion
+TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
+
+# Auto-discover KQL URI from Eventhouse if not set
+if not KQL_URI:
+    eh = next((i for i in items if i.get("displayName") == "CAEManufacturingEH"), None)
+    if eh:
+        eh_props = requests.get(
+            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventhouses/{eh['id']}",
+            headers=headers
+        ).json()
+        KQL_URI = eh_props.get("properties", {}).get("queryServiceUri", "")
+        print(f"Auto-discovered KQL URI: {KQL_URI}")
+    else:
+        raise RuntimeError("CAEManufacturingEH not found and KQL_URI not set")
+
+DB_NAME = "CAEManufacturingKQLDB"
+
+# Build CSV payload for inline ingestion
+csv_lines = []
+for e in events:
+    csv_lines.append(f"{e['timestamp']},{e['machine_id']},{e['sensor_id']},{e['sensor_category']},{e['sensor_name']},{e['value']},{e['unit']},{e['alert_level']},{e['is_anomaly']}")
+
+csv_payload = "\n".join(csv_lines)
+
+# Use Kusto streaming ingestion REST API
+ingest_url = f"{KQL_URI}/v1/rest/ingest/{DB_NAME}/MachineTelemetry?streamFormat=Csv"
+ingest_headers = {
+    "Authorization": f"Bearer {TOKEN_KQL}",
+    "Content-Type": "text/csv",
+}
+ingest_resp = requests.post(ingest_url, headers=ingest_headers, data=csv_payload)
+
+if ingest_resp.status_code == 200:
+    print(f"Ingested {len(events)} telemetry events at {ts}")
 else:
-    # Fallback: write to Lakehouse staging Delta table (configure Eventstream for production)
+    print(f"Ingestion failed ({ingest_resp.status_code}): {ingest_resp.text[:300]}")
+    # Fallback: write to Lakehouse staging
     df = spark.createDataFrame(events)
     df.write.format("delta").mode("append").save(f"{BASE}/Tables/machine_telemetry_raw")
-    print(f"Wrote {len(events)} events to Lakehouse staging at {ts}")
-    print("(Set EVENTHUB_CONNECTION_STRING to route to Eventstream -> Eventhouse)")
+    print(f"Fallback: wrote {len(events)} events to Lakehouse staging")
 
 # METADATA ********************
 
