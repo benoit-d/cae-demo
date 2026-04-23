@@ -1,39 +1,31 @@
-/// Employees → Production Lines (many employees per line)
 relationship 'Employees to Production Lines'
 	fromColumn: Employees.production_line_id
 	toColumn: 'Production Lines'.production_line_id
 
-/// Machines → Production Lines (many machines per line)
 relationship 'Machines to Production Lines'
 	fromColumn: Machines.production_line_id
 	toColumn: 'Production Lines'.production_line_id
 
-/// Projects → Simulators (one project per simulator)
 relationship 'Projects to Simulators'
 	fromColumn: Projects.Simulator_ID
 	toColumn: Simulators.simulator_id
 
-/// Tasks → Projects (many tasks per project)
 relationship 'Tasks to Projects'
 	fromColumn: Tasks.Parent_Project_ID
 	toColumn: Projects.Project_ID
 
-/// Tasks → Machines (task uses a machine, nullable)
 relationship 'Tasks to Machines'
 	fromColumn: Tasks.Machine_ID
 	toColumn: Machines.machine_id
 
-/// Maintenance History → Machines (many events per machine)
 relationship 'Maintenance to Machines'
 	fromColumn: 'Maintenance History'.machine_id
 	toColumn: Machines.machine_id
 
-/// Machine Jobs → Machines (many jobs per machine)
 relationship 'Jobs to Machines'
 	fromColumn: 'Machine Jobs'.machine_id
 	toColumn: Machines.machine_id
 
-/// Machine Jobs → Projects (many jobs per project)
 relationship 'Jobs to Projects'
 	fromColumn: 'Machine Jobs'.project_id
 	toColumn: Projects.Project_ID

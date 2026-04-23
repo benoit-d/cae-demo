@@ -57,15 +57,12 @@ table Projects
 		dataType: string
 		sourceColumn: Is_Critical_Path
 
-	/// Total contract value across projects
 	measure 'Total Contract Value' = SUM(Projects[Contract Value USD])
 		formatString: \$#,##0
 
-	/// Average completion
 	measure 'Avg Completion %' = AVERAGE(Projects[Complete %])
 		formatString: 0.0%
 
-	/// Count of active projects
 	measure '# Projects' = COUNTROWS(Projects)
 		formatString: #,##0
 

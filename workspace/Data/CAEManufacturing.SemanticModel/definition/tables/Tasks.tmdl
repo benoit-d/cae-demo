@@ -60,15 +60,12 @@ table Tasks
 		summarizeBy: none
 		sourceColumn: Machine_ID
 
-	/// Total tasks
 	measure '# Tasks' = COUNTROWS(Tasks)
 		formatString: #,##0
 
-	/// Tasks completed
 	measure '# Tasks Completed' = CALCULATE(COUNTROWS(Tasks), Tasks[Complete %] = 100)
 		formatString: #,##0
 
-	/// Tasks in progress
 	measure '# Tasks In Progress' = CALCULATE(COUNTROWS(Tasks), Tasks[Complete %] > 0 && Tasks[Complete %] < 100)
 		formatString: #,##0
 

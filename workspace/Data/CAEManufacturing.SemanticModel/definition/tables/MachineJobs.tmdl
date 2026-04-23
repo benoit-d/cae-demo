@@ -56,7 +56,6 @@ table 'Machine Jobs'
 		dataType: dateTime
 		sourceColumn: due_date
 
-	/// Total queued jobs
 	measure '# Jobs' = COUNTROWS('Machine Jobs')
 		formatString: #,##0
 

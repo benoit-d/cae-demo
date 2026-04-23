@@ -60,11 +60,9 @@ table Employees
 		summarizeBy: none
 		sourceColumn: production_line_id
 
-	/// Full display name
 	measure 'Employee Name' = SELECTEDVALUE(Employees[First Name]) & " " & SELECTEDVALUE(Employees[Last Name])
 		formatString: 0
 
-	/// Total headcount
 	measure '# Employees' = COUNTROWS(Employees)
 		formatString: #,##0
 

@@ -52,7 +52,6 @@ table Machines
 		dataType: double
 		sourceColumn: tolerance_mm
 
-	/// Total machine count
 	measure '# Machines' = COUNTROWS(Machines)
 		formatString: #,##0
 
