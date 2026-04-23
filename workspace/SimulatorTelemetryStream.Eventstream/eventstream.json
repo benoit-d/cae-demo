@@ -11,25 +11,7 @@
       }
     }
   ],
-  "destinations": [
-    {
-      "id": "b0b0b0b0-1111-2222-3333-444455556666",
-      "name": "Eventhouse",
-      "type": "Eventhouse",
-      "properties": {
-        "dataIngestionMode": "ProcessedIngestion",
-        "workspaceId": "00000000-0000-0000-0000-000000000000",
-        "itemId": "a1b2c3d4-1111-2222-3333-aabbccddeeff",
-        "databaseName": "CAEManufacturingKQLDB",
-        "tableName": "MachineTelemetry",
-        "inputSerialization": {
-          "type": "Json",
-          "properties": { "encoding": "UTF8" }
-        }
-      },
-      "inputNodes": [{ "name": "SimulatorTelemetryStream-stream" }]
-    }
-  ],
+  "destinations": [],
   "streams": [
     {
       "name": "SimulatorTelemetryStream-stream",
