@@ -1,4 +1,4 @@
-﻿table tasks
+table tasks
 	lineageTag: bbbc8861-b321-4094-8b78-5bfd21568765
 	sourceLineageTag: [plm].[tasks]
 
@@ -163,30 +163,22 @@
 
 		annotation SummarizationSetBy = Automatic
 
-	column Calculated_Start_Date
+	column Calculated_Start_Date = COALESCE(tasks[Actual_Start], tasks[Modified_Planned_Start], tasks[Initial_Planned_Start])
 		dataType: dateTime
 		formatString: General Date
+		isDataTypeInferred
 		summarizeBy: none
-		sourceColumn: Calculated_Start_Date
 
-	column Calculated_End_Date
+	column Calculated_End_Date = COALESCE(tasks[Actual_End], tasks[Actual_Start] + tasks[Standard_Duration], tasks[Modified_Planned_Start] + tasks[Standard_Duration], tasks[Initial_Planned_Start] + tasks[Standard_Duration])
 		dataType: dateTime
 		formatString: General Date
+		isDataTypeInferred
 		summarizeBy: none
-		sourceColumn: Calculated_End_Date
 
-	measure 'Calculated Start Date' = 
-		VAR _start = COALESCE(tasks[Actual_Start], tasks[Modified_Planned_Start], tasks[Initial_Planned_Start])
-		RETURN _start
-		formatString: General Date
-
-	measure 'Calculated End Date' = 
-		VAR _start = COALESCE(tasks[Actual_Start], tasks[Modified_Planned_Start], tasks[Initial_Planned_Start])
-		VAR _end = COALESCE(tasks[Actual_End], _start + tasks[Standard_Duration])
-		RETURN _end
-		formatString: General Date
-
-	measure 'Is Milestone' = IF(tasks[Milestone] = 1, TRUE(), FALSE())
+	column Is_Milestone = IF(tasks[Milestone] = 1, TRUE(), FALSE())
+		dataType: boolean
+		isDataTypeInferred
+		summarizeBy: none
 
 	partition tasks = entity
 		mode: directLake
@@ -194,5 +186,3 @@
 			entityName: tasks
 			schemaName: plm
 			expressionSource: 'DirectLake - CAEManufacturing_SQLDB'
-
-

@@ -1,0 +1,17 @@
+=== SQL Database Fix Script ===
+Workspace: 161c43a4-6a14-4b8f-81eb-070f0981a609
+Database: CAEManufacturing_SQLDB
+Database Item ID: 6c31cad3-74a3-4eae-91f3-e2a4ed845e7e
+
+=== STEP 1: Check current column state ===
+
+--- Check columns ---
+Query: SELECT name, type_name(user_type_id) as type_name, is_computed 
+FROM sys.columns 
+WHERE object_id = OBJECT_ID('plm.tasks') 
+AND name IN ('Calculated_Start_Date', 'Calculated_End_Date', 'Is_Milestone')
+Invoke-WebRequest: C:\Repo\cae-demo\fix_sql_v2.ps1:36:17
+Line |
+  36 |  . $response = Invoke-WebRequest -Uri $sqlEndpoint -Headers $headers -Me .
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     |  {   "requestId": "422c204c-5f67-4073-827b-bdc0b98cc496",   "errorCode": "EntityNotFound",   "message": "The requested resource could not be found",   "isRetriable": false }

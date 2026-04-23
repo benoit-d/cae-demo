@@ -1,0 +1,23 @@
+model Model
+	culture: en-US
+	directLakeBehavior: Automatic
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["DirectLake - CAEManufacturing_SQLDB"]
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["DirectLakeOnOneLakeInWeb","WebModelingEdit"]
+
+ref table employees
+ref table production_lines
+ref table machines
+ref table machine_jobs
+ref table simulators
+ref table maintenance_history
+ref table projects
+ref table tasks

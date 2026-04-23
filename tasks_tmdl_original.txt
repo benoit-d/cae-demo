@@ -1,4 +1,4 @@
-﻿table tasks
+table tasks
 	lineageTag: bbbc8861-b321-4094-8b78-5bfd21568765
 	sourceLineageTag: [plm].[tasks]
 
@@ -166,14 +166,28 @@
 	column Calculated_Start_Date
 		dataType: dateTime
 		formatString: General Date
+		sourceLineageTag: Calculated_Start_Date
 		summarizeBy: none
 		sourceColumn: Calculated_Start_Date
+
+		annotation SummarizationSetBy = Automatic
 
 	column Calculated_End_Date
 		dataType: dateTime
 		formatString: General Date
+		sourceLineageTag: Calculated_End_Date
 		summarizeBy: none
 		sourceColumn: Calculated_End_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Is_Milestone
+		dataType: boolean
+		sourceLineageTag: Is_Milestone
+		summarizeBy: none
+		sourceColumn: Is_Milestone
+
+		annotation SummarizationSetBy = Automatic
 
 	partition tasks = entity
 		mode: directLake
