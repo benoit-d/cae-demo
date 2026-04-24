@@ -156,6 +156,8 @@ else:
 
     if existing_kqldb:
         print(f"KQL Database '{db_name}' already exists: {existing_kqldb['id']}")
+        KQL_DB_ID = existing_kqldb["id"]
+        KQL_DB_DISPLAY_NAME = existing_kqldb.get("displayName", db_name)
         KQL_SETUP_OK = True
     else:
         print(f"Creating KQL Database '{db_name}'...")
@@ -200,6 +202,14 @@ else:
                 if status == "succeeded":
                     print(f"  KQL Database created with schema.")
                     KQL_SETUP_OK = True
+                    # Fetch the newly created KQL DB item ID
+                    items_resp2 = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=headers)
+                    items = items_resp2.json().get("value", [])
+                    new_kqldb = next((i for i in items if i.get("displayName") == db_name and i.get("type") == "KQLDatabase"), None)
+                    KQL_DB_ID = new_kqldb["id"] if new_kqldb else None
+                    KQL_DB_DISPLAY_NAME = db_name
+                    if KQL_DB_ID:
+                        print(f"  KQL Database ID: {KQL_DB_ID}")
                 else:
                     detail = poll_resp.json().get("error", {}).get("message", poll_resp.text[:300])
                     print(f"  KQL Database creation ended with status: {status}")
@@ -228,9 +238,12 @@ ES_SETUP_OK = False
 
 if not eh:
     print("WARNING: Eventhouse not found. Skipping EventStream setup.")
+elif 'KQL_DB_ID' not in dir() or not KQL_DB_ID:
+    print("WARNING: KQL Database ID not available. Skipping EventStream setup.")
 else:
-    eventhouse_id = eh["id"]
-    db_name = "CAEManufacturingKQLDB"
+    kql_db_id = KQL_DB_ID
+    kql_db_display_name = KQL_DB_DISPLAY_NAME
+    print(f"Using KQL Database ID: {kql_db_id} ({kql_db_display_name})")
 
     eventstream_configs = [
         {
@@ -273,8 +286,8 @@ else:
                     "properties": {
                         "dataIngestionMode": "ProcessedIngestion",
                         "workspaceId": WORKSPACE_ID,
-                        "itemId": eventhouse_id,
-                        "databaseName": db_name,
+                        "itemId": kql_db_id,
+                        "databaseName": kql_db_display_name,
                         "tableName": es_cfg["table_name"],
                         "inputSerialization": {"type": "Json", "properties": {"encoding": "UTF8"}},
                     },
