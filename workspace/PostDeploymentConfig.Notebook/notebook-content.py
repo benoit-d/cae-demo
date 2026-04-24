@@ -126,7 +126,7 @@ else:
 .create-merge table MachineTelemetry (
     timestamp: datetime, machine_id: string, sensor_id: string,
     sensor_category: string, sensor_name: string, value: real,
-    unit: string, alert_level: string, is_anomaly: bool)
+    unit: string, alert_level: string, is_anomaly: string)
 
 .create-merge table ClockInEvents (
     timestamp: datetime, event_type: string, employee_email: string,
@@ -135,6 +135,10 @@ else:
 
 .alter table MachineTelemetry policy streamingingestion enable
 .alter table ClockInEvents policy streamingingestion enable
+
+.create-or-alter table MachineTelemetry ingestion json mapping 'MachineTelemetry_mapping' '[{"column":"timestamp","path":"$.timestamp","datatype":"datetime"},{"column":"machine_id","path":"$.machine_id","datatype":"string"},{"column":"sensor_id","path":"$.sensor_id","datatype":"string"},{"column":"sensor_category","path":"$.sensor_category","datatype":"string"},{"column":"sensor_name","path":"$.sensor_name","datatype":"string"},{"column":"value","path":"$.value","datatype":"real"},{"column":"unit","path":"$.unit","datatype":"string"},{"column":"alert_level","path":"$.alert_level","datatype":"string"},{"column":"is_anomaly","path":"$.is_anomaly","datatype":"string"}]'
+
+.create-or-alter table ClockInEvents ingestion json mapping 'ClockInEvents_mapping' '[{"column":"timestamp","path":"$.timestamp","datatype":"datetime"},{"column":"event_type","path":"$.event_type","datatype":"string"},{"column":"employee_email","path":"$.employee_email","datatype":"string"},{"column":"employee_name","path":"$.employee_name","datatype":"string"},{"column":"employee_id","path":"$.employee_id","datatype":"string"},{"column":"department","path":"$.department","datatype":"string"},{"column":"project_id","path":"$.project_id","datatype":"string"},{"column":"task_id","path":"$.task_id","datatype":"string"},{"column":"simulator_id","path":"$.simulator_id","datatype":"string"},{"column":"details","path":"$.details","datatype":"string"}]'
 """
 
     # Build the KQL Database definition
@@ -251,12 +255,14 @@ else:
             "source_name": "TelemetryInput",
             "dest_name": "TelemetryToEventhouse",
             "table_name": "MachineTelemetry",
+            "mapping_name": "MachineTelemetry_mapping",
         },
         {
             "name": "ClockInEventStream",
             "source_name": "ClockInInput",
             "dest_name": "ClockInToEventhouse",
             "table_name": "ClockInEvents",
+            "mapping_name": "ClockInEvents_mapping",
         },
     ]
 
@@ -289,6 +295,7 @@ else:
                         "itemId": kql_db_id,
                         "databaseName": kql_db_display_name,
                         "tableName": es_cfg["table_name"],
+                        "mappingRuleName": es_cfg["mapping_name"],
                         "inputSerialization": {"type": "Json", "properties": {"encoding": "UTF8"}},
                     },
                     "inputNodes": [{"name": stream_name}],
