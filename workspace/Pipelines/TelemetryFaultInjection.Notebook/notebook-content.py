@@ -5,8 +5,7 @@
 # META {
 # META   "kernel_info": {
 # META     "name": "synapse_pyspark"
-# META   },
-# META   "dependencies": {}
+# META   }
 # META }
 
 # MARKDOWN ********************
@@ -52,10 +51,11 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "azure-even
 # === CONFIGURATION ===
 TARGET_MACHINE = "CNC-003"      # Machine to inject faults on
 INTERVAL = 60                   # Seconds between batches
-DURATION_MIN = 10.0             # Total fault injection duration in minutes
+DURATION_MIN = 6.0              # Total fault injection duration in minutes
 
 # EventStream connection string from the Custom Endpoint source.
-# Leave empty to auto-discover from workspace items.
+# Must be set manually after fabric-cicd redeploys since EventStream endpoints
+# are rotated. Copy from TelemetryEventStream → Custom Endpoint source in UI.
 EVENTSTREAM_CONNECTION_STRING = ""
 EVENTSTREAM_NAME = "TelemetryEventStream"
 
@@ -123,13 +123,15 @@ if not EVENTSTREAM_CONNECTION_STRING:
         f"copy the Event Hub connection string into EVENTSTREAM_CONNECTION_STRING."
     )
 
-# Fault profile: spindle bearing failure on CNC mill
+# Fault profile: spindle bearing failure on CNC mill.
+# Rates are tuned so at least one sensor crosses Critical thresholds
+# (vib>0.20g, temp>70C, power>26kW, coolant<3LPM) within ~5 minutes.
 FAULTS = {
-    "Spindle Vibration":       {"start": 0,  "rate": 0.015},    # g increase per minute
-    "Spindle Temperature":     {"start": 1,  "rate": 3.0},      # C rise per minute
-    "Coolant Flow Rate":       {"start": 3,  "rate": -1.5},     # LPM drop per minute
-    "Axis Position Accuracy":  {"start": 5,  "rate": 0.001},    # mm drift per minute
-    "Power Consumption":       {"start": 2,  "rate": 2.0},      # kW rise per minute
+    "Spindle Vibration":       {"start": 0,  "rate": 0.04},     # g increase per minute
+    "Spindle Temperature":     {"start": 1,  "rate": 7.0},      # C rise per minute
+    "Coolant Flow Rate":       {"start": 2,  "rate": -2.5},     # LPM drop per minute
+    "Axis Position Accuracy":  {"start": 3,  "rate": 0.003},    # mm drift per minute
+    "Power Consumption":       {"start": 1,  "rate": 4.0},      # kW rise per minute
 }
 
 # METADATA ********************
@@ -203,6 +205,21 @@ except KeyboardInterrupt:
 
 print(f"\nFault injection complete. {batch_num} batches sent to {EVENTSTREAM_NAME}.")
 print(f"Check alerts: MachineHealthAlerts() | where machine_id == '{TARGET_MACHINE}'")
+
+# Release Spark resources so the notebook (and its parent pipeline) can end
+# instead of holding the session open until idle timeout.
+try:
+    spark.stop()
+except Exception:
+    pass
+try:
+    notebookutils.session.stop()
+except Exception:
+    try:
+        import mssparkutils
+        mssparkutils.session.stop()
+    except Exception:
+        pass
 
 # METADATA ********************
 
