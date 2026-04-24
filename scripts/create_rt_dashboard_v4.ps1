@@ -51,10 +51,6 @@ $tcCNC = @{
 }
 
 $queries = @(
-    (Q "q1" "MachineTelemetry | where timestamp between (_startTime .. _endTime) | summarize machines=dcount(machine_id) | project strcat(machines, ' / 20')")
-    (Q "q2" "MachineTelemetry | where timestamp between (_startTime .. _endTime) | count")
-    (Q "q3" "MachineTelemetry | where timestamp between (_startTime .. _endTime) | where alert_level == 'Critical' | count")
-    (Q "q4" "MachineTelemetry | where timestamp between (_startTime .. _endTime) | where alert_level == 'Warning' | count")
     (Q "q5" "MachineTelemetry | where timestamp between (_startTime .. _endTime) | summarize events=count() by bin(timestamp, 1m) | render timechart with (ytitle='Events/min')")
     (Q "q6" "MachineTelemetry | where timestamp between (_startTime .. _endTime) | summarize count() by alert_level | render piechart")
     (Q "q7" "MachineTelemetry | where timestamp between (_startTime .. _endTime) | where alert_level in ('Warning','Critical') | summarize critical=countif(alert_level=='Critical'), warning=countif(alert_level=='Warning') by machine_id | order by critical desc | render barchart")
