@@ -11,21 +11,18 @@
 
 # MARKDOWN ********************
 
-# # ML Anomaly Detection — Baseline & Scoring
+# # ML Anomaly Detection — Baseline, Scoring & Notification
 # 
-# Builds per-machine/sensor statistical baselines from historical telemetry,
-# then scores the latest readings using a Z-score + composite approach.
-# Anomalies are written to the `AnomalyAlerts` table in the KQL Database
-# for the Activator to monitor.
+# Triggered by the **Fabric Activator** when sensor `alert_level` becomes `Critical`
+# on the TelemetryEventStream. Can also be run manually for testing.
 # 
-# **Designed to run on a schedule (every 5 minutes) via a Data Pipeline.**
-# 
-# ## Approach
+# ## Flow
 # 1. Query last 24h of telemetry from KQL to compute baseline stats (mean, stddev)
 # 2. Query last 5min of telemetry and compute Z-scores per sensor
 # 3. Combine Z-scores into a composite anomaly confidence per machine
-# 4. Write rows with confidence >= 50% to `AnomalyAlerts` table
-# 5. The Activator monitors `AnomalyAlerts` and triggers when confidence >= 80%
+# 4. Write rows with confidence >= 50% to `AnomalyAlerts` table in KQL
+# 5. Call a **Foundry agent** for AI root-cause analysis and recommendations
+# 6. Send a **Teams notification** with the alert details and AI analysis
 
 # METADATA ********************
 
@@ -41,6 +38,12 @@ KQL_URI = ""  # Leave empty to auto-discover from Eventhouse
 BASELINE_WINDOW = "24h"   # How far back to compute baseline stats
 SCORING_WINDOW = "5m"     # Recent window to score
 ALERT_THRESHOLD = 50.0    # Minimum confidence % to write to AnomalyAlerts
+
+# Teams Incoming Webhook URL — create one in your Teams channel
+TEAMS_WEBHOOK_URL = ""  # e.g. "https://outlook.office.com/webhook/..."
+
+# Foundry Agent endpoint (optional — for AI root-cause analysis)
+FOUNDRY_AGENT_ENDPOINT = ""  # e.g. "https://your-foundry-endpoint.azurewebsites.net"
 
 # METADATA ********************
 
@@ -368,7 +371,160 @@ if anomaly_alerts:
 else:
     print("\nNo anomalies above threshold — all machines nominal")
 
-print(f"\nDone. Next run in {SCORING_WINDOW}.")
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 6: Invoke Foundry Agent for AI root-cause analysis
+critical_alerts = [a for a in anomaly_alerts if a["anomaly_confidence_pct"] >= 70.0]
+agent_analysis = None
+
+if critical_alerts and FOUNDRY_AGENT_ENDPOINT:
+    print("Invoking Foundry Agent for root-cause analysis...")
+
+    agent_context = {
+        "alerts": critical_alerts,
+        "question": (
+            "Analyze these machine health alerts for CAE flight simulator manufacturing. "
+            "For each alert, provide: (1) likely root cause, (2) recommended immediate action, "
+            "(3) impact on production schedule, (4) recommended spare parts to have ready."
+        ),
+    }
+
+    try:
+        agent_resp = requests.post(
+            f"{FOUNDRY_AGENT_ENDPOINT}/api/agent/analyze",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {TOKEN_FABRIC}",
+            },
+            json=agent_context,
+            timeout=60,
+        )
+        if agent_resp.status_code == 200:
+            agent_analysis = agent_resp.json()
+            print("\n=== AI Root-Cause Analysis ===")
+            print(json.dumps(agent_analysis, indent=2))
+        else:
+            print(f"Agent response: {agent_resp.status_code} {agent_resp.text[:200]}")
+    except Exception as e:
+        print(f"Agent call failed: {e}")
+elif critical_alerts:
+    print("FOUNDRY_AGENT_ENDPOINT not configured — skipping AI analysis")
+else:
+    print("No critical alerts — skipping AI analysis")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 7: Send Teams notification
+def build_adaptive_card(alerts, analysis=None):
+    """Build a Teams Adaptive Card for machine health alerts."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    severity_color = {
+        "Critical": "attention", "High": "warning",
+        "Medium": "accent", "Low": "good",
+    }
+
+    facts = []
+    for a in alerts[:5]:
+        color = severity_color.get(a["severity"], "default")
+        rul_text = f" | RUL: {a['estimated_rul_hours']}h" if a["estimated_rul_hours"] > 0 else ""
+        facts.append({
+            "type": "FactSet",
+            "facts": [
+                {"title": "Machine", "value": a["machine_id"]},
+                {"title": "Alert", "value": a["anomaly_type"]},
+                {"title": "Confidence", "value": f"{a['anomaly_confidence_pct']}%{rul_text}"},
+                {"title": "Severity", "value": a["severity"]},
+            ]
+        })
+        if a.get("description"):
+            facts.append({
+                "type": "TextBlock", "text": a["description"],
+                "wrap": True, "size": "small", "color": color,
+            })
+        facts.append({"type": "TextBlock", "text": "---", "spacing": "small"})
+
+    body = [
+        {
+            "type": "TextBlock",
+            "text": "⚠️ CAE Manufacturing — Machine Health Alert",
+            "weight": "bolder", "size": "large",
+            "color": "attention" if any(a["severity"] == "Critical" for a in alerts) else "warning",
+        },
+        {
+            "type": "TextBlock",
+            "text": f"{len(alerts)} machine(s) with anomalies detected at {now}",
+            "wrap": True, "spacing": "small",
+        },
+    ] + facts
+
+    if analysis:
+        body.append({
+            "type": "TextBlock",
+            "text": "🤖 **AI Root-Cause Analysis**",
+            "weight": "bolder", "spacing": "medium",
+        })
+        body.append({
+            "type": "TextBlock",
+            "text": json.dumps(analysis, indent=2, default=str)[:2000],
+            "wrap": True, "fontType": "monospace", "size": "small",
+        })
+
+    body.append({
+        "type": "ActionSet",
+        "actions": [{
+            "type": "Action.OpenUrl",
+            "title": "Open Fabric Dashboard",
+            "url": f"https://app.fabric.microsoft.com/groups/{WORKSPACE_ID}",
+        }]
+    })
+
+    return {
+        "type": "message",
+        "attachments": [{
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard", "version": "1.4", "body": body,
+            }
+        }]
+    }
+
+if critical_alerts and TEAMS_WEBHOOK_URL:
+    card = build_adaptive_card(critical_alerts, agent_analysis)
+    teams_resp = requests.post(
+        TEAMS_WEBHOOK_URL, headers={"Content-Type": "application/json"},
+        json=card, timeout=10,
+    )
+    if teams_resp.status_code in (200, 202):
+        print(f"Teams notification sent ({len(critical_alerts)} alerts)")
+    else:
+        print(f"Teams notification failed: {teams_resp.status_code} {teams_resp.text[:200]}")
+elif critical_alerts:
+    print("TEAMS_WEBHOOK_URL not configured — skipping Teams notification")
+    print("Alert summary:")
+    for a in critical_alerts:
+        print(f"  {a['severity']:8s} {a['machine_id']:8s} {a['anomaly_confidence_pct']:5.1f}%  {a['anomaly_type']}")
+else:
+    print("No critical alerts — nothing to send")
+
+print(f"\n{'='*60}")
+print(f"  ANOMALY DETECTION & NOTIFICATION COMPLETE")
+print(f"{'='*60}")
 
 # METADATA ********************
 

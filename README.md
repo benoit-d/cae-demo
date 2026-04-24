@@ -29,28 +29,32 @@ The AI agent reasons across all data sources to:
   Workforce             │   ┌───────┴──────┐    │ ┌────────────────┐   │
   Clock-in/out     ────►│   │  Eventhouse   │   └►│  Activator     │   │
   Task events           │   │  (KQL DB)     │     │  (Reflex)      │   │
-  (Event Hub SDK)       │   │  Machine      │     │  Real-time     │   │
-                        │   │  Telemetry    │     │  anomaly rules │   │
+  (Event Hub SDK)       │   │  Machine      │     │  alert_level   │   │
+                        │   │  Telemetry    │     │  = Critical    │   │
   ┌──────────────────┐  │   │  ClockIn      │     └───────┬────────┘   │
   │ClockInEventStream│──│──►│  Events       │             │            │
-  │(Custom Endpoint) │  │   │  Anomaly      │             ▼            │
-  └──────────────────┘  │   │  Alerts       │     ┌────────────────┐   │
-                        │   └──────┬────────┘     │ AlertNotif.    │   │
-                        │          │              │ Agent          │   │
-                        │          │ 16 KQL       │ (Teams +       │   │
-                        │          │ health       │  Foundry)      │   │
-                        │          │ functions    └───────┬────────┘   │
-                        │          ▼                      │            │
-                        │   ┌─────────────────┐           ▼            │
-                        │   │ AnomalyDetection│    Microsoft Teams     │
-                        │   │ (ML Z-score)    │                        │
-  Reference Data        │   └─────────────────┘                        │
-  HR, BOM, Inventory───►│                          ┌────────────┐      │
-  Projects, Tasks       │   ┌────────────┐         │ SQL Database│     │
-                        │   │ Power BI   │         │ hr.* erp.*  │     │
-                        │   │ Dashboards │◄────────│ plm.* mes.* │     │
-                        │   │ Gantt Chart│         └─────────────┘     │
-                        │   └────────────┘                             │
+  │(Custom Endpoint) │  │   │  Anomaly      │     triggers│            │
+  └──────────────────┘  │   │  Alerts       │             ▼            │
+                        │   └──────┬────────┘     ┌────────────────┐   │
+                        │          │              │ AnomalyDetect. │   │
+                        │          │ 16 KQL       │ (ML Z-score)   │   │
+                        │          │ health       └───────┬────────┘   │
+                        │          │ functions            │            │
+                        │          ▼                      ▼            │
+                        │                         ┌────────────────┐   │
+  Reference Data        │                         │ Foundry Agent  │   │
+  HR, BOM, Inventory───►│                         │ (root cause +  │   │
+  Projects, Tasks       │   ┌────────────┐        │  Teams notif.) │   │
+                        │   │ Power BI   │        └───────┬────────┘   │
+                        │   │ Dashboards │◄──┐            │            │
+                        │   │ Gantt Chart│   │            ▼            │
+                        │   └────────────┘   │     Microsoft Teams     │
+                        │                    │                         │
+                        │              ┌─────┴───────┐                 │
+                        │              │ SQL Database │                 │
+                        │              │ hr.* erp.*   │                 │
+                        │              │ plm.* mes.*  │                 │
+                        │              └──────────────┘                 │
                         └──────────────────────────────────────────────┘
 ```
 
@@ -170,7 +174,6 @@ cae-demo/
 │   ├── Pipelines/                                # Scheduled data pipelines
 │   │   ├── TelemetryPipeline.DataPipeline/       # 1-min telemetry ingestion
 │   │   ├── ClockInPipeline.DataPipeline/         # 1-min clock-in ingestion
-│   │   ├── AlertPipeline.DataPipeline/           # 5-min anomaly detection + notification
 │   │   ├── SimulatorTelemetryEmulator.Notebook/  # Single-shot telemetry emitter
 │   │   ├── ClockInEventEmulator.Notebook/        # Single-shot clock-in emitter
 │   │   └── TelemetryFaultInjection.Notebook/     # Manual — CNC-001 bearing failure demo
@@ -358,35 +361,35 @@ The **PostDeploymentConfig** notebook automatically creates a `CAEManufacturing`
 
 ### 7. Configure Activator
 
-A **MachineHealthActivator** Reflex item is already created in the RTI folder. Configure it in the Fabric UI:
+Set up the Activator to detect anomalies in real-time and trigger ML analysis:
 
-1. Open the **TelemetryEventStream** → click the default stream node
-2. Add an **Activator destination** from the EventStream canvas (or create a new Activator)
-3. Set the object ID to `machine_id`
-4. Create a rule on `alert_level`: trigger when value **Becomes** `"Critical"`
-5. Action: Send a Teams notification or invoke the `AlertNotificationAgent` notebook
+1. Open the **TelemetryEventStream** in the Fabric UI
+2. Click the default stream node → **Add destination** → select **Activator**
+3. Create a new Activator (or select an existing one)
+4. Set the **object ID** to `machine_id`
+5. Create a rule: `alert_level` **Becomes** `"Critical"`
+6. Set the **action** to **Run Notebook** → select `AnomalyDetection`
 
-Alternatively, connect the Activator to the `AnomalyAlerts` KQL table via a **Real-Time Dashboard**:
-1. Create a Real-Time Dashboard tile querying `CriticalAnomalyAlerts()`
-2. Set Alert → condition: `anomaly_confidence_pct >= 80`
+When a sensor reading arrives with `alert_level = Critical`, the Activator triggers the **AnomalyDetection** notebook which:
+1. Computes ML baselines (24h) and Z-score anomaly confidence
+2. Writes alerts to the `AnomalyAlerts` KQL table
+3. Calls the **Foundry agent** for AI root-cause analysis and recommendations
+4. Sends a **Teams Adaptive Card** with alert details + AI analysis
 
-The **AlertPipeline** (5-min schedule) also runs the full detection + notification chain automatically:
-1. **AnomalyDetection** notebook computes Z-score baselines and writes alerts to `AnomalyAlerts`
-2. **AlertNotificationAgent** reads alerts and sends Teams Adaptive Cards
-
-To enable Teams notifications, set `TEAMS_WEBHOOK_URL` in the AlertNotificationAgent notebook config cell.
-To enable AI root-cause analysis, set `FOUNDRY_AGENT_ENDPOINT`.
+To enable Teams notifications, set `TEAMS_WEBHOOK_URL` in the AnomalyDetection notebook config cell.
+To enable AI root-cause analysis, set `FOUNDRY_AGENT_ENDPOINT` in the same config cell.
 
 ### 8. Demo
 
 1. **Start telemetry**: TelemetryPipeline runs every 1 min, sending sensor data from all 20 machines to TelemetryEventStream → Eventhouse
 2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-001 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)
 3. **Watch detection**: The 16 KQL health scoring functions produce composite scores in real-time. `CNC_BearingWearScore` will climb from ~0.2 to 0.99 as the fault progresses
-4. **Activator fires**: When `alert_level` becomes `Critical`, the Activator rule triggers automatically via the EventStream
-5. **ML scoring**: `AnomalyDetection` notebook (or AlertPipeline) runs Z-score analysis and writes to `AnomalyAlerts` with confidence %, RUL estimate, and severity
-6. **Notification**: `AlertNotificationAgent` sends a Teams Adaptive Card with machine ID, failure mode, confidence, and a link to the Fabric dashboard
-7. **AI reasoning**: Open `CapacityManagementAgent` to see the agent query both SQL DB and KQL Eventhouse for scheduling impact, worker reassignment, and parts availability
-8. **Power BI**: View the Gantt chart from `plm.projects` + `plm.tasks` and the real-time machine health dashboard
+4. **Activator fires**: When `alert_level` becomes `Critical`, the Activator triggers the `AnomalyDetection` notebook automatically
+5. **ML scoring**: The notebook computes Z-score baselines and writes alerts to `AnomalyAlerts` with confidence %, RUL estimate, and severity
+6. **Foundry agent**: The notebook calls the Foundry agent for root-cause analysis, impact assessment, and recommended actions
+7. **Teams notification**: An Adaptive Card is sent to Teams with machine ID, failure mode, confidence, AI analysis, and a link to the Fabric dashboard
+8. **AI reasoning**: Open `CapacityManagementAgent` to see the agent query both SQL DB and KQL Eventhouse for scheduling impact, worker reassignment, and parts availability
+9. **Power BI**: View the Gantt chart from `plm.projects` + `plm.tasks` and the real-time machine health dashboard
 
 ![Gantt Chart](docs/screenshots/07-gantt-powerbi.png)
 
@@ -413,6 +416,7 @@ Run `python scripts/validate_data.py` to verify.
 | Eventhouse for telemetry + events + anomaly alerts | Sub-second queries on time-series data, native KQL, real-time scoring functions |
 | Lakehouse as staging only | CSVs upload there during deployment, then get loaded into SQL DB |
 | Single-shot notebooks for data pipelines | No long-running Spark executors; pipeline calls notebook every 1 min |
+| EventStream → Activator → ML notebook | Activator detects threshold breach in real-time, triggers ML for deep analysis + Foundry agent for AI reasoning |
 | Constraints added after bulk insert | Avoids FK ordering issues during initial data load |
 | Semantic model created via REST API with TMDL | fabric-cicd doesn't pass `format=TMDL`; REST API supports full DirectLake TMDL definitions including relationships |
 | Separate simulators (products) from machines (equipment) | Telemetry monitors manufacturing machines, not the simulators being built |
