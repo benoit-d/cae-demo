@@ -347,7 +347,7 @@ The **PostDeploymentConfig** notebook automatically creates a `CAEManufacturing`
 
 The **CreateOntology** notebook (in `workspace/RTI/`) builds a `CAEManufacturingOntology` Fabric Ontology item via the REST API. It is invoked automatically by PostDeploymentConfig as **Step 10** when `create_ontology = True` (default) in its config cell — set it to `False` if your capacity does not have the Ontology preview enabled.
 
-**Entity types (8):** `Machine`, `Employee`, `ProductionLine`, `Project`, `Simulator`, `Task`, `MaintenanceHistory`, `MachineJob` — all bound (NonTimeSeries) to the corresponding SQL Database tables.
+**Entity types (8):** `Machine`, `Employee`, `ProductionLine`, `Project`, `Simulator`, `Task`, `MaintenanceHistory`, `MachineJob` — all bound (NonTimeSeries) directly to the **Fabric SQL Database** (`CAEManufacturing_SQLDB`, `erp` schema). Verified: the Ontology data-binding API accepts a `SQLDatabase` item directly as `sourceType: "LakehouseTable"` with `sourceSchema: "erp"` — no intermediate lakehouse shortcut required.
 
 **Relationships (8 — active verbs):**
 - `EmployeeWorksOnProductionLine` (Employee → ProductionLine)
