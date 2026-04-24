@@ -14,10 +14,10 @@
 # # Clock-In Events - Single Batch
 # 
 # Generates ONE batch of workforce events (badge in/out, task start/complete)
-# and ingests directly into the KQL Database via the Kusto streaming ingestion API.
+# and sends them to the **ClockInEventStream** via its Event Hub-compatible
+# custom endpoint. The EventStream routes data to the Eventhouse KQL Database.
 # 
-# **Designed to be called by a Data Pipeline** (or run manually for demos).
-# No EventHub or Eventstream needed.
+# **Designed to be called by ClockInPipeline** (or run manually for demos).
 
 # METADATA ********************
 
@@ -28,7 +28,10 @@
 
 # CELL ********************
 
-KQL_URI = ""  # Leave empty to auto-discover from Eventhouse
+# Configuration — EventStream connection string from the Custom Endpoint source.
+# Leave empty to auto-discover from workspace items.
+EVENTSTREAM_CONNECTION_STRING = ""
+EVENTSTREAM_NAME = "ClockInEventStream"
 
 # METADATA ********************
 
@@ -39,7 +42,7 @@ KQL_URI = ""  # Leave empty to auto-discover from Eventhouse
 
 # CELL ********************
 
-import json, random, os, requests
+import json, random, os, requests, base64
 from datetime import datetime, timezone
 import notebookutils
 
@@ -71,6 +74,33 @@ workers = [e for e in employees if e["employee_id"] != "EMP-050"]
 in_progress = [t for t in tasks if t.get("Complete_Percentage") and 0 < int(t["Complete_Percentage"]) < 100]
 
 print(f"{len(workers)} workers, {len(in_progress)} in-progress tasks")
+
+# Auto-discover EventStream connection string if not set
+if not EVENTSTREAM_CONNECTION_STRING:
+    es = next((i for i in items if i.get("displayName") == EVENTSTREAM_NAME and i.get("type") == "Eventstream"), None)
+    if es:
+        es_def_resp = requests.get(
+            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventstreams/{es['id']}/definition",
+            headers=headers
+        )
+        if es_def_resp.status_code == 200:
+            for part in es_def_resp.json().get("definition", {}).get("parts", []):
+                if part["path"] == "eventstream.json":
+                    es_json = json.loads(base64.b64decode(part["payload"]).decode("utf-8"))
+                    for src in es_json.get("sources", []):
+                        conn = src.get("properties", {}).get("connectionString", "")
+                        if conn:
+                            EVENTSTREAM_CONNECTION_STRING = conn
+                            print(f"Auto-discovered EventStream connection string")
+                            break
+                    break
+
+if not EVENTSTREAM_CONNECTION_STRING:
+    raise RuntimeError(
+        f"EventStream connection string not found. "
+        f"Open '{EVENTSTREAM_NAME}' in Fabric UI → Custom Endpoint source → "
+        f"copy the Event Hub connection string into EVENTSTREAM_CONNECTION_STRING."
+    )
 
 # METADATA ********************
 
@@ -113,52 +143,17 @@ for t in random.sample(in_progress, min(2, len(in_progress))):
             simulator_id=p.get("Simulator_ID", ""),
             details=f"{etype}: {t['Task_Name']}"))
 
-# Send to KQL Database via streaming ingestion
-TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
+# Send to EventStream via Event Hub SDK
+from azure.eventhub import EventHubProducerClient, EventData
 
-if not KQL_URI:
-    eh = next((i for i in items if i.get("displayName") == "CAEManufacturingEH"), None)
-    if eh:
-        eh_props = requests.get(
-            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventhouses/{eh['id']}",
-            headers=headers
-        ).json()
-        KQL_URI = eh_props.get("properties", {}).get("queryServiceUri", "")
-        print(f"Auto-discovered KQL URI: {KQL_URI}")
-    else:
-        raise RuntimeError("CAEManufacturingEH not found and KQL_URI not set")
+producer = EventHubProducerClient.from_connection_string(EVENTSTREAM_CONNECTION_STRING)
+with producer:
+    batch = producer.create_batch()
+    for ev in events:
+        batch.add(EventData(json.dumps(ev)))
+    producer.send_batch(batch)
 
-DB_NAME = "CAEManufacturingKQLDB"
-
-# Build CSV for streaming ingestion
-def esc(v):
-    s = str(v).replace('"', '""')
-    return f'"{s}"' if ',' in s or '"' in s else s
-
-csv_lines = []
-for e in events:
-    csv_lines.append(",".join([
-        e["timestamp"], esc(e["event_type"]), esc(e["employee_email"]),
-        esc(e["employee_name"]), e["employee_id"], esc(e["department"]),
-        e["project_id"], e["task_id"], e["simulator_id"], esc(e["details"])
-    ]))
-
-csv_payload = "\n".join(csv_lines)
-
-ingest_url = f"{KQL_URI}/v1/rest/ingest/{DB_NAME}/ClockInEvents?streamFormat=Csv"
-ingest_headers = {
-    "Authorization": f"Bearer {TOKEN_KQL}",
-    "Content-Type": "text/csv",
-}
-ingest_resp = requests.post(ingest_url, headers=ingest_headers, data=csv_payload)
-
-if ingest_resp.status_code == 200:
-    print(f"Ingested {len(events)} clock-in events")
-else:
-    print(f"Ingestion failed ({ingest_resp.status_code}): {ingest_resp.text[:300]}")
-    df = spark.createDataFrame(events)
-    df.write.format("delta").mode("append").save(f"{BASE}/Tables/clockin_events_raw")
-    print(f"Fallback: wrote {len(events)} events to Lakehouse staging")
+print(f"Sent {len(events)} clock-in events to {EVENTSTREAM_NAME}")
 
 # METADATA ********************
 

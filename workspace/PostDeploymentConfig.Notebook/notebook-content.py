@@ -22,6 +22,7 @@
 # 
 # Also creates:
 # - **KQL Database** inside the Eventhouse (MachineTelemetry, ClockInEvents, AnomalyAlerts tables)
+# - **EventStreams** (TelemetryEventStream, ClockInEventStream) with Custom Endpoint → Eventhouse routing
 # - **Semantic Model** (DirectLake) with 8 tables and 8 relationships
 # 
 # ## Prerequisites
@@ -220,7 +221,154 @@ else:
 
 # CELL ********************
 
-# Step 3 - Drop ALL existing SQL tables and schemas, then recreate fresh
+# Step 3 - Create EventStreams with Custom Endpoint source → Eventhouse destination
+import base64, json, time
+
+ES_SETUP_OK = False
+
+if not eh:
+    print("WARNING: Eventhouse not found. Skipping EventStream setup.")
+else:
+    eventhouse_id = eh["id"]
+    db_name = "CAEManufacturingKQLDB"
+
+    eventstream_configs = [
+        {
+            "name": "TelemetryEventStream",
+            "source_name": "TelemetryInput",
+            "dest_name": "TelemetryToEventhouse",
+            "table_name": "MachineTelemetry",
+        },
+        {
+            "name": "ClockInEventStream",
+            "source_name": "ClockInInput",
+            "dest_name": "ClockInToEventhouse",
+            "table_name": "ClockInEvents",
+        },
+    ]
+
+    all_ok = True
+    for es_cfg in eventstream_configs:
+        # Check if EventStream already exists
+        existing_es = next(
+            (i for i in items if i.get("displayName") == es_cfg["name"] and i.get("type") == "Eventstream"),
+            None,
+        )
+        if existing_es:
+            print(f"EventStream '{es_cfg['name']}' already exists: {existing_es['id']}")
+            continue
+
+        print(f"Creating EventStream '{es_cfg['name']}'...")
+
+        # Build the EventStream definition with Custom Endpoint source → Eventhouse destination
+        stream_name = f"{es_cfg['name']}-stream"
+        es_definition = {
+            "sources": [
+                {"name": es_cfg["source_name"], "type": "CustomEndpoint", "properties": {}}
+            ],
+            "destinations": [
+                {
+                    "name": es_cfg["dest_name"],
+                    "type": "Eventhouse",
+                    "properties": {
+                        "dataIngestionMode": "ProcessedIngestion",
+                        "workspaceId": WORKSPACE_ID,
+                        "itemId": eventhouse_id,
+                        "databaseName": db_name,
+                        "tableName": es_cfg["table_name"],
+                        "inputSerialization": {"type": "Json", "properties": {"encoding": "UTF8"}},
+                    },
+                    "inputNodes": [{"name": stream_name}],
+                }
+            ],
+            "streams": [
+                {
+                    "name": stream_name,
+                    "type": "DefaultStream",
+                    "properties": {},
+                    "inputNodes": [{"name": es_cfg["source_name"]}],
+                }
+            ],
+            "operators": [],
+            "compatibilityLevel": "1.0",
+        }
+
+        es_def_b64 = base64.b64encode(json.dumps(es_definition).encode("utf-8")).decode("utf-8")
+        es_props = {"retentionTimeInDays": 1, "eventThroughputLevel": "Low"}
+        es_props_b64 = base64.b64encode(json.dumps(es_props).encode("utf-8")).decode("utf-8")
+
+        # Discover RTI folder
+        rti_folder_id = None
+        try:
+            folders_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/folders", headers=headers)
+            rti_folder = next((f for f in folders_resp.json().get("value", []) if f["displayName"] == "RTI"), None)
+            if rti_folder:
+                rti_folder_id = rti_folder["id"]
+        except Exception:
+            pass
+
+        payload = {
+            "displayName": es_cfg["name"],
+            "description": f"Routes {es_cfg['table_name']} events to Eventhouse",
+            "definition": {
+                "format": "eventstream",
+                "parts": [
+                    {"path": "eventstream.json", "payload": es_def_b64, "payloadType": "InlineBase64"},
+                    {"path": "eventstreamProperties.json", "payload": es_props_b64, "payloadType": "InlineBase64"},
+                ],
+            },
+        }
+        if rti_folder_id:
+            payload["folderId"] = rti_folder_id
+
+        create_resp = requests.post(
+            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventstreams",
+            json=payload,
+            headers=headers,
+        )
+        print(f"  Status: {create_resp.status_code}")
+
+        if create_resp.status_code in (200, 201, 202):
+            if "Location" in create_resp.headers:
+                poll_url = create_resp.headers["Location"]
+                for attempt in range(20):
+                    poll_resp = requests.get(poll_url, headers=headers)
+                    status = poll_resp.json().get("status", "").lower()
+                    print(f"  Polling: {status}")
+                    if status != "running":
+                        break
+                    time.sleep(5)
+                if status == "succeeded":
+                    print(f"  EventStream '{es_cfg['name']}' created.")
+                else:
+                    detail = poll_resp.json().get("error", {}).get("message", poll_resp.text[:300])
+                    print(f"  EventStream creation ended with status: {status}")
+                    print(f"  Detail: {detail}")
+                    all_ok = False
+            else:
+                print(f"  EventStream '{es_cfg['name']}' created (no polling needed).")
+        else:
+            print(f"  Failed: {create_resp.text[:300]}")
+            all_ok = False
+
+    ES_SETUP_OK = all_ok
+    if ES_SETUP_OK:
+        print("\nEventStreams ready.")
+        print("NOTE: Open each EventStream in Fabric UI → Custom Endpoint source →")
+        print("      copy the Event Hub connection string into the emulator notebooks.")
+    else:
+        print("\nSome EventStreams failed. Configure them manually in Fabric UI.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 4 - Drop ALL existing SQL tables and schemas, then recreate fresh
 import pyodbc
 
 TOKEN_SQL = notebookutils.credentials.getToken("https://database.windows.net/")
@@ -278,7 +426,7 @@ for schema in ['hr', 'erp', 'plm', 'mes', 'telemetry']:
 
 # CELL ********************
 
-# Step 4 - Create SQL tables (PK columns are NOT NULL, everything else nullable)
+# Step 5 - Create SQL tables (PK columns are NOT NULL, everything else nullable)
 DDL = [
     # --- hr schema ---
     """CREATE TABLE hr.employees (
@@ -450,7 +598,7 @@ print("\nAll tables created.")
 
 # CELL ********************
 
-# Step 5 - Bulk insert all data
+# Step 6 - Bulk insert all data
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
 
@@ -518,7 +666,7 @@ print("\nAll data loaded.")
 
 # CELL ********************
 
-# Step 6 - Add primary keys and foreign keys
+# Step 7 - Add primary keys and foreign keys
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 conn.autocommit = True
 cursor = conn.cursor()
@@ -602,7 +750,7 @@ print(f"\n{ok}/{len(CONSTRAINTS)} constraints added.")
 
 # CELL ********************
 
-# Step 7 - Verify
+# Step 8 - Verify
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 cursor = conn.cursor()
 
@@ -648,7 +796,7 @@ print("\nSQL data verified.")
 
 # CELL ********************
 
-# Step 8 - Create or update Semantic Model with DirectLake + relationships
+# Step 9 - Create or update Semantic Model with DirectLake + relationships
 import base64
 
 SM_NAME = "CAEManufacturing"
@@ -938,7 +1086,7 @@ relationship 'Jobs to Projects'
 
 # CELL ********************
 
-# Step 9 - Summary
+# Step 10 - Summary
 print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
@@ -948,6 +1096,13 @@ print("  erp.*       -  7 tables (production lines, machines, inventory, ...)")
 print("  plm.*       -  7 tables (simulators, BOM, projects, tasks, parts, ...)")
 print("  mes.*       -  1 table  (machine_jobs)")
 print("  telemetry.* -  1 table  (sensor_definitions)")
+if 'KQL_SETUP_OK' in dir() and KQL_SETUP_OK:
+    print(f"\nKQL Database: CAEManufacturingKQLDB")
+    print("  MachineTelemetry, ClockInEvents (streaming ingestion enabled)")
+if 'ES_SETUP_OK' in dir() and ES_SETUP_OK:
+    print(f"\nEventStreams: TelemetryEventStream, ClockInEventStream")
+    print("  Custom Endpoint → Eventhouse routing configured")
+    print("  ACTION: Copy connection strings from Fabric UI into emulator notebooks")
 if 'SM_SETUP_OK' in dir() and SM_SETUP_OK:
     print(f"\nSemantic Model: {SM_NAME}")
     print("  8 tables (DirectLake) + 8 relationships")

@@ -14,7 +14,8 @@
 # # Telemetry Fault Injection
 # 
 # Simulates progressive machine failures by injecting degrading sensor
-# readings directly into the KQL Database via Kusto streaming ingestion.
+# readings into the **TelemetryEventStream** via its Event Hub-compatible
+# custom endpoint. The EventStream routes data to the Eventhouse KQL Database.
 # 
 # **Fault Profiles:**
 # - **CNC-001**: Spindle bearing failure — vibration increases, temperature rises,
@@ -38,9 +39,13 @@
 
 # === CONFIGURATION ===
 TARGET_MACHINE = "CNC-001"      # Machine to inject faults on
-KQL_URI = ""                    # Leave empty to auto-discover from Eventhouse
 INTERVAL = 60                   # Seconds between batches
 DURATION_MIN = 10.0             # Total fault injection duration in minutes
+
+# EventStream connection string from the Custom Endpoint source.
+# Leave empty to auto-discover from workspace items.
+EVENTSTREAM_CONNECTION_STRING = ""
+EVENTSTREAM_NAME = "TelemetryEventStream"
 
 # METADATA ********************
 
@@ -51,7 +56,7 @@ DURATION_MIN = 10.0             # Total fault injection duration in minutes
 
 # CELL ********************
 
-import json, math, random, time, os, requests
+import json, math, random, time, os, requests, base64
 from datetime import datetime, timezone
 import notebookutils
 
@@ -79,21 +84,32 @@ sensor_defs = [row.asDict() for row in
     .filter(f"machine_id = '{TARGET_MACHINE}'").collect()]
 print(f"{len(sensor_defs)} sensors loaded for {TARGET_MACHINE}")
 
-# Auto-discover KQL URI from Eventhouse
-TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
-if not KQL_URI:
-    eh = next((i for i in items_list if i.get("displayName") == "CAEManufacturingEH"), None)
-    if eh:
-        eh_props = requests.get(
-            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventhouses/{eh['id']}",
+# Auto-discover EventStream connection string if not set
+if not EVENTSTREAM_CONNECTION_STRING:
+    es = next((i for i in items_list if i.get("displayName") == EVENTSTREAM_NAME and i.get("type") == "Eventstream"), None)
+    if es:
+        es_def_resp = requests.get(
+            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventstreams/{es['id']}/definition",
             headers=headers
-        ).json()
-        KQL_URI = eh_props.get("properties", {}).get("queryServiceUri", "")
-        print(f"Auto-discovered KQL URI: {KQL_URI}")
-    else:
-        raise RuntimeError("CAEManufacturingEH not found and KQL_URI not set")
+        )
+        if es_def_resp.status_code == 200:
+            for part in es_def_resp.json().get("definition", {}).get("parts", []):
+                if part["path"] == "eventstream.json":
+                    es_json = json.loads(base64.b64decode(part["payload"]).decode("utf-8"))
+                    for src in es_json.get("sources", []):
+                        conn = src.get("properties", {}).get("connectionString", "")
+                        if conn:
+                            EVENTSTREAM_CONNECTION_STRING = conn
+                            print(f"Auto-discovered EventStream connection string")
+                            break
+                    break
 
-DB_NAME = "CAEManufacturingKQLDB"
+if not EVENTSTREAM_CONNECTION_STRING:
+    raise RuntimeError(
+        f"EventStream connection string not found. "
+        f"Open '{EVENTSTREAM_NAME}' in Fabric UI → Custom Endpoint source → "
+        f"copy the Event Hub connection string into EVENTSTREAM_CONNECTION_STRING."
+    )
 
 # Fault profile: spindle bearing failure on CNC mill
 FAULTS = {
@@ -112,6 +128,8 @@ FAULTS = {
 # META }
 
 # CELL ********************
+
+from azure.eventhub import EventHubProducerClient, EventData
 
 start = time.time()
 batch_num = 0
@@ -150,41 +168,28 @@ try:
                 "unit": s["unit"], "alert_level": lvl, "is_anomaly": lvl != "Normal",
             })
 
-        # Send to KQL Database via Kusto streaming ingestion
-        csv_lines = []
-        for e in events:
-            csv_lines.append(
-                f"{e['timestamp']},{e['machine_id']},{e['sensor_id']},"
-                f"{e['sensor_category']},{e['sensor_name']},{e['value']},"
-                f"{e['unit']},{e['alert_level']},{e['is_anomaly']}"
-            )
-        csv_payload = "\n".join(csv_lines)
-
-        ingest_url = f"{KQL_URI}/v1/rest/ingest/{DB_NAME}/MachineTelemetry?streamFormat=Csv"
-        ingest_headers = {
-            "Authorization": f"Bearer {TOKEN_KQL}",
-            "Content-Type": "text/csv",
-        }
-        ingest_resp = requests.post(ingest_url, headers=ingest_headers, data=csv_payload)
+        # Send to EventStream via Event Hub SDK
+        producer = EventHubProducerClient.from_connection_string(EVENTSTREAM_CONNECTION_STRING)
+        with producer:
+            eh_batch = producer.create_batch()
+            for e in events:
+                eh_batch.add(EventData(json.dumps(e)))
+            producer.send_batch(eh_batch)
 
         w = sum(1 for e in events if e["alert_level"] == "Warning")
         c = sum(1 for e in events if e["alert_level"] == "Critical")
         batch_num += 1
 
-        status = "OK" if ingest_resp.status_code == 200 else f"FAIL({ingest_resp.status_code})"
-        print(f"  [{elapsed:5.1f} min] batch {batch_num}  Normal:{len(events)-w-c}  Warn:{w}  Crit:{c}  KQL:{status}")
+        print(f"  [{elapsed:5.1f} min] batch {batch_num}  Normal:{len(events)-w-c}  Warn:{w}  Crit:{c}  → {EVENTSTREAM_NAME}")
         for e in events:
             if e["alert_level"] != "Normal":
                 print(f"      {e['sensor_name']}: {e['value']} {e['unit']} [{e['alert_level']}]")
-
-        if ingest_resp.status_code != 200:
-            print(f"      Ingestion error: {ingest_resp.text[:200]}")
 
         time.sleep(INTERVAL)
 except KeyboardInterrupt:
     pass
 
-print(f"\nFault injection complete. {batch_num} batches sent to KQL.")
+print(f"\nFault injection complete. {batch_num} batches sent to {EVENTSTREAM_NAME}.")
 print(f"Check alerts: MachineHealthAlerts() | where machine_id == '{TARGET_MACHINE}'")
 
 # METADATA ********************

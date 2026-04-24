@@ -21,36 +21,36 @@ The AI agent reasons across all data sources to:
                         │           Microsoft Fabric Workspace          │
                         ├──────────────────────────────────────────────┤
                         │                                              │
-  Manufacturing         │   ┌──────────────────────────────┐           │
-  Machines (20)    ────►│   │  Eventhouse (KQL DB)         │           │
-  Telemetry             │   │  MachineTelemetry            │           │
-  (Kusto streaming)     │   │  ClockInEvents               │           │
-                        │   │  AnomalyAlerts               │           │
-  Workforce             │   └──────────┬───────────────────┘           │
-  Clock-in/out     ────►│              │                               │
-  Task events           │              │ 16 KQL health                 │
-                        │              │ scoring functions              │
-                        │              ▼                               │
-                        │   ┌─────────────────────┐   ┌────────────┐  │
-                        │   │  AnomalyDetection   │   │ Power BI   │  │
-                        │   │  (ML Z-score model) │   │ Dashboards │  │
-  Reference Data        │   └────────┬────────────┘   │ Gantt Chart│  │
-  HR, BOM, Inventory───►│            │                └────────────┘  │
-  Projects, Tasks       │            ▼                     ▲          │
-                        │   ┌─────────────────────┐        │          │
-                        │   │  Activator (Reflex)  │  ┌─────────────┐ │
-                        │   │  confidence >= 80%   │  │ SQL Database│ │
-                        │   └────────┬────────────┘  │ hr.* erp.*  │ │
-                        │            │               │ plm.* mes.* │ │
-                        │            ▼               └──────┬──────┘ │
-                        │   ┌─────────────────────┐         │        │
-                        │   │ AlertNotification   │         ▼        │
-                        │   │ Agent               │  ┌────────────┐  │
-                        │   │ (Teams + Foundry)   │  │ Capacity   │  │
-                        │   └─────────────────────┘  │ Mgmt Agent │  │
-                        │            │               └────────────┘  │
-                        │            ▼                               │
-                        │      Microsoft Teams                      │
+  Manufacturing         │   ┌────────────────────────────────┐         │
+  Machines (20)    ────►│   │  TelemetryEventStream          │         │
+  Telemetry             │   │  (Custom Endpoint source)      │         │
+  (Event Hub SDK)       │   └───────┬───────────┬────────────┘         │
+                        │           │           │                      │
+  Workforce             │   ┌───────┴──────┐    │ ┌────────────────┐   │
+  Clock-in/out     ────►│   │  Eventhouse   │   └►│  Activator     │   │
+  Task events           │   │  (KQL DB)     │     │  (Reflex)      │   │
+  (Event Hub SDK)       │   │  Machine      │     │  Real-time     │   │
+                        │   │  Telemetry    │     │  anomaly rules │   │
+  ┌──────────────────┐  │   │  ClockIn      │     └───────┬────────┘   │
+  │ClockInEventStream│──│──►│  Events       │             │            │
+  │(Custom Endpoint) │  │   │  Anomaly      │             ▼            │
+  └──────────────────┘  │   │  Alerts       │     ┌────────────────┐   │
+                        │   └──────┬────────┘     │ AlertNotif.    │   │
+                        │          │              │ Agent          │   │
+                        │          │ 16 KQL       │ (Teams +       │   │
+                        │          │ health       │  Foundry)      │   │
+                        │          │ functions    └───────┬────────┘   │
+                        │          ▼                      │            │
+                        │   ┌─────────────────┐           ▼            │
+                        │   │ AnomalyDetection│    Microsoft Teams     │
+                        │   │ (ML Z-score)    │                        │
+  Reference Data        │   └─────────────────┘                        │
+  HR, BOM, Inventory───►│                          ┌────────────┐      │
+  Projects, Tasks       │   ┌────────────┐         │ SQL Database│     │
+                        │   │ Power BI   │         │ hr.* erp.*  │     │
+                        │   │ Dashboards │◄────────│ plm.* mes.* │     │
+                        │   │ Gantt Chart│         └─────────────┘     │
+                        │   └────────────┘                             │
                         └──────────────────────────────────────────────┘
 ```
 
@@ -65,6 +65,8 @@ The AI agent reasons across all data sources to:
 | **SQL Database** | `telemetry` | sensor_definitions | Sensor metadata (107 sensors × 20 machines) |
 | **Eventhouse** (KQL) | — | MachineTelemetry, ClockInEvents, AnomalyAlerts | Real-time event data + ML anomaly alerts |
 | **Eventhouse** (KQL) | — | 16 health scoring functions | Composite anomaly scores per machine type |
+| **EventStream** | — | TelemetryEventStream | Routes telemetry → Eventhouse + Activator |
+| **EventStream** | — | ClockInEventStream | Routes workforce events → Eventhouse |
 | **Lakehouse** | — | CSV files in Files/ | Staging only (deployment) |
 
 ## Manufacturing Machines (20)
@@ -162,7 +164,9 @@ cae-demo/
 │   │   └── CAEManufacturing_LH.Lakehouse/       # Staging Lakehouse
 │   ├── RTI/                                      # Real-Time Intelligence
 │   │   ├── CAEManufacturingEH.Eventhouse/        # Telemetry store
-│   │   └── AnomalyDetection.Notebook/            # ML Z-score anomaly scoring
+│   │   ├── AnomalyDetection.Notebook/            # ML Z-score anomaly scoring
+│   │   ├── TelemetryEventStream*                 # Created by PostDeploymentConfig (API)
+│   │   └── ClockInEventStream*                   # Created by PostDeploymentConfig (API)
 │   ├── Pipelines/                                # Scheduled data pipelines
 │   │   ├── TelemetryPipeline.DataPipeline/       # 1-min telemetry ingestion
 │   │   ├── ClockInPipeline.DataPipeline/         # 1-min clock-in ingestion
@@ -259,6 +263,8 @@ shutil.rmtree(clone_dir, ignore_errors=True)
 
 > **Note:** You will see a `Parameter file not found` warning during publishing — this is expected and harmless. No parameter file is needed.
 
+> **Note:** EventStreams are **not** deployed by fabric-cicd. They are created by PostDeploymentConfig (Step 3) via the Fabric REST API, because their definitions reference the Eventhouse item ID which is only known at runtime.
+
 ### 2. Create a Fabric SQL Database
 
 In the workspace, click **+ New item > SQL Database** and name it `CAEManufacturing_SQLDB`.
@@ -277,11 +283,22 @@ Open the deployed `PostDeploymentConfig` notebook. A default JDBC connection str
 
 This creates 5 schemas (`hr`, `erp`, `plm`, `mes`, `telemetry`) with 24 tables, bulk inserts all data, then adds primary keys and foreign keys.
 
-### 4. KQL Database Setup
+### 4. KQL Database & EventStreams Setup
 
-The **PostDeploymentConfig** notebook automatically creates the KQL Database inside the Eventhouse via the Fabric API. It creates `MachineTelemetry`, `ClockInEvents`, and `AnomalyAlerts` tables with streaming ingestion enabled.
+The **PostDeploymentConfig** notebook automatically:
+1. Creates the **KQL Database** inside the Eventhouse via the Fabric API with `MachineTelemetry`, `ClockInEvents`, and `AnomalyAlerts` tables (streaming ingestion enabled)
+2. Creates two **EventStreams** with Custom Endpoint source → Eventhouse destination routing:
+   - **TelemetryEventStream** — routes sensor telemetry to `MachineTelemetry` table
+   - **ClockInEventStream** — routes workforce events to `ClockInEvents` table
 
-After the tables are created, deploy the **16 health scoring functions** by running the commands in `scripts/kql/machine_health_monitoring.kql` in the KQL Database query editor. These functions provide composite anomaly scores for every machine type:
+**After PostDeploymentConfig runs**, open each EventStream in the Fabric UI:
+1. Click on the Custom Endpoint source node
+2. Copy the **Event Hub connection string** from the Details pane (SAS Key Authentication tab)
+3. Paste it into the `EVENTSTREAM_CONNECTION_STRING` parameter in the corresponding emulator notebook
+
+The emulator notebooks (`SimulatorTelemetryEmulator`, `ClockInEventEmulator`, `TelemetryFaultInjection`) send events via the Azure Event Hub SDK to the EventStream, which routes them to the Eventhouse automatically.
+
+After the KQL tables are created, deploy the **16 health scoring functions** by running the commands in `scripts/kql/machine_health_monitoring.kql` in the KQL Database query editor. These functions provide composite anomaly scores for every machine type:
 
 | Function | Machines | Failure Mode |
 |---|---|---|
@@ -343,10 +360,15 @@ The **PostDeploymentConfig** notebook automatically creates a `CAEManufacturing`
 
 A **MachineHealthActivator** Reflex item is already created in the RTI folder. Configure it in the Fabric UI:
 
-1. Open the Activator and connect it to the KQL Database (`CAEManufacturingKQLDB`)
-2. Set the monitoring query to: `CriticalAnomalyAlerts()` or monitor the `AnomalyAlerts` table directly
-3. Trigger condition: `anomaly_confidence_pct >= 80`
-4. Action: Send a Teams notification or invoke the `AlertNotificationAgent` notebook
+1. Open the **TelemetryEventStream** → click the default stream node
+2. Add an **Activator destination** from the EventStream canvas (or create a new Activator)
+3. Set the object ID to `machine_id`
+4. Create a rule on `alert_level`: trigger when value **Becomes** `"Critical"`
+5. Action: Send a Teams notification or invoke the `AlertNotificationAgent` notebook
+
+Alternatively, connect the Activator to the `AnomalyAlerts` KQL table via a **Real-Time Dashboard**:
+1. Create a Real-Time Dashboard tile querying `CriticalAnomalyAlerts()`
+2. Set Alert → condition: `anomaly_confidence_pct >= 80`
 
 The **AlertPipeline** (5-min schedule) also runs the full detection + notification chain automatically:
 1. **AnomalyDetection** notebook computes Z-score baselines and writes alerts to `AnomalyAlerts`
@@ -357,13 +379,14 @@ To enable AI root-cause analysis, set `FOUNDRY_AGENT_ENDPOINT`.
 
 ### 8. Demo
 
-1. **Start telemetry**: TelemetryPipeline runs every 1 min, ingesting sensor data from all 20 machines into KQL via Kusto streaming API
+1. **Start telemetry**: TelemetryPipeline runs every 1 min, sending sensor data from all 20 machines to TelemetryEventStream → Eventhouse
 2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-001 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)
 3. **Watch detection**: The 16 KQL health scoring functions produce composite scores in real-time. `CNC_BearingWearScore` will climb from ~0.2 to 0.99 as the fault progresses
-4. **ML scoring**: `AnomalyDetection` notebook (or AlertPipeline) runs Z-score analysis and writes to `AnomalyAlerts` with confidence %, RUL estimate, and severity
-5. **Notification**: `AlertNotificationAgent` sends a Teams Adaptive Card with machine ID, failure mode, confidence, and a link to the Fabric dashboard
-6. **AI reasoning**: Open `CapacityManagementAgent` to see the agent query both SQL DB and KQL Eventhouse for scheduling impact, worker reassignment, and parts availability
-7. **Power BI**: View the Gantt chart from `plm.projects` + `plm.tasks` and the real-time machine health dashboard
+4. **Activator fires**: When `alert_level` becomes `Critical`, the Activator rule triggers automatically via the EventStream
+5. **ML scoring**: `AnomalyDetection` notebook (or AlertPipeline) runs Z-score analysis and writes to `AnomalyAlerts` with confidence %, RUL estimate, and severity
+6. **Notification**: `AlertNotificationAgent` sends a Teams Adaptive Card with machine ID, failure mode, confidence, and a link to the Fabric dashboard
+7. **AI reasoning**: Open `CapacityManagementAgent` to see the agent query both SQL DB and KQL Eventhouse for scheduling impact, worker reassignment, and parts availability
+8. **Power BI**: View the Gantt chart from `plm.projects` + `plm.tasks` and the real-time machine health dashboard
 
 ![Gantt Chart](docs/screenshots/07-gantt-powerbi.png)
 

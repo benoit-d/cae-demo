@@ -13,13 +13,12 @@
 
 # # Simulator Telemetry - Single Batch
 # 
-# Generates ONE batch of normal sensor readings for all machines and ingests
-# directly into the KQL Database via the Kusto streaming ingestion API.
+# Generates ONE batch of normal sensor readings for all machines and sends them
+# to the **TelemetryEventStream** via its Event Hub-compatible custom endpoint.
+# The EventStream routes data to the Eventhouse KQL Database automatically.
 # 
-# **This notebook is designed to be called by a Data Pipeline on a 1-minute schedule.**
-# It does not loop or sleep - it sends one batch and exits.
-# 
-# No EventHub or Eventstream needed - uses the Kusto REST API directly.
+# **Called by TelemetryPipeline on a 1-minute schedule.**
+# Sends one batch and exits — no loop or sleep.
 
 # METADATA ********************
 
@@ -30,9 +29,10 @@
 
 # CELL ********************
 
-# Configuration
-# Leave KQL_URI empty to auto-discover from the Eventhouse in the workspace
-KQL_URI = ""  # e.g. "https://xyz.z0.kusto.fabric.microsoft.com"
+# Configuration — EventStream connection string from the Custom Endpoint source.
+# Leave empty to auto-discover from workspace items.
+EVENTSTREAM_CONNECTION_STRING = ""
+EVENTSTREAM_NAME = "TelemetryEventStream"
 
 # METADATA ********************
 
@@ -43,11 +43,10 @@ KQL_URI = ""  # e.g. "https://xyz.z0.kusto.fabric.microsoft.com"
 
 # CELL ********************
 
-import json, math, random, time, os, requests
+import json, math, random, time, os, requests, base64
 from datetime import datetime, timezone
 import notebookutils
 
-# Discover Lakehouse for reading staged CSV sensor definitions
 TOKEN = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
 WORKSPACE_ID = os.environ.get("TRIDENT_WORKSPACE_ID", "")
 if not WORKSPACE_ID:
@@ -73,6 +72,33 @@ sensor_defs = [row.asDict() for row in
     spark.read.csv(f"{BASE}/Files/data/telemetry/sensor_definitions.csv", header=True, inferSchema=True).collect()]
 
 print(f"Loaded {len(sensor_defs)} sensors")
+
+# Auto-discover EventStream connection string if not set
+if not EVENTSTREAM_CONNECTION_STRING:
+    es = next((i for i in items if i.get("displayName") == EVENTSTREAM_NAME and i.get("type") == "Eventstream"), None)
+    if es:
+        es_def_resp = requests.get(
+            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventstreams/{es['id']}/definition",
+            headers=headers
+        )
+        if es_def_resp.status_code == 200:
+            for part in es_def_resp.json().get("definition", {}).get("parts", []):
+                if part["path"] == "eventstream.json":
+                    es_json = json.loads(base64.b64decode(part["payload"]).decode("utf-8"))
+                    for src in es_json.get("sources", []):
+                        conn = src.get("properties", {}).get("connectionString", "")
+                        if conn:
+                            EVENTSTREAM_CONNECTION_STRING = conn
+                            print(f"Auto-discovered EventStream connection string")
+                            break
+                    break
+
+if not EVENTSTREAM_CONNECTION_STRING:
+    raise RuntimeError(
+        f"EventStream connection string not found. "
+        f"Open '{EVENTSTREAM_NAME}' in Fabric UI → Custom Endpoint source → "
+        f"copy the Event Hub connection string into EVENTSTREAM_CONNECTION_STRING."
+    )
 
 # METADATA ********************
 
@@ -109,47 +135,17 @@ for s in sensor_defs:
         "is_anomaly": False,
     })
 
-# Send to Eventhouse KQL Database via streaming ingestion
-TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
+# Send to EventStream via Event Hub SDK
+from azure.eventhub import EventHubProducerClient, EventData
 
-# Auto-discover KQL URI from Eventhouse if not set
-if not KQL_URI:
-    eh = next((i for i in items if i.get("displayName") == "CAEManufacturingEH"), None)
-    if eh:
-        eh_props = requests.get(
-            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventhouses/{eh['id']}",
-            headers=headers
-        ).json()
-        KQL_URI = eh_props.get("properties", {}).get("queryServiceUri", "")
-        print(f"Auto-discovered KQL URI: {KQL_URI}")
-    else:
-        raise RuntimeError("CAEManufacturingEH not found and KQL_URI not set")
+producer = EventHubProducerClient.from_connection_string(EVENTSTREAM_CONNECTION_STRING)
+with producer:
+    batch = producer.create_batch()
+    for e in events:
+        batch.add(EventData(json.dumps(e)))
+    producer.send_batch(batch)
 
-DB_NAME = "CAEManufacturingKQLDB"
-
-# Build CSV payload for inline ingestion
-csv_lines = []
-for e in events:
-    csv_lines.append(f"{e['timestamp']},{e['machine_id']},{e['sensor_id']},{e['sensor_category']},{e['sensor_name']},{e['value']},{e['unit']},{e['alert_level']},{e['is_anomaly']}")
-
-csv_payload = "\n".join(csv_lines)
-
-# Use Kusto streaming ingestion REST API
-ingest_url = f"{KQL_URI}/v1/rest/ingest/{DB_NAME}/MachineTelemetry?streamFormat=Csv"
-ingest_headers = {
-    "Authorization": f"Bearer {TOKEN_KQL}",
-    "Content-Type": "text/csv",
-}
-ingest_resp = requests.post(ingest_url, headers=ingest_headers, data=csv_payload)
-
-if ingest_resp.status_code == 200:
-    print(f"Ingested {len(events)} telemetry events at {ts}")
-else:
-    print(f"Ingestion failed ({ingest_resp.status_code}): {ingest_resp.text[:300]}")
-    # Fallback: write to Lakehouse staging
-    df = spark.createDataFrame(events)
-    df.write.format("delta").mode("append").save(f"{BASE}/Tables/machine_telemetry_raw")
-    print(f"Fallback: wrote {len(events)} events to Lakehouse staging")
+print(f"Sent {len(events)} telemetry events to {EVENTSTREAM_NAME} at {ts}")
 
 # METADATA ********************
 
