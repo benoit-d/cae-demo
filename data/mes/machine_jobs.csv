@@ -1,7 +1,7 @@
-job_id,machine_id,part_spec_id,part_name,project_id,quantity,tolerance_mm,priority,due_date,status,assigned_operator
-JOB-0001,CNC-001,PS-4815,Door-Frame Bracket A320,PRJ-001,8,0.03,High,2026-04-30,Running,Miguel Lopez
-JOB-0002,CNC-001,PS-4821,Hydraulic Manifold B737,PRJ-009,4,0.02,Critical,2026-04-29,Queued,Miguel Lopez
-JOB-0003,CNC-002,PS-4803,Wing Bracket B777,PRJ-009,6,0.025,Critical,2026-05-02,Queued,Véronique Dufresne
+﻿job_id,machine_id,part_spec_id,part_name,project_id,quantity,tolerance_mm,priority,due_date,status,assigned_operator
+JOB-0001,CNC-001,PS-4815,Door-Frame Bracket A320,PRJ-001,8,0.03,High,2026-04-30,Running,David Tremblay
+JOB-0002,CNC-001,PS-4821,Hydraulic Manifold B737,PRJ-009,4,0.02,Critical,2026-04-29,Queued,David Tremblay
+JOB-0003,CNC-002,PS-4803,Wing Bracket B777,PRJ-009,6,0.025,Critical,2026-05-02,Queued,Sophie Martin
 JOB-0004,CNC-003,PS-4832,Actuator Mount B737,PRJ-006,10,0.02,High,2026-05-03,Queued,Wei Chen
 JOB-0005,CNC-001,PS-4815,Door-Frame Bracket A320,PRJ-002,12,0.03,High,2026-05-04,Running,
 JOB-0006,CNC-001,PS-4821,Hydraulic Manifold B737,PRJ-009,8,0.02,Critical,2026-05-10,Queued,

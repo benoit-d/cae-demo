@@ -1,4 +1,4 @@
-employee_id,first_name,last_name,email,teams_email,role,department,employee_type,hire_date,shift_preference,employment_status,manager_email,phone,location,badge_number,union_member,production_line_id
+﻿employee_id,first_name,last_name,email,teams_email,role,department,employee_type,hire_date,shift_preference,employment_status,manager_email,phone,location,badge_number,union_member,production_line_id
 EMP-001,Jean-Pierre,Tremblay,jp.tremblay@caedemo.com,jp.tremblay@caedemo.com,Senior Technician,Motion Systems,FullTime,2018-03-15,Day,Active,sylvie.raymond@caedemo.com,514-555-0101,Montreal Plant,BDG-1001,Yes,PL-01
 EMP-002,Marie-Claire,Dubois,mc.dubois@caedemo.com,mc.dubois@caedemo.com,Technician,Hydraulics,FullTime,2020-06-01,Day,Active,robert.lapointe@caedemo.com,514-555-0102,Montreal Plant,BDG-1002,Yes,PL-02
 EMP-003,Luc,Bergeron,luc.bergeron@caedemo.com,luc.bergeron@caedemo.com,Senior Technician,Electrical,FullTime,2015-09-10,Day,Active,claire.pelletier@caedemo.com,514-555-0103,Montreal Plant,BDG-1003,Yes,PL-03
@@ -11,8 +11,8 @@ EMP-009,David,Chen,david.chen@caedemo.com,david.chen@caedemo.com,Test Engineer,T
 EMP-010,Nathalie,Bouchard,nat.bouchard@caedemo.com,nat.bouchard@caedemo.com,Technician,Structures,FullTime,2022-02-20,Day,Active,robert.lapointe@caedemo.com,514-555-0110,Montreal Plant,BDG-1010,Yes,PL-02
 EMP-011,James,Taylor,james.taylor@contractco.com,james.taylor@contractco.com,Contract Technician,Hydraulics,Contractor,2026-02-01,Flex,Active,robert.lapointe@caedemo.com,514-555-0111,Montreal Plant,BDG-1011,No,PL-02
 EMP-012,Maria,Garcia,maria.garcia@contractco.com,maria.garcia@contractco.com,Contract Technician,Electrical,Contractor,2026-01-15,Flex,Active,claire.pelletier@caedemo.com,514-555-0112,Montreal Plant,BDG-1012,No,PL-03
-EMP-013,Miguel,Lopez,miguel.lopez@caedemo.com,miguel.lopez@caedemo.com,Technician,CNC Machining,FullTime,2020-03-10,Day,Active,sylvie.raymond@caedemo.com,514-555-0113,Montreal Plant,BDG-1013,Yes,PL-01
-EMP-014,Véronique,Dufresne,vero.dufresne@caedemo.com,vero.dufresne@caedemo.com,Senior Technician,CNC Machining,FullTime,2016-05-20,Day,Active,sylvie.raymond@caedemo.com,514-555-0114,Montreal Plant,BDG-1014,Yes,PL-01
+EMP-013,David,Tremblay,david.tremblay@caedemo.com,david.tremblay@caedemo.com,Technician,CNC Machining,FullTime,2020-03-10,Day,Active,sylvie.raymond@caedemo.com,514-555-0113,Montreal Plant,BDG-1013,Yes,PL-01
+EMP-014,Sophie,Martin,sophie.martin@caedemo.com,sophie.martin@caedemo.com,Senior Technician,CNC Machining,FullTime,2016-05-20,Day,Active,sylvie.raymond@caedemo.com,514-555-0114,Montreal Plant,BDG-1014,Yes,PL-01
 EMP-015,Hassan,Al-Farsi,hassan.alfarsi@caedemo.com,hassan.alfarsi@caedemo.com,Technician,Welding,FullTime,2021-09-01,Day,Active,robert.lapointe@caedemo.com,514-555-0115,Montreal Plant,BDG-1015,Yes,PL-02
 EMP-016,Patrick,O'Brien,pat.obrien@caedemo.com,pat.obrien@caedemo.com,Technician,Welding,FullTime,2023-01-10,Night,Active,robert.lapointe@caedemo.com,514-555-0116,Montreal Plant,BDG-1016,Yes,PL-02
 EMP-017,Yuki,Tanaka,yuki.tanaka@caedemo.com,yuki.tanaka@caedemo.com,Technician,Electronics,FullTime,2020-10-01,Day,Active,claire.pelletier@caedemo.com,514-555-0117,Montreal Plant,BDG-1017,No,PL-03
@@ -23,7 +23,7 @@ EMP-021,Mei,Wong,mei.wong@caedemo.com,mei.wong@caedemo.com,Technician,Sheet Meta
 EMP-022,Kevin,Murphy,kevin.murphy@caedemo.com,kevin.murphy@caedemo.com,Technician,Painting,FullTime,2021-11-01,Day,Active,robert.lapointe@caedemo.com,514-555-0122,Montreal Plant,BDG-1022,Yes,PL-02
 EMP-023,Aisha,Mohammed,aisha.mohammed@caedemo.com,aisha.mohammed@caedemo.com,Technician,Quality,FullTime,2021-02-01,Day,Active,robert.lapointe@caedemo.com,514-555-0123,Montreal Plant,BDG-1023,No,PL-02
 EMP-024,Roberto,Silva,roberto.silva@caedemo.com,roberto.silva@caedemo.com,Senior Technician,Welding,FullTime,2015-05-15,Day,Active,robert.lapointe@caedemo.com,514-555-0124,Montreal Plant,BDG-1024,Yes,PL-02
-EMP-025,Wei,Chen,wei.chen@caedemo.com,wei.chen@caedemo.com,Technician,CNC Machining,FullTime,2023-09-01,Day,Active,sylvie.raymond@caedemo.com,514-555-0125,Montreal Plant,BDG-1025,Yes,PL-01
+EMP-025,Luc,Bouchard,luc.bouchard@caedemo.com,luc.bouchard@caedemo.com,Technician,CNC Machining,FullTime,2023-09-01,Day,Active,sylvie.raymond@caedemo.com,514-555-0125,Montreal Plant,BDG-1025,Yes,PL-01
 EMP-027,André,Lefebvre,andre.lefebvre@caedemo.com,andre.lefebvre@caedemo.com,Technician,Additive Manufacturing,FullTime,2023-06-20,Day,Active,sylvie.raymond@caedemo.com,514-555-0127,Montreal Plant,BDG-1027,Yes,PL-01
 EMP-028,Isabelle,Roy,isabelle.roy@caedemo.com,isabelle.roy@caedemo.com,Technician,Electronics,FullTime,2022-03-01,Day,Active,claire.pelletier@caedemo.com,514-555-0128,Montreal Plant,BDG-1028,Yes,PL-03
 EMP-029,Wei,Zhang,wei.zhang@contractco.com,wei.zhang@contractco.com,Contract Technician,CNC Machining,Contractor,2026-03-01,Flex,Active,sylvie.raymond@caedemo.com,514-555-0129,Montreal Plant,BDG-1029,No,PL-01

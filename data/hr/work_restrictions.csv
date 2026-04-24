@@ -1,4 +1,4 @@
-limitation_id,employee_id,limitation_type,description,effective_date,review_date,accommodations_required,certified_by,impacts_assignments
+﻿limitation_id,employee_id,limitation_type,description,effective_date,review_date,accommodations_required,certified_by,impacts_assignments
 LIM-001,EMP-001,Lifting,Maximum lifting capacity 25kg due to previous back injury,2025-06-01,2026-06-01,"No heavy lifting above 25kg, use mechanical assist for heavier items",Dr. Martin Leclerc,Yes
 LIM-002,EMP-003,Mobility,Knee recovery — limited stair climbing and ladder use,2026-01-15,2026-07-15,"Ground-level assignments preferred, no ladder work above 2m, use lift platform instead",Dr. Martin Leclerc,Yes
 LIM-003,EMP-005,Hearing,Mild hearing loss — requires hearing protection in high-noise areas,2024-03-15,2026-03-15,"Must wear hearing protection near CNC machines and welding, prefer quiet zones",Dr. Sophie Tremblay,Yes

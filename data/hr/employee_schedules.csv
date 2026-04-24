@@ -1,4 +1,4 @@
-schedule_id,employee_id,week_start,shift_type,shift_start_time,shift_end_time,monday,tuesday,wednesday,thursday,friday,saturday,sunday,notes
+﻿schedule_id,employee_id,week_start,shift_type,shift_start_time,shift_end_time,monday,tuesday,wednesday,thursday,friday,saturday,sunday,notes
 SCH-001,EMP-001,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
 SCH-002,EMP-002,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,
 SCH-003,EMP-003,2026-04-21,Day,07:00,15:30,Working,Working,Working,Working,Working,Off,Off,

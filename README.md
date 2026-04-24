@@ -132,8 +132,8 @@ Each project has **13 tasks** with finish-to-start dependencies, skill requireme
 | François Côté | FTE | Motion Systems | PL-01 | — |
 | David Chen | FTE | Test Engineering | PL-02 | — |
 | Nathalie Bouchard | FTE | Structures | PL-02 | — |
-| Miguel Lopez | FTE | CNC Machining | PL-01 | — |
-| Véronique Dufresne | FTE Senior | CNC Machining | PL-01 | Vision — corrective lenses |
+| David Tremblay | FTE | CNC Machining | PL-01 | — |
+| Sophie Martin | FTE Senior | CNC Machining | PL-01 | Vision — corrective lenses |
 | Hassan Al-Farsi | FTE | Welding | PL-02 | — |
 | Patrick O'Brien | FTE | Welding (Night) | PL-02 | — |
 | Yuki Tanaka | FTE | Electronics | PL-03 | — |
@@ -144,7 +144,7 @@ Each project has **13 tasks** with finish-to-start dependencies, skill requireme
 | Kevin Murphy | FTE | Painting | PL-02 | — |
 | Aisha Mohammed | FTE | Quality | PL-02 | — |
 | Roberto Silva | FTE Senior | Welding | PL-02 | Wrist — limited TIG |
-| Wei Chen | FTE | CNC Machining | PL-01 | — |
+| Luc Bouchard | FTE | CNC Machining | PL-01 | — |
 | André Lefebvre | FTE | Additive Manufacturing | PL-01 | — |
 | Isabelle Roy | FTE | Electronics | PL-03 | — |
 | James Taylor | Contractor | Hydraulics | PL-02 | — |

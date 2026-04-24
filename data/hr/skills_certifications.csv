@@ -1,4 +1,4 @@
-employee_id,skill_category,skill_name,certification_level,certification_date,expiry_date,certifying_body,is_current
+﻿employee_id,skill_category,skill_name,certification_level,certification_date,expiry_date,certifying_body,is_current
 EMP-001,Motion Systems,6-DOF Platform Calibration,Expert,2024-06-15,2026-06-15,CAE Internal,Yes
 EMP-001,Motion Systems,Actuator Installation,Expert,2023-03-10,2025-03-10,CAE Internal,Yes
 EMP-001,Hydraulics,Hydraulic System Basics,Intermediate,2022-09-01,2024-09-01,CAE Internal,No
