@@ -21,8 +21,9 @@
 # 2. Query last 5min of telemetry and compute Z-scores per sensor
 # 3. Combine Z-scores into a composite anomaly confidence per machine
 # 4. Write rows with confidence >= 50% to `AnomalyDetection` table in KQL
-# 5. Call a **Foundry agent** for AI root-cause analysis and recommendations
-# 6. Send a **Teams notification** with the alert details and AI analysis
+# 5. Invoke the **Foundry agent** (`CAE-Manufacturing-Copilot`) via Azure AI Agent Service
+#    — the agent performs root-cause analysis, assesses schedule impact, and sends Teams notifications
+# 6. Fallback: send a **Teams Adaptive Card** if the agent is not configured
 
 # METADATA ********************
 
@@ -39,11 +40,12 @@ BASELINE_WINDOW = "24h"   # How far back to compute baseline stats
 SCORING_WINDOW = "5m"     # Recent window to score
 ALERT_THRESHOLD = 50.0    # Minimum confidence % to write to AnomalyDetection
 
-# Teams Incoming Webhook URL — create one in your Teams channel
-TEAMS_WEBHOOK_URL = ""  # e.g. "https://outlook.office.com/webhook/..."
+# Azure AI Foundry Agent — root-cause analysis + Teams notification
+AGENT_PROJECT_ENDPOINT = "https://demo-foundry-sweden.services.ai.azure.com/api/projects/proj-demo"
+AGENT_ID = "CAE-Manufacturing-Copilot:1"
 
-# Foundry Agent endpoint (optional — for AI root-cause analysis)
-FOUNDRY_AGENT_ENDPOINT = ""  # e.g. "https://your-foundry-endpoint.azurewebsites.net"
+# Teams Incoming Webhook URL — fallback if agent is not configured
+TEAMS_WEBHOOK_URL = ""  # e.g. "https://outlook.office.com/webhook/..."
 
 # METADATA ********************
 
@@ -380,42 +382,89 @@ else:
 
 # CELL ********************
 
-# Step 6: Invoke Foundry Agent for AI root-cause analysis
+# Step 6: Invoke Foundry Agent for root-cause analysis + Teams notification
 critical_alerts = [a for a in anomaly_alerts if a["anomaly_confidence_pct"] >= 70.0]
 agent_analysis = None
 
-if critical_alerts and FOUNDRY_AGENT_ENDPOINT:
+if critical_alerts and AGENT_PROJECT_ENDPOINT and AGENT_ID:
     print("Invoking Foundry Agent for root-cause analysis...")
+    print(f"  Agent: {AGENT_ID}")
+    print(f"  Project: {AGENT_PROJECT_ENDPOINT}")
 
-    agent_context = {
-        "alerts": critical_alerts,
-        "question": (
-            "Analyze these machine health alerts for CAE flight simulator manufacturing. "
-            "For each alert, provide: (1) likely root cause, (2) recommended immediate action, "
-            "(3) impact on production schedule, (4) recommended spare parts to have ready."
-        ),
-    }
+    # Build the alert message for the agent
+    alert_summary = "\n".join(
+        f"- {a['machine_id']} ({a['anomaly_type']}): {a['anomaly_confidence_pct']}% confidence, "
+        f"RUL {a['estimated_rul_hours']}h, severity {a['severity']}. "
+        f"Top sensors: {a['top_deviating_sensors']}"
+        for a in critical_alerts
+    )
+
+    agent_message = (
+        f"ANOMALY DETECTED — {len(critical_alerts)} machine(s) in critical state.\n\n"
+        f"{alert_summary}\n\n"
+        "Analyze these alerts. Provide:\n"
+        "1. Likely root cause for each machine\n"
+        "2. Recommended immediate action\n"
+        "3. Impact on production schedule (queued jobs, revenue at risk)\n"
+        "4. Recommended spare parts to have ready\n"
+        "5. Send a summary notification to the production manager via Teams"
+    )
 
     try:
-        agent_resp = requests.post(
-            f"{FOUNDRY_AGENT_ENDPOINT}/api/agent/analyze",
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {TOKEN_FABRIC}",
-            },
-            json=agent_context,
-            timeout=60,
+        from azure.ai.projects import AIProjectClient
+        from azure.core.credentials import AccessToken
+
+        # Use Fabric token for Azure Cognitive Services
+        TOKEN_AI = notebookutils.credentials.getToken("https://cognitiveservices.azure.com")
+
+        class _FabricCredential:
+            def get_token(self, *scopes, **kwargs):
+                return AccessToken(TOKEN_AI, 0)
+
+        client = AIProjectClient(
+            endpoint=AGENT_PROJECT_ENDPOINT,
+            credential=_FabricCredential(),
         )
-        if agent_resp.status_code == 200:
-            agent_analysis = agent_resp.json()
+
+        # Create a conversation thread and send the alert
+        thread = client.agents.create_thread()
+        client.agents.create_message(
+            thread_id=thread.id,
+            role="user",
+            content=agent_message,
+        )
+
+        # Run the agent (synchronous — waits for completion)
+        run = client.agents.create_and_process_run(
+            thread_id=thread.id,
+            agent_id=AGENT_ID,
+        )
+
+        if run.status == "completed":
+            # Get the agent's response
+            messages = client.agents.list_messages(thread_id=thread.id)
+            for msg in messages.data:
+                if msg.role == "assistant":
+                    for block in msg.content:
+                        if hasattr(block, "text"):
+                            agent_analysis = block.text.value
+                            break
+                    break
+
             print("\n=== AI Root-Cause Analysis ===")
-            print(json.dumps(agent_analysis, indent=2))
+            print(agent_analysis or "(no response)")
         else:
-            print(f"Agent response: {agent_resp.status_code} {agent_resp.text[:200]}")
+            print(f"Agent run ended with status: {run.status}")
+            if hasattr(run, "last_error") and run.last_error:
+                print(f"  Error: {run.last_error}")
+
+    except ImportError:
+        print("azure-ai-projects SDK not available — install with: pip install azure-ai-projects")
     except Exception as e:
         print(f"Agent call failed: {e}")
+
 elif critical_alerts:
-    print("FOUNDRY_AGENT_ENDPOINT not configured — skipping AI analysis")
+    print("AGENT_PROJECT_ENDPOINT not configured — skipping AI analysis")
 else:
     print("No critical alerts — skipping AI analysis")
 
@@ -428,7 +477,9 @@ else:
 
 # CELL ********************
 
-# Step 7: Send Teams notification
+# Step 7: Fallback Teams notification (if agent didn't handle it)
+# The Foundry agent sends Teams notifications directly.
+# This is a fallback for when the agent is not configured or fails.
 def build_adaptive_card(alerts, analysis=None):
     """Build a Teams Adaptive Card for machine health alerts."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
