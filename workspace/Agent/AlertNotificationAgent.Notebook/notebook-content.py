@@ -43,7 +43,7 @@
 # === CONFIGURATION ===
 # Azure AI Foundry Agent — root-cause analysis + Teams notification
 AGENT_PROJECT_ENDPOINT = "https://demo-foundry-sweden.services.ai.azure.com/api/projects/proj-demo"
-AGENT_ID = "CAE-Manufacturing-Copilot:1"
+AGENT_ID = "CAE-Manufacturing-Copilot:2"
 
 # Teams Incoming Webhook URL — fallback if agent is not configured
 TEAMS_WEBHOOK_URL = ""  # e.g. "https://outlook.office.com/webhook/..."
@@ -390,6 +390,21 @@ else:
 print("\n" + "="*60)
 print("  ALERT NOTIFICATION COMPLETE")
 print("="*60)
+
+# Release Spark resources so the notebook (and its parent pipeline) can end
+# instead of holding the session open until idle timeout.
+try:
+    spark.stop()
+except Exception:
+    pass
+try:
+    notebookutils.session.stop()
+except Exception:
+    try:
+        import mssparkutils
+        mssparkutils.session.stop()
+    except Exception:
+        pass
 
 # METADATA ********************
 

@@ -42,7 +42,7 @@ ALERT_THRESHOLD = 50.0    # Minimum confidence % to write to AnomalyDetection
 
 # Azure AI Foundry Agent — root-cause analysis + Teams notification
 AGENT_PROJECT_ENDPOINT = "https://demo-foundry-sweden.services.ai.azure.com/api/projects/proj-demo"
-AGENT_ID = "CAE-Manufacturing-Copilot:1"
+AGENT_ID = "CAE-Manufacturing-Copilot:2"
 
 # Teams Incoming Webhook URL — fallback if agent is not configured
 TEAMS_WEBHOOK_URL = ""  # e.g. "https://outlook.office.com/webhook/..."
@@ -576,6 +576,21 @@ else:
 print(f"\n{'='*60}")
 print(f"  ANOMALY DETECTION & NOTIFICATION COMPLETE")
 print(f"{'='*60}")
+
+# Release Spark resources so the notebook (and its parent pipeline) can end
+# instead of holding the session open until idle timeout.
+try:
+    spark.stop()
+except Exception:
+    pass
+try:
+    notebookutils.session.stop()
+except Exception:
+    try:
+        import mssparkutils
+        mssparkutils.session.stop()
+    except Exception:
+        pass
 
 # METADATA ********************
 

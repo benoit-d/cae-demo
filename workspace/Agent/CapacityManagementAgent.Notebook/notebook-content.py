@@ -217,6 +217,21 @@ active = json.loads(get_active_tasks())
 for t in active[:10]:
     print(f"  {t['Task_ID']:18s} {str(t['Task_Name'])[:35]:35s} {str(t['Resource_Login']):35s} {t['Complete_Percentage']:>3d}%")
 
+# Release Spark resources so the notebook (and its parent pipeline) can end
+# instead of holding the session open until idle timeout.
+try:
+    spark.stop()
+except Exception:
+    pass
+try:
+    notebookutils.session.stop()
+except Exception:
+    try:
+        import mssparkutils
+        mssparkutils.session.stop()
+    except Exception:
+        pass
+
 # METADATA ********************
 
 # META {

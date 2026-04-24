@@ -629,6 +629,21 @@ print("=" * 60)
 print("Open the ontology in the Fabric workspace to explore entities, relationships,")
 print("and live telemetry bindings.")
 
+# Release Spark resources so the notebook (and its parent pipeline) can end
+# instead of holding the session open until idle timeout.
+try:
+    spark.stop()
+except Exception:
+    pass
+try:
+    notebookutils.session.stop()
+except Exception:
+    try:
+        import mssparkutils
+        mssparkutils.session.stop()
+    except Exception:
+        pass
+
 # METADATA ********************
 
 # META {
