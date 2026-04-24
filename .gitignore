@@ -18,3 +18,7 @@ Thumbs.db
 
 # Fabric
 *.pbix
+deployed_faultinj.ipynb
+_deploy_notebooks.py
+fabric_cicd.error.log
+faultinj_instance.txt
