@@ -16,15 +16,15 @@
     employee_name: string, employee_id: string, department: string,
     project_id: string, task_id: string, simulator_id: string, details: string)
 
-.create-merge table AnomalyAlerts (
-    scored_at: datetime, machine_id: string, anomaly_type: string,
+.create-merge table AnomalyDetection (
+    timestamp: datetime, machine_id: string, anomaly_type: string,
     anomaly_confidence_pct: real, estimated_rul_hours: int,
     top_deviating_sensors: string, composite_score: real,
     description: string, severity: string)
 
 .alter table MachineTelemetry policy streamingingestion enable
 .alter table ClockInEvents policy streamingingestion enable
-.alter table AnomalyAlerts policy streamingingestion enable
+.alter table AnomalyDetection policy streamingingestion enable
 
 // ----- HEALTH SCORING FUNCTIONS (all 20 machines) -------------------
 
@@ -274,9 +274,9 @@ MachineHealthAlerts(lookback:timespan = 30m) {
 
 .create-or-alter function with (docstring = 'Critical anomaly alerts for Activator monitoring', folder = 'Health')
 CriticalAnomalyAlerts() {
-    AnomalyAlerts
-    | where scored_at > ago(15m)
+    AnomalyDetection
+    | where timestamp > ago(15m)
     | where anomaly_confidence_pct >= 80.0
-    | project scored_at, machine_id, anomaly_type, anomaly_confidence_pct, estimated_rul_hours, severity, description
+    | project timestamp, machine_id, anomaly_type, anomaly_confidence_pct, estimated_rul_hours, severity, description
     | order by anomaly_confidence_pct desc
 }

@@ -208,24 +208,24 @@ Write-Host "### STEP 6: Inject AnomalyAlert Record" -ForegroundColor Yellow
 Write-Host "#############################################`n" -ForegroundColor Yellow
 
 $ingest3 = @"
-.ingest inline into table AnomalyAlerts <|
+.ingest inline into table AnomalyDetection <|
 2026-04-23T12:38:00Z,CNC-001,Spindle bearing wear,92.5,24,"Spindle Vibration: 0.24g (Z=4.2); Spindle Temperature: 74.5C (Z=3.8); Power: 35kW (Z=3.1)",4.2,"Spindle bearing wear detected on CNC-001 with 92% confidence. Top sensor: Spindle Vibration (Z=4.2)",Critical
 "@
 Invoke-KQLMgmt -Command $ingest3 -Name "Inject AnomalyAlert for Notification Path Test"
 
 # ============================================
-# STEP 7: Verify AnomalyAlerts
+# STEP 7: Verify AnomalyDetection
 # ============================================
 Write-Host "`n#############################################" -ForegroundColor Yellow
-Write-Host "### STEP 7: Verify AnomalyAlerts Table" -ForegroundColor Yellow
+Write-Host "### STEP 7: Verify AnomalyDetection Table" -ForegroundColor Yellow
 Write-Host "#############################################`n" -ForegroundColor Yellow
 
 $query7 = @"
-AnomalyAlerts 
-| order by scored_at desc 
+AnomalyDetection 
+| order by timestamp desc 
 | take 5
 "@
-Invoke-KQLQuery -Query $query7 -Name "AnomalyAlerts (Latest 5)"
+Invoke-KQLQuery -Query $query7 -Name "AnomalyDetection (Latest 5)"
 
 # ============================================
 # STEP 8: Test CriticalAnomalyAlerts function
@@ -248,7 +248,7 @@ Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Summary of injected data:" -ForegroundColor Green
 Write-Host "  - MachineTelemetry: 20 fault records for CNC-001" -ForegroundColor White
-Write-Host "  - AnomalyAlerts: 1 critical alert record" -ForegroundColor White
+Write-Host "  - AnomalyDetection: 1 critical alert record" -ForegroundColor White
 Write-Host ""
 Write-Host "The anomaly detection pipeline should now show:" -ForegroundColor Green
 Write-Host "  - High bearing wear scores (Step 3)" -ForegroundColor White

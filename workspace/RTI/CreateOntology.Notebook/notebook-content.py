@@ -41,12 +41,12 @@
 # ## Time-series Bindings (3 — Eventhouse)
 # - `MachineTelemetry` → Machine (by `machine_id`)
 # - `ClockInEvents` → Employee (by `employee_id`)
-# - `AnomalyAlerts` → Machine (by `machine_id`)
+# - `AnomalyDetection` → Machine (by `machine_id`)
 # 
 # **Idempotent:** existing ontology with the same name is deleted and recreated.
 # 
 # **Prerequisites:** PostDeploymentConfig has run (SQL Database populated, KQL DB
-# with `MachineTelemetry` / `ClockInEvents` / `AnomalyAlerts` tables).
+# with `MachineTelemetry` / `ClockInEvents` / `AnomalyDetection` tables).
 
 # METADATA ********************
 
@@ -314,7 +314,7 @@ TIMESERIES_BINDINGS = [
     },
     {
         "entity": "Machine",
-        "kql_table": "AnomalyAlerts",
+        "kql_table": "AnomalyDetection",
         "timestamp_column": "alert_timestamp",
         "key_column": "machine_id",
         "properties": [

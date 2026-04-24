@@ -20,7 +20,7 @@
 # 1. Query last 24h of telemetry from KQL to compute baseline stats (mean, stddev)
 # 2. Query last 5min of telemetry and compute Z-scores per sensor
 # 3. Combine Z-scores into a composite anomaly confidence per machine
-# 4. Write rows with confidence >= 50% to `AnomalyAlerts` table in KQL
+# 4. Write rows with confidence >= 50% to `AnomalyDetection` table in KQL
 # 5. Call a **Foundry agent** for AI root-cause analysis and recommendations
 # 6. Send a **Teams notification** with the alert details and AI analysis
 
@@ -37,7 +37,7 @@
 KQL_URI = ""  # Leave empty to auto-discover from Eventhouse
 BASELINE_WINDOW = "24h"   # How far back to compute baseline stats
 SCORING_WINDOW = "5m"     # Recent window to score
-ALERT_THRESHOLD = 50.0    # Minimum confidence % to write to AnomalyAlerts
+ALERT_THRESHOLD = 50.0    # Minimum confidence % to write to AnomalyDetection
 
 # Teams Incoming Webhook URL — create one in your Teams channel
 TEAMS_WEBHOOK_URL = ""  # e.g. "https://outlook.office.com/webhook/..."
@@ -126,10 +126,10 @@ print("Connected to KQL Database")
 
 # CELL ********************
 
-# Step 1: Ensure AnomalyAlerts table exists with streaming ingestion
+# Step 1: Ensure AnomalyDetection table exists with streaming ingestion
 create_cmd = """
-.create-merge table AnomalyAlerts (
-    scored_at: datetime,
+.create-merge table AnomalyDetection (
+    timestamp: datetime,
     machine_id: string,
     anomaly_type: string,
     anomaly_confidence_pct: real,
@@ -141,13 +141,13 @@ create_cmd = """
 )
 """
 status, msg = kql_mgmt(create_cmd)
-print(f"AnomalyAlerts table: {status}")
+print(f"AnomalyDetection table: {status}")
 
-status2, _ = kql_mgmt(".alter table AnomalyAlerts policy streamingingestion enable")
+status2, _ = kql_mgmt(".alter table AnomalyDetection policy streamingingestion enable")
 print(f"Streaming policy: {status2}")
 
 # Retention: keep 30 days of anomaly alerts
-status3, _ = kql_mgmt(".alter table AnomalyAlerts policy retention softdelete = 30d recoverability = enabled")
+status3, _ = kql_mgmt(".alter table AnomalyDetection policy retention softdelete = 30d recoverability = enabled")
 print(f"Retention policy: {status3}")
 
 # METADATA ********************
@@ -268,7 +268,7 @@ FAILURE_MODES = {
 }
 
 anomaly_alerts = []
-scored_at = datetime.now(timezone.utc).isoformat()
+alert_ts = datetime.now(timezone.utc).isoformat()
 
 for machine_id, sensors in machine_scores.items():
     # Composite: weighted average of Z-scores (higher Z = more anomalous)
@@ -307,7 +307,7 @@ for machine_id, sensors in machine_scores.items():
 
     if confidence >= ALERT_THRESHOLD:
         anomaly_alerts.append({
-            "scored_at": scored_at,
+            "timestamp": alert_ts,
             "machine_id": machine_id,
             "anomaly_type": FAILURE_MODES.get(machine_id, "Unknown"),
             "anomaly_confidence_pct": round(confidence, 1),
@@ -344,7 +344,7 @@ if anomaly_alerts:
     csv_lines = []
     for a in anomaly_alerts:
         csv_lines.append(",".join([
-            a["scored_at"],
+            a["timestamp"],
             a["machine_id"],
             esc_csv(a["anomaly_type"]),
             str(a["anomaly_confidence_pct"]),
@@ -357,7 +357,7 @@ if anomaly_alerts:
 
     csv_payload = "\n".join(csv_lines)
 
-    ingest_url = f"{KQL_URI}/v1/rest/ingest/{DB_NAME}/AnomalyAlerts?streamFormat=Csv"
+    ingest_url = f"{KQL_URI}/v1/rest/ingest/{DB_NAME}/AnomalyDetection?streamFormat=Csv"
     ingest_headers = {
         "Authorization": f"Bearer {TOKEN_KQL}",
         "Content-Type": "text/csv",

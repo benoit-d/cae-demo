@@ -21,7 +21,7 @@
 # - **telemetry** — sensor definitions
 # 
 # Also creates:
-# - **KQL Database** inside the Eventhouse (MachineTelemetry, ClockInEvents, AnomalyAlerts tables)
+# - **KQL Database** inside the Eventhouse (MachineTelemetry, ClockInEvents, AnomalyDetection tables)
 # - **EventStreams** (TelemetryEventStream, ClockInEventStream) with Custom Endpoint → Eventhouse routing
 # - **Semantic Model** (DirectLake) with 8 tables and 8 relationships
 # 

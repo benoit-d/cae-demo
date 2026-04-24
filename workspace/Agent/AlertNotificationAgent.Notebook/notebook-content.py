@@ -129,12 +129,12 @@ print("Connected to KQL Database")
 # Step 1: Query for critical anomaly alerts
 print("Querying for anomaly alerts...\n")
 
-# Check AnomalyAlerts table (from ML scoring notebook)
+# Check AnomalyDetection table (from ML scoring notebook)
 anomaly_alerts = kql_query(f"""
-    AnomalyAlerts
-    | where scored_at > ago(15m)
+    AnomalyDetection
+    | where timestamp > ago(15m)
     | where anomaly_confidence_pct >= {MIN_CONFIDENCE}
-    | summarize arg_max(scored_at, *) by machine_id
+    | summarize arg_max(timestamp, *) by machine_id
     | order by anomaly_confidence_pct desc
 """)
 

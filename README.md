@@ -67,7 +67,7 @@ The AI agent reasons across all data sources to:
 | **SQL Database** | `plm` | simulators, bill_of_materials, projects, tasks, task_type_durations, part_specs, machine_capabilities | Product lifecycle management |
 | **SQL Database** | `mes` | machine_jobs | Manufacturing execution |
 | **SQL Database** | `telemetry` | sensor_definitions | Sensor metadata (107 sensors × 20 machines) |
-| **Eventhouse** (KQL) | — | MachineTelemetry, ClockInEvents, AnomalyAlerts | Real-time event data + ML anomaly alerts |
+| **Eventhouse** (KQL) | — | MachineTelemetry, ClockInEvents, AnomalyDetection | Real-time event data + ML anomaly alerts |
 | **Eventhouse** (KQL) | — | 16 health scoring functions | Composite anomaly scores per machine type |
 | **EventStream** | — | TelemetryEventStream | Routes telemetry → Eventhouse + Activator |
 | **EventStream** | — | ClockInEventStream | Routes workforce events → Eventhouse |
@@ -290,7 +290,7 @@ This creates 5 schemas (`hr`, `erp`, `plm`, `mes`, `telemetry`) with 24 tables, 
 ### 4. KQL Database & EventStreams Setup
 
 The **PostDeploymentConfig** notebook automatically:
-1. Creates the **KQL Database** inside the Eventhouse via the Fabric API with `MachineTelemetry`, `ClockInEvents`, and `AnomalyAlerts` tables (streaming ingestion enabled)
+1. Creates the **KQL Database** inside the Eventhouse via the Fabric API with `MachineTelemetry`, `ClockInEvents`, and `AnomalyDetection` tables (streaming ingestion enabled)
 2. Creates two **EventStreams** with Custom Endpoint source → Eventhouse destination routing:
    - **TelemetryEventStream** — routes sensor telemetry to `MachineTelemetry` table
    - **ClockInEventStream** — routes workforce events to `ClockInEvents` table
@@ -362,7 +362,7 @@ The **CreateOntology** notebook (in `workspace/RTI/`) builds a `CAEManufacturing
 **Time-series bindings (3 — Eventhouse / KustoTable):**
 - `MachineTelemetry` → `Machine` (by `machine_id`, timestamp `timestamp`)
 - `ClockInEvents` → `Employee` (by `employee_id`, timestamp `timestamp`)
-- `AnomalyAlerts` → `Machine` (by `machine_id`, timestamp `alert_timestamp`)
+- `AnomalyDetection` → `Machine` (by `machine_id`, timestamp `alert_timestamp`)
 
 The notebook is **idempotent** — re-running it deletes the existing ontology and recreates it. The Ontology API is in preview ([docs](https://learn.microsoft.com/en-us/rest/api/fabric/ontology)); if your workspace capacity does not support it, the notebook surfaces a 404 and PostDeploymentConfig treats the step as non-fatal.
 
@@ -396,7 +396,7 @@ Set up the Activator to detect anomalies in real-time and trigger ML analysis:
 
 When a sensor reading arrives with `alert_level = Critical`, the Activator triggers the **AnomalyDetection** notebook which:
 1. Computes ML baselines (24h) and Z-score anomaly confidence
-2. Writes alerts to the `AnomalyAlerts` KQL table
+2. Writes alerts to the `AnomalyDetection` KQL table
 3. Calls the **Foundry agent** for AI root-cause analysis and recommendations
 4. Sends a **Teams Adaptive Card** with alert details + AI analysis
 
@@ -409,7 +409,7 @@ To enable AI root-cause analysis, set `FOUNDRY_AGENT_ENDPOINT` in the same confi
 2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-003 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)
 3. **Watch detection**: The 16 KQL health scoring functions produce composite scores in real-time. `CNC_BearingWearScore` will climb from ~0.2 to 0.99 as the fault progresses
 4. **Activator fires**: When `alert_level` becomes `Critical`, the Activator triggers the `AnomalyDetection` notebook automatically
-5. **ML scoring**: The notebook computes Z-score baselines and writes alerts to `AnomalyAlerts` with confidence %, RUL estimate, and severity
+5. **ML scoring**: The notebook computes Z-score baselines and writes alerts to `AnomalyDetection` with confidence %, RUL estimate, and severity
 6. **Foundry agent**: The notebook calls the Foundry agent for root-cause analysis, impact assessment, and recommended actions
 7. **Teams notification**: An Adaptive Card is sent to Teams with machine ID, failure mode, confidence, AI analysis, and a link to the Fabric dashboard
 8. **AI reasoning**: Open `CapacityManagementAgent` to see the agent query both SQL DB and KQL Eventhouse for scheduling impact, worker reassignment, and parts availability
