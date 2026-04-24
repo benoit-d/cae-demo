@@ -595,8 +595,8 @@ DDL = [
         job_id NVARCHAR(10) NOT NULL, machine_id NVARCHAR(10) NOT NULL,
         part_spec_id NVARCHAR(10) NOT NULL, part_name NVARCHAR(100),
         project_id NVARCHAR(10) NOT NULL, quantity INT, tolerance_mm FLOAT,
-        planned_start NVARCHAR(30), planned_end NVARCHAR(30),
-        status NVARCHAR(20), priority NVARCHAR(20), due_date DATE)""",
+        priority NVARCHAR(20), due_date DATE,
+        status NVARCHAR(20), assigned_operator NVARCHAR(128))""",
 ]
 
 print("Creating tables...\n")
@@ -964,8 +964,8 @@ relationship 'Jobs to Projects'
         "machine_jobs": ("mes", [
             ("job_id","string"),("machine_id","string"),("part_spec_id","string"),
             ("part_name","string"),("project_id","string"),("quantity","int64"),
-            ("tolerance_mm","double"),("planned_start","string"),("planned_end","string"),
-            ("status","string"),("priority","string"),("due_date","dateTime"),
+            ("tolerance_mm","double"),("priority","string"),("due_date","dateTime"),
+            ("status","string"),("assigned_operator","string"),
         ]),
         "simulators": ("plm", [
             ("simulator_id","string"),("simulator_model","string"),("bay_id","string"),
