@@ -49,6 +49,9 @@ if not SQL_JDBC_CONNECTION_STRING:
     SQL_JDBC_CONNECTION_STRING = _DEFAULT_JDBC
     print(f"Using default JDBC connection string")
 
+# Optional: create the Fabric Ontology (preview). Requires Ontology preview enabled on the capacity.
+create_ontology = True
+
 # METADATA ********************
 
 # META {
@@ -1106,7 +1109,32 @@ relationship 'Jobs to Projects'
 
 # CELL ********************
 
-# Step 10 - Summary
+# Step 10 - (Optional) Create Fabric Ontology by invoking CreateOntology notebook
+ONTOLOGY_SETUP_OK = False
+ONTOLOGY_SKIPPED  = not create_ontology
+
+if create_ontology:
+    try:
+        print("Invoking CreateOntology notebook...")
+        notebookutils.notebook.run("CreateOntology", 1800)
+        ONTOLOGY_SETUP_OK = True
+        print("CreateOntology finished.")
+    except Exception as e:
+        print(f"CreateOntology failed (non-fatal): {e}")
+        ONTOLOGY_SETUP_OK = False
+else:
+    print("Ontology creation skipped (set create_ontology = True to enable).")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 11 - Summary
 print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
@@ -1126,6 +1154,10 @@ if 'ES_SETUP_OK' in dir() and ES_SETUP_OK:
 if 'SM_SETUP_OK' in dir() and SM_SETUP_OK:
     print(f"\nSemantic Model: {SM_NAME}")
     print("  8 tables (DirectLake) + 8 relationships")
+if 'ONTOLOGY_SKIPPED' in dir() and ONTOLOGY_SKIPPED:
+    print("\nOntology: skipped (create_ontology = False)")
+elif 'ONTOLOGY_SETUP_OK' in dir() and ONTOLOGY_SETUP_OK:
+    print("\nOntology: CAEManufacturingOntology (8 entities, 8 relationships, 3 timeseries bindings)")
 print("\nNext: Open GetStarted notebook.")
 
 # METADATA ********************

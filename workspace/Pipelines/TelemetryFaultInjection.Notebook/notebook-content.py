@@ -18,7 +18,7 @@
 # custom endpoint. The EventStream routes data to the Eventhouse KQL Database.
 # 
 # **Fault Profiles:**
-# - **CNC-001**: Spindle bearing failure — vibration increases, temperature rises,
+# - **CNC-003**: Spindle bearing failure — vibration increases, temperature rises,
 #   coolant flow drops, axis accuracy degrades, power consumption climbs
 # - *(Extensible to other machines via TARGET_MACHINE and FAULTS config)*
 # 
@@ -50,7 +50,7 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "azure-even
 # CELL ********************
 
 # === CONFIGURATION ===
-TARGET_MACHINE = "CNC-001"      # Machine to inject faults on
+TARGET_MACHINE = "CNC-003"      # Machine to inject faults on
 INTERVAL = 60                   # Seconds between batches
 DURATION_MIN = 10.0             # Total fault injection duration in minutes
 

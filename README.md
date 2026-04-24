@@ -169,6 +169,7 @@ cae-demo/
 │   ├── RTI/                                      # Real-Time Intelligence
 │   │   ├── CAEManufacturingEH.Eventhouse/        # Telemetry store
 │   │   ├── AnomalyDetection.Notebook/            # ML Z-score anomaly scoring
+│   │   ├── CreateOntology.Notebook/              # Fabric Ontology builder (preview)
 │   │   ├── TelemetryEventStream*                 # Created by PostDeploymentConfig (API)
 │   │   └── ClockInEventStream*                   # Created by PostDeploymentConfig (API)
 │   ├── Pipelines/                                # Scheduled data pipelines
@@ -176,7 +177,7 @@ cae-demo/
 │   │   ├── ClockInPipeline.DataPipeline/         # 1-min clock-in ingestion
 │   │   ├── SimulatorTelemetryEmulator.Notebook/  # Single-shot telemetry emitter
 │   │   ├── ClockInEventEmulator.Notebook/        # Single-shot clock-in emitter
-│   │   └── TelemetryFaultInjection.Notebook/     # Manual — CNC-001 bearing failure demo
+│   │   └── TelemetryFaultInjection.Notebook/     # Manual — CNC-003 bearing failure demo
 │   └── Agent/
 │       ├── CapacityManagementAgent.Notebook/     # AI agent querying SQL DB + KQL
 │       └── AlertNotificationAgent.Notebook/      # Teams webhook + Foundry agent
@@ -342,6 +343,29 @@ The **PostDeploymentConfig** notebook automatically creates a `CAEManufacturing`
 
 > **Note**: SQL FK constraints do NOT auto-propagate to DirectLake semantic models — relationships must be defined explicitly in TMDL. The PostDeploymentConfig handles this automatically.
 
+### 5b. Fabric Ontology (preview — optional)
+
+The **CreateOntology** notebook (in `workspace/RTI/`) builds a `CAEManufacturingOntology` Fabric Ontology item via the REST API. It is invoked automatically by PostDeploymentConfig as **Step 10** when `create_ontology = True` (default) in its config cell — set it to `False` if your capacity does not have the Ontology preview enabled.
+
+**Entity types (8):** `Machine`, `Employee`, `ProductionLine`, `Project`, `Simulator`, `Task`, `MaintenanceHistory`, `MachineJob` — all bound (NonTimeSeries) to the corresponding SQL Database tables.
+
+**Relationships (8 — active verbs):**
+- `EmployeeWorksOnProductionLine` (Employee → ProductionLine)
+- `MachineOnProductionLine` (Machine → ProductionLine)
+- `ProjectDeliversSimulator` (Project → Simulator)
+- `TaskBelongsToProject` (Task → Project)
+- `TaskRequiresMachine` (Task → Machine)
+- `MaintenanceServicesMachine` (MaintenanceHistory → Machine)
+- `JobRunsOnMachine` (MachineJob → Machine)
+- `JobSupportsProject` (MachineJob → Project)
+
+**Time-series bindings (3 — Eventhouse / KustoTable):**
+- `MachineTelemetry` → `Machine` (by `machine_id`, timestamp `timestamp`)
+- `ClockInEvents` → `Employee` (by `employee_id`, timestamp `timestamp`)
+- `AnomalyAlerts` → `Machine` (by `machine_id`, timestamp `alert_timestamp`)
+
+The notebook is **idempotent** — re-running it deletes the existing ontology and recreates it. The Ontology API is in preview ([docs](https://learn.microsoft.com/en-us/rest/api/fabric/ontology)); if your workspace capacity does not support it, the notebook surfaces a 404 and PostDeploymentConfig treats the step as non-fatal.
+
 ### 6. Create Gantt Report
 
 1. In the workspace, click **+ New item > Report** and connect it to the `CAEManufacturing` semantic model
@@ -382,7 +406,7 @@ To enable AI root-cause analysis, set `FOUNDRY_AGENT_ENDPOINT` in the same confi
 ### 8. Demo
 
 1. **Start telemetry**: TelemetryPipeline runs every 1 min, sending sensor data from all 20 machines to TelemetryEventStream → Eventhouse
-2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-001 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)
+2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-003 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)
 3. **Watch detection**: The 16 KQL health scoring functions produce composite scores in real-time. `CNC_BearingWearScore` will climb from ~0.2 to 0.99 as the fault progresses
 4. **Activator fires**: When `alert_level` becomes `Critical`, the Activator triggers the `AnomalyDetection` notebook automatically
 5. **ML scoring**: The notebook computes Z-score baselines and writes alerts to `AnomalyAlerts` with confidence %, RUL estimate, and severity
