@@ -45,7 +45,7 @@ function T($key, $title, $page, $vtype, $qkey, $x, $y, $w, $h, $vopts) {
 
 $tcCNC = @{
     multipleYAxes = @{ additional = @(); showMultiplePanels = $false
-        base = @{ id = "-1"; columns = @(); label = ""; yAxisMinimumValue = $null; yAxisMaximumValue = $null; yAxisScale = "linear"; horizontalLine = ""; horizontalLines = @() } }
+        base = @{ id = "-1"; columns = @(); label = ""; yAxisMinimumValue = $null; yAxisMaximumValue = $null; yAxisScale = "linear"; horizontalLines = @() } }
     seriesColors = @{ "CNC-003" = $magenta; "CNC-001" = $teal; "CNC-002" = $cyan; "CNC-005" = $green }
     legendLocation = "bottom"; crossFilter = @(); crossFilterDisabled = $false; drillthroughDisabled = $false; drillthrough = @()
 }
@@ -81,15 +81,11 @@ $queries = @(
 )
 
 $tiles = @(
-    (T "t1" "Active Machines" $p1 "stat" "q1" 0 0 4 3 @{})
-    (T "t2" "Total Readings" $p1 "stat" "q2" 4 0 4 3 @{})
-    (T "t3" "Critical" $p1 "stat" "q3" 8 0 4 3 @{})
-    (T "t4" "Warnings" $p1 "stat" "q4" 12 0 4 3 @{})
-    (T "t5" "Ingestion Rate" $p1 "timechart" "q5" 0 3 12 5 @{})
-    (T "t6" "Alert Distribution" $p1 "pie" "q6" 12 3 6 5 @{})
-    (T "t7" "Machines with Alerts" $p1 "bar" "q7" 18 3 6 5 @{})
-    (T "t8" "Alert Level Over Time" $p1 "timechart" "q8" 0 8 12 5 @{})
-    (T "t9" "Latest Readings" $p1 "table" "q9" 12 8 12 5 @{})
+    (T "t1" "Ingestion Rate" $p1 "timechart" "q5" 0 0 12 7 @{})
+    (T "t2" "Alert Distribution" $p1 "pie" "q6" 12 0 12 7 @{})
+    (T "t3" "Machines with Alerts" $p1 "bar" "q7" 0 7 12 7 @{})
+    (T "t4" "Alert Level Over Time" $p1 "timechart" "q8" 12 7 12 7 @{})
+    (T "t9" "Latest Readings" $p1 "table" "q9" 0 14 24 7 @{})
     (T "t10" "Spindle Temperature" $p2 "timechart" "q10" 0 0 12 6 $tcCNC)
     (T "t11" "Spindle Vibration" $p2 "timechart" "q11" 12 0 12 6 $tcCNC)
     (T "t12" "Power Consumption" $p2 "timechart" "q12" 0 6 12 6 $tcCNC)
