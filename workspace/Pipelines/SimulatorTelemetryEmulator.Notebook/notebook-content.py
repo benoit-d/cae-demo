@@ -29,7 +29,8 @@
 
 # CELL ********************
 
-%pip install -q azure-eventhub
+import subprocess, sys
+subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "azure-eventhub"])
 
 # METADATA ********************
 
