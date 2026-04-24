@@ -855,16 +855,7 @@ else:
 
 \tannotation PBI_QueryOrder = ["DirectLake - CAEManufacturing_SQLDB"]
 
-\tannotation __PBI_TimeIntelligenceEnabled = 1
-
-\tref table employees
-\tref table production_lines
-\tref table machines
-\tref table machine_jobs
-\tref table simulators
-\tref table maintenance_history
-\tref table projects
-\tref table tasks"""
+\tannotation __PBI_TimeIntelligenceEnabled = 1"""
 
     tmdl_expressions = f"""expression 'DirectLake - CAEManufacturing_SQLDB' =
 \t\tlet
