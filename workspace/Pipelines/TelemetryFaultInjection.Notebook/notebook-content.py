@@ -37,6 +37,17 @@
 
 # CELL ********************
 
+%pip install -q azure-eventhub
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 # === CONFIGURATION ===
 TARGET_MACHINE = "CNC-001"      # Machine to inject faults on
 INTERVAL = 60                   # Seconds between batches

@@ -28,6 +28,17 @@
 
 # CELL ********************
 
+%pip install -q azure-eventhub
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 # Configuration — EventStream connection string from the Custom Endpoint source.
 # Leave empty to auto-discover from workspace items.
 EVENTSTREAM_CONNECTION_STRING = ""
