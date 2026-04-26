@@ -43,7 +43,8 @@
 
 # === CONFIGURATION ===
 SQL_JDBC_CONNECTION_STRING = ""
-# Paste your JDBC connection string above, or leave empty to use the default below.
+# Leave empty to auto-discover from the config file or use the default below.
+# On a fresh workspace, paste your JDBC connection string here for the first run.
 _DEFAULT_JDBC = "jdbc:sqlserver://glhdjewslwruzpuscihr6nmsre-urbryfqunkhuxapla4hqtangbe.database.fabric.microsoft.com:1433;database={CAEManufacturing_SQLDB-6c31cad3-74a3-4eae-91f3-e2a4ed845e7e};encrypt=true;trustServerCertificate=false;authentication=ActiveDirectoryInteractive"
 if not SQL_JDBC_CONNECTION_STRING:
     SQL_JDBC_CONNECTION_STRING = _DEFAULT_JDBC
