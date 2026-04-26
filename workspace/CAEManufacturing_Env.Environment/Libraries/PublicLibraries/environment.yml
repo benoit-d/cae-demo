@@ -4,3 +4,4 @@ dependencies:
       - fabric-cicd>=1.0.0
       - gitpython>=3.1.0
       - pip>=26.0
+      - time-series-anomaly-detector==0.3.9

@@ -170,6 +170,7 @@ cae-demo/
 │   ├── RTI/                                      # Real-Time Intelligence
 │   │   ├── CAEManufacturingEH.Eventhouse/        # Telemetry store
 │   │   ├── AnomalyDetection.Notebook/            # ML Z-score anomaly scoring
+│   │   ├── TrainMVADModel.Notebook/              # Train multivariate anomaly detection model
 │   │   ├── CreateOntology.Notebook/              # Fabric Ontology builder (preview)
 │   │   ├── TelemetryEventStream*                 # Created by PostDeploymentConfig (API)
 │   │   └── ClockInEventStream*                   # Created by PostDeploymentConfig (API)
@@ -190,8 +191,9 @@ cae-demo/
 │   └── telemetry/    # sensor_definitions.csv (107 sensors × 20 machines)
 └── scripts/          # Local Python tools + KQL scripts
     ├── kql/                        # KQL health scoring functions (16 functions)
-    │   ├── machine_health_monitoring.kql   # All functions + table definitions
-    │   ├── anomaly_scoring.kql             # Confidence + RUL estimation
+│   │   ├── machine_health_monitoring.kql   # All functions + table definitions
+│   │   ├── anomaly_scoring.kql             # Confidence + RUL estimation
+│   │   ├── mvad_prediction.kql             # MVAD prediction functions (Phase 2)
     │   └── dashboard_spec.json             # Real-time dashboard spec
     ├── generate_project_data.py    # Regenerate 8 projects with scheduling constraints
     ├── telemetry_normal.py         # Standalone telemetry generator
@@ -325,7 +327,7 @@ Open the Lakehouse (`CAEManufacturing_LH`) in the Fabric UI. Navigate to **Files
 }
 ```
 
-Then open the `PostDeploymentConfig` notebook and **Run All**.
+Then open the `PostDeploymentConfig` notebook and **Run All**. It reads the JDBC string from `connections.json` automatically.
 
 ![PostDeploymentConfig](docs/screenshots/03-postdeployment-run-all.png)
 
@@ -449,7 +451,66 @@ When a sensor reading arrives with `alert_level = Critical`, the Activator trigg
 To enable Teams notifications, set `TEAMS_WEBHOOK_URL` in `config/connections.json` in the Lakehouse.
 To enable AI root-cause analysis, set `FOUNDRY_AGENT_PROJECT_ENDPOINT` and `FOUNDRY_AGENT_ID` in the same config file.
 
-### 8. Demo
+### 8. Multivariate Anomaly Detection (MVAD) — Optional
+
+Adds cross-sensor correlation modeling to detect subtle multi-sensor anomalies that Z-score analysis misses (e.g., vibration ↑ + temperature ↑ + coolant ↓ + power ↑ simultaneously during a bearing failure).
+
+**Architecture:** Spark notebook trains a `MultivariateAnomalyDetector` model → MLflow registry → KQL stored function loads model via Python plugin for real-time prediction.
+
+#### Prerequisites (manual UI steps)
+
+1. **Enable OneLake availability** on the Eventhouse: Open `CAEManufacturingEH` → Database details pane → Toggle **OneLake availability** to **On**
+2. **Enable Python plugin** on the Eventhouse: Open `CAEManufacturingEH` → Plugins → Toggle **Python language extension** to **On** → Select **Python 3.11.7 DL (preview)** → Done
+3. **Publish the Environment**: After the next deployment, the `CAEManufacturing_Env` environment includes `time-series-anomaly-detector==0.3.9`. Open the environment → Home tab → **Publish**
+
+#### Train the model
+
+1. Open the `TrainMVADModel` notebook (in `workspace/RTI/`)
+2. Attach the `CAEManufacturing_Env` environment
+3. **Run All** — the notebook:
+   - Reads `MachineTelemetry` from OneLake for CNC-001/002/003/005
+   - Filters to normal data only (`alert_level = "Normal"`)
+   - Pivots to wide format (4 sensors: Spindle Vibration, Spindle Temperature, Coolant Flow Rate, Power Consumption)
+   - Trains a `MultivariateAnomalyDetector` with sliding window = 200 (~3.3 hours)
+   - Registers the model in MLflow as `cnc_bearing_mvad_model`
+4. **Copy the ABFSS URI** from the last cell output
+
+> **Note:** You need several days of normal telemetry data before training. At 1-min intervals × 4 CNC machines, aim for at least 400 samples (~7 hours minimum, ideally 2+ days).
+
+#### Deploy the KQL prediction function
+
+1. Open `scripts/kql/mvad_prediction.kql`
+2. Replace `<MODEL_ABFSS_URI>` with the ABFSS path from the training notebook
+3. Run all `.create-or-alter function` commands in the KQL Database query editor
+
+This creates three functions:
+- `predict_fabric_mvad_fl()` — generic MVAD prediction helper (from the Microsoft tutorial)
+- `predict_cnc_mvad()` — CNC-specific wrapper that pivots telemetry and invokes the model
+- `ingest_mvad_anomalies()` — writes detected anomalies to the `AnomalyDetection` table with `anomaly_type = "MVAD"`
+
+#### Test it
+
+```kql
+// Run MVAD prediction on recent CNC data
+predict_cnc_mvad(400)
+| where is_anomaly == true
+| order by timestamp desc
+| take 50
+
+// Ingest anomalies into AnomalyDetection table
+.set-or-append AnomalyDetection <|
+    ingest_mvad_anomalies()
+```
+
+#### Coexistence with Z-score detection
+
+MVAD runs alongside the existing Z-score anomaly detection — they complement each other:
+- **Z-score** (existing): Catches obvious single-sensor spikes (fast, rule-based)
+- **MVAD** (new): Catches subtle multi-sensor correlations (ML-based, cross-sensor)
+
+MVAD results are written to the same `AnomalyDetection` table with `anomaly_type = "MVAD"` to distinguish from Z-score alerts (`anomaly_type = "Z-Score"`). The existing Foundry agent and Teams notification pipeline works with both.
+
+### 9. Demo
 
 1. **Start telemetry**: TelemetryPipeline runs every 1 min, sending sensor data from all 20 machines to TelemetryEventStream → Eventhouse
 2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-003 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)

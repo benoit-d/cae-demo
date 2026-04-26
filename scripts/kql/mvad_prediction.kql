@@ -1,0 +1,194 @@
+// =============================================================================
+// Multivariate Anomaly Detection (MVAD) — KQL Prediction Functions
+// =============================================================================
+// Prerequisites:
+//   1. Python 3.11.7 DL plugin enabled on the Eventhouse (Plugins pane)
+//   2. Trained MVAD model registered in MLflow (run TrainMVADModel notebook first)
+//   3. Replace <MODEL_ABFSS_URI> below with the actual model ABFSS path
+//
+// Deploy: Run these commands in the KQL Database query editor for CAEManufacturingKQLDB
+// =============================================================================
+
+
+// ---------------------------------------------------------------------------
+// Step 1: Create the generic predict_fabric_mvad_fl() stored function
+// ---------------------------------------------------------------------------
+// This is the standard helper function from the Microsoft tutorial that:
+//   - Downloads MLflow model artifacts from OneLake
+//   - Loads the model in the KQL Python sandbox
+//   - Runs prediction and returns is_anomaly, score, severity, interpretation
+// ---------------------------------------------------------------------------
+
+.create-or-alter function with (folder = "Packages\\ML", docstring = "Predict MVAD model in Microsoft Fabric")
+predict_fabric_mvad_fl(samples:(*), features_cols:dynamic, artifacts_uri:string, trim_result:bool=false)
+{
+    let s = artifacts_uri;
+    let artifacts = bag_pack(
+        'MLmodel', strcat(s, '/MLmodel;impersonate'),
+        'conda.yaml', strcat(s, '/conda.yaml;impersonate'),
+        'requirements.txt', strcat(s, '/requirements.txt;impersonate'),
+        'python_env.yaml', strcat(s, '/python_env.yaml;impersonate'),
+        'python_model.pkl', strcat(s, '/python_model.pkl;impersonate')
+    );
+    let kwargs = bag_pack('features_cols', features_cols, 'trim_result', trim_result);
+    let code = ```if 1:
+        import os
+        import shutil
+        import mlflow
+        model_dir = 'C:/Temp/mvad_model'
+        model_data_dir = model_dir + '/data'
+        os.mkdir(model_dir)
+        shutil.move('C:/Temp/MLmodel', model_dir)
+        shutil.move('C:/Temp/conda.yaml', model_dir)
+        shutil.move('C:/Temp/requirements.txt', model_dir)
+        shutil.move('C:/Temp/python_env.yaml', model_dir)
+        shutil.move('C:/Temp/python_model.pkl', model_dir)
+        features_cols = kargs["features_cols"]
+        trim_result = kargs["trim_result"]
+        test_data = df[features_cols]
+        model = mlflow.pyfunc.load_model(model_dir)
+        predictions = model.predict(test_data)
+        predict_result = pd.DataFrame(predictions)
+        samples_offset = len(df) - len(predict_result)
+        if trim_result:
+            result = df[samples_offset:]
+            result.iloc[:,-4:] = predict_result.iloc[:, 1:]
+        else:
+            result = df
+            result.iloc[samples_offset:,-4:] = predict_result.iloc[:, 1:]
+        ```;
+    samples
+    | evaluate python(typeof(*), code, kwargs, external_artifacts=artifacts)
+}
+
+
+// ---------------------------------------------------------------------------
+// Step 2: Create the CNC-specific prediction function predict_cnc_mvad()
+// ---------------------------------------------------------------------------
+// This wraps predict_fabric_mvad_fl() with CNC-specific logic:
+//   - Reads MachineTelemetry for CNC machines
+//   - Pivots narrow → wide format
+//   - Adds placeholder columns for MVAD output
+//   - Invokes the trained model
+//   - Returns results per timestamp × machine
+// ---------------------------------------------------------------------------
+
+// ** IMPORTANT: Replace <MODEL_ABFSS_URI> with the actual ABFSS path from the training notebook **
+// Example: abfss://12345678-abcd-1234-abcd-1234567890ab@onelake.dfs.fabric.microsoft.com/.../mvad_artifacts
+
+.create-or-alter function with (folder = "Health\\MVAD", docstring = "Predict CNC mill multivariate anomalies using trained MVAD model")
+predict_cnc_mvad(lookback_minutes:int = 400)
+{
+    let sliding_window = 200;
+    let prefix_score_len = sliding_window / 2 + min_of(sliding_window / 2, 200) - 1;
+    let cnc_machines = dynamic(["CNC-001", "CNC-002", "CNC-003", "CNC-005"]);
+    let feature_sensors = dynamic(["Spindle Vibration", "Spindle Temperature", "Coolant Flow Rate", "Power Consumption"]);
+    let model_uri = "<MODEL_ABFSS_URI>";  // ← Replace with actual model ABFSS path
+    //
+    // Pivot MachineTelemetry from narrow to wide format
+    MachineTelemetry
+    | where timestamp > ago(totimespan(strcat(tostring(lookback_minutes), "m")))
+    | where machine_id in (cnc_machines)
+    | where sensor_name in (feature_sensors)
+    | summarize value = avg(value) by timestamp, machine_id, sensor_name
+    | evaluate pivot(sensor_name, take_any(value))
+    | project
+        timestamp,
+        machine_id,
+        Spindle_Vibration = column_ifexists("Spindle Vibration", real(null)),
+        Spindle_Temperature = column_ifexists("Spindle Temperature", real(null)),
+        Coolant_Flow_Rate = column_ifexists("Coolant Flow Rate", real(null)),
+        Power_Consumption = column_ifexists("Power Consumption", real(null))
+    | where isnotnull(Spindle_Vibration) and isnotnull(Spindle_Temperature)
+        and isnotnull(Coolant_Flow_Rate) and isnotnull(Power_Consumption)
+    | order by machine_id asc, timestamp asc
+    // Add placeholder columns for MVAD output
+    | extend is_anomaly = bool(false), score = real(null), severity = real(null), interpretation = dynamic(null)
+    // Invoke MVAD model
+    | invoke predict_fabric_mvad_fl(
+        pack_array("Spindle_Vibration", "Spindle_Temperature", "Coolant_Flow_Rate", "Power_Consumption"),
+        model_uri,
+        trim_result=true
+    )
+}
+
+
+// ---------------------------------------------------------------------------
+// Step 3: Create a convenience function to write MVAD results to AnomalyDetection
+// ---------------------------------------------------------------------------
+// Call this from a KQL queryset alert or scheduled query to persist MVAD alerts
+// alongside the existing Z-score alerts (anomaly_type = "MVAD").
+// ---------------------------------------------------------------------------
+
+.create-or-alter function with (folder = "Health\\MVAD", docstring = "Insert MVAD anomalies into AnomalyDetection table")
+ingest_mvad_anomalies()
+{
+    predict_cnc_mvad(400)
+    | where is_anomaly == true
+    | summarize
+        top_sensors = strcat_delim(", ",
+            iff(isnotnull(Spindle_Vibration), strcat("Spindle Vibration: ", round(Spindle_Vibration, 4)), ""),
+            iff(isnotnull(Spindle_Temperature), strcat("Spindle Temperature: ", round(Spindle_Temperature, 1)), ""),
+            iff(isnotnull(Coolant_Flow_Rate), strcat("Coolant Flow Rate: ", round(Coolant_Flow_Rate, 1)), ""),
+            iff(isnotnull(Power_Consumption), strcat("Power Consumption: ", round(Power_Consumption, 1)), "")
+        ),
+        avg_score = avg(score),
+        max_severity = max(severity)
+        by timestamp, machine_id
+    | extend
+        anomaly_type = "MVAD",
+        anomaly_confidence_pct = round(min_of(avg_score * 100.0, 99.9), 1),
+        estimated_rul_hours = case(
+            max_severity > 0.8, 4,
+            max_severity > 0.6, 24,
+            max_severity > 0.4, 72,
+            max_severity > 0.2, 168,
+            720
+        ),
+        composite_score = round(avg_score, 4),
+        description = strcat("MVAD multivariate anomaly detected — correlated sensor shift on ", machine_id),
+        severity = case(
+            max_severity > 0.8, "Critical",
+            max_severity > 0.6, "High",
+            max_severity > 0.4, "Medium",
+            "Low"
+        )
+    | project
+        timestamp,
+        machine_id,
+        anomaly_type,
+        anomaly_confidence_pct,
+        estimated_rul_hours,
+        top_deviating_sensors = top_sensors,
+        composite_score,
+        description,
+        severity
+}
+
+
+// ===========================================================================
+// SAMPLE QUERIES — Run these after deploying the functions above
+// ===========================================================================
+
+// --- Test: Run MVAD prediction on last ~6 hours of CNC data ---
+// predict_cnc_mvad(400)
+// | where is_anomaly == true
+// | order by timestamp desc
+// | take 50
+
+// --- Test: Render anomaly chart for CNC-003 ---
+// predict_cnc_mvad(400)
+// | where machine_id == "CNC-003"
+// | order by timestamp asc
+// | summarize
+//     timestamp = make_list(timestamp),
+//     Spindle_Vibration = make_list(Spindle_Vibration),
+//     Spindle_Temperature = make_list(Spindle_Temperature),
+//     Coolant_Flow_Rate = make_list(Coolant_Flow_Rate),
+//     Power_Consumption = make_list(Power_Consumption),
+//     anomaly = make_list(toint(is_anomaly))
+// | render anomalychart with(anomalycolumns=anomaly, title='CNC-003 MVAD Anomaly Detection')
+
+// --- Ingest detected anomalies into AnomalyDetection table ---
+// .set-or-append AnomalyDetection <|
+//     ingest_mvad_anomalies()

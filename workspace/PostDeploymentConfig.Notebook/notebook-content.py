@@ -28,7 +28,7 @@
 # ## Prerequisites
 # 1. SolutionInstaller has run (Lakehouse has CSVs in Files/)
 # 2. A Fabric SQL Database exists in the workspace
-# 3. Paste the JDBC connection string in `config/connections.json` (Lakehouse > Files > config)
+# 3. JDBC connection string is set in `config/connections.json` (Lakehouse > Files > config)
 # 
 # **Run All to configure.**
 
@@ -42,17 +42,8 @@
 # CELL ********************
 
 # === CONFIGURATION ===
-SQL_JDBC_CONNECTION_STRING = ""
-# Leave empty to auto-discover from config/connections.json in the Lakehouse.
-# On a fresh workspace, set the JDBC string in connections.json (preferred)
-# or paste it here for a quick first run.
-_DEFAULT_JDBC = ""
-if not SQL_JDBC_CONNECTION_STRING:
-    SQL_JDBC_CONNECTION_STRING = _DEFAULT_JDBC
-if SQL_JDBC_CONNECTION_STRING:
-    print(f"Using JDBC from config cell")
-else:
-    print(f"No JDBC in config cell — will read from connections.json")
+# All connection strings are read from config/connections.json in the Lakehouse.
+# Set them there before running this notebook (see README Step 3).
 
 # Optional: create the Fabric Ontology (preview). Requires Ontology preview enabled on the capacity.
 create_ontology = True
@@ -90,21 +81,6 @@ if not lh:
 LH_ID = lh["id"]
 BASE = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{LH_ID}/Files"
 print(f"Lakehouse: {LH_ID}")
-
-SQL_ENDPOINT = ""
-SQL_DBNAME = ""
-if SQL_JDBC_CONNECTION_STRING:
-    sm = re.search(r'sqlserver://([^:;]+)', SQL_JDBC_CONNECTION_STRING)
-    dm = re.search(r'database=\{?([^};]+)\}?', SQL_JDBC_CONNECTION_STRING)
-    if sm and dm:
-        SQL_ENDPOINT = sm.group(1)
-        SQL_DBNAME = dm.group(1)
-        print(f"SQL Server:   {SQL_ENDPOINT}")
-        print(f"SQL Database: {SQL_DBNAME}")
-    else:
-        print("ERROR: Could not parse JDBC string.")
-else:
-    raise RuntimeError("Set SQL_JDBC_CONNECTION_STRING in the config cell above.")
 
 # METADATA ********************
 
@@ -165,45 +141,12 @@ try:
     for k, v in config.items():
         status = "SET" if v else "EMPTY"
         print(f"    {k}: {status}")
-
-    # Use SQL connection from config if available (and not already set in config cell)
-    if config.get("SQL_JDBC_CONNECTION_STRING") and not SQL_JDBC_CONNECTION_STRING:
-        SQL_JDBC_CONNECTION_STRING = config["SQL_JDBC_CONNECTION_STRING"]
-        sm = re.search(r'sqlserver://([^:;]+)', SQL_JDBC_CONNECTION_STRING)
-        dm = re.search(r'database=\{?([^};]+)\}?', SQL_JDBC_CONNECTION_STRING)
-        if sm and dm:
-            SQL_ENDPOINT = sm.group(1)
-            SQL_DBNAME = dm.group(1)
-            print(f"    Using SQL connection from config file")
-
-    # Update config with current SQL connection (in case it was set in the config cell)
-    if SQL_JDBC_CONNECTION_STRING and SQL_JDBC_CONNECTION_STRING != config.get("SQL_JDBC_CONNECTION_STRING"):
-        config["SQL_JDBC_CONNECTION_STRING"] = SQL_JDBC_CONNECTION_STRING
-        _write_config(CONFIG_PATH, config)
-        print("    Updated SQL connection in config file")
-
-    # Ensure all expected keys exist (add new ones if missing from older config files)
-    all_keys = ["SQL_JDBC_CONNECTION_STRING", "TELEMETRY_EVENTSTREAM_CONNECTION_STRING",
-                "CLOCKIN_EVENTSTREAM_CONNECTION_STRING", "FOUNDRY_AGENT_PROJECT_ENDPOINT",
-                "FOUNDRY_AGENT_ID", "TEAMS_WEBHOOK_URL"]
-    updated = False
-    for k in all_keys:
-        if k not in config:
-            config[k] = ""
-            updated = True
-
-    empty_keys = [k for k, v in config.items() if not v]
-    if empty_keys:
-        print(f"\n  Empty keys (fill in before using those features): {', '.join(empty_keys)}")
-    if updated:
-        _write_config(CONFIG_PATH, config)
-        print("  Added missing keys to config file")
 except Exception:
     print(f"WARNING: Config file not found: {CONFIG_PATH}")
     print("  Run SolutionInstaller first (Cell 3 creates it).")
     print("  Creating a default config file now...")
     config = {
-        "SQL_JDBC_CONNECTION_STRING": SQL_JDBC_CONNECTION_STRING,
+        "SQL_JDBC_CONNECTION_STRING": "",
         "TELEMETRY_EVENTSTREAM_CONNECTION_STRING": "",
         "CLOCKIN_EVENTSTREAM_CONNECTION_STRING": "",
         "FOUNDRY_AGENT_PROJECT_ENDPOINT": "",
@@ -211,7 +154,42 @@ except Exception:
         "TEAMS_WEBHOOK_URL": "",
     }
     _write_config(CONFIG_PATH, config)
-    print("  Created. Fill in connection strings before running pipelines.")
+    print("  Created. Fill in SQL_JDBC_CONNECTION_STRING before re-running.")
+
+# Ensure all expected keys exist (add new ones if missing from older config files)
+all_keys = ["SQL_JDBC_CONNECTION_STRING", "TELEMETRY_EVENTSTREAM_CONNECTION_STRING",
+            "CLOCKIN_EVENTSTREAM_CONNECTION_STRING", "FOUNDRY_AGENT_PROJECT_ENDPOINT",
+            "FOUNDRY_AGENT_ID", "TEAMS_WEBHOOK_URL"]
+updated = False
+for k in all_keys:
+    if k not in config:
+        config[k] = ""
+        updated = True
+if updated:
+    _write_config(CONFIG_PATH, config)
+    print("  Added missing keys to config file")
+
+# Parse SQL connection string from config
+SQL_JDBC_CONNECTION_STRING = config.get("SQL_JDBC_CONNECTION_STRING", "")
+if not SQL_JDBC_CONNECTION_STRING:
+    raise RuntimeError("SQL_JDBC_CONNECTION_STRING is empty in connections.json. "
+                       "Open Lakehouse > Files > config > connections.json and paste your JDBC string.")
+
+sm = re.search(r'sqlserver://([^:;]+)', SQL_JDBC_CONNECTION_STRING)
+dm = re.search(r'database=\{?([^};]+)\}?', SQL_JDBC_CONNECTION_STRING)
+if sm and dm:
+    SQL_ENDPOINT = sm.group(1)
+    SQL_DBNAME = dm.group(1)
+    print(f"SQL Server:   {SQL_ENDPOINT}")
+    print(f"SQL Database: {SQL_DBNAME}")
+else:
+    raise RuntimeError("Could not parse SQL_JDBC_CONNECTION_STRING. Check the format in connections.json.")
+
+empty_keys = [k for k, v in config.items() if not v]
+if empty_keys:
+    print(f"\n  Empty keys (fill in before using those features): {', '.join(empty_keys)}")
+
+print("\nConfig OK — proceeding with deployment")
 
 # METADATA ********************
 
