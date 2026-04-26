@@ -63,7 +63,7 @@ if not SQL_JDBC_CONNECTION_STRING:
     items_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=fab_headers)
     lh = next((i for i in items_resp.json().get("value", []) if i.get("displayName") == "CAEManufacturing_LH"), None)
     if lh:
-        config_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/config/connections.json"
+        config_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"
         try:
             config = json.loads(notebookutils.fs.head(config_path, 10000))
             SQL_JDBC_CONNECTION_STRING = config.get("SQL_JDBC_CONNECTION_STRING", "")

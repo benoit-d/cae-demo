@@ -167,10 +167,22 @@ try:
         notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
         print("    Updated SQL connection in config file")
 
-    empty_keys = [k for k, v in config.items() if not v and "EVENTSTREAM" in k]
+    # Ensure all expected keys exist (add new ones if missing from older config files)
+    all_keys = ["SQL_JDBC_CONNECTION_STRING", "TELEMETRY_EVENTSTREAM_CONNECTION_STRING",
+                "CLOCKIN_EVENTSTREAM_CONNECTION_STRING", "FOUNDRY_AGENT_PROJECT_ENDPOINT",
+                "FOUNDRY_AGENT_ID", "TEAMS_WEBHOOK_URL"]
+    updated = False
+    for k in all_keys:
+        if k not in config:
+            config[k] = ""
+            updated = True
+
+    empty_keys = [k for k, v in config.items() if not v]
     if empty_keys:
-        print(f"\n  ACTION REQUIRED: Fill in EventStream connection strings in the config file.")
-        print("  Open each EventStream in Fabric UI → Custom Endpoint → Details → SAS Key Authentication")
+        print(f"\n  Empty keys (fill in before using those features): {', '.join(empty_keys)}")
+    if updated:
+        notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
+        print("  Added missing keys to config file")
 except Exception:
     print(f"WARNING: Config file not found: {CONFIG_PATH}")
     print("  Run SolutionInstaller first (Cell 3 creates it).")
@@ -179,9 +191,12 @@ except Exception:
         "SQL_JDBC_CONNECTION_STRING": SQL_JDBC_CONNECTION_STRING,
         "TELEMETRY_EVENTSTREAM_CONNECTION_STRING": "",
         "CLOCKIN_EVENTSTREAM_CONNECTION_STRING": "",
+        "FOUNDRY_AGENT_PROJECT_ENDPOINT": "",
+        "FOUNDRY_AGENT_ID": "",
+        "TEAMS_WEBHOOK_URL": "",
     }
     notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
-    print("  Created. Fill in EventStream connection strings before running pipelines.")
+    print("  Created. Fill in connection strings before running pipelines.")
 
 # METADATA ********************
 

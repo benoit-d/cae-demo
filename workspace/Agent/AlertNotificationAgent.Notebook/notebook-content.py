@@ -41,19 +41,10 @@
 # CELL ********************
 
 # === CONFIGURATION ===
-# Azure AI Foundry Agent — root-cause analysis + Teams notification
-# Replaced at deploy time by fabric-cicd via workspace/parameter.yml.
-AGENT_PROJECT_ENDPOINT = "<<FOUNDRY_AGENT_PROJECT_ENDPOINT>>"
-AGENT_ID = "<<FOUNDRY_AGENT_ID>>"
-if AGENT_PROJECT_ENDPOINT.startswith("<<"):
-    AGENT_PROJECT_ENDPOINT = ""
-if AGENT_ID.startswith("<<"):
-    AGENT_ID = ""
-
-# Teams Incoming Webhook URL — fallback if agent is not configured
-TEAMS_WEBHOOK_URL = "<<TEAMS_WEBHOOK_URL>>"
-if TEAMS_WEBHOOK_URL.startswith("<<"):
-    TEAMS_WEBHOOK_URL = ""
+# All config read from Lakehouse config/connections.json (set once, persists across CI/CD).
+AGENT_PROJECT_ENDPOINT = ""
+AGENT_ID = ""
+TEAMS_WEBHOOK_URL = ""
 
 # KQL URI — leave empty to auto-discover
 KQL_URI = ""
@@ -103,6 +94,23 @@ if not KQL_URI:
         raise RuntimeError("CAEManufacturingEH not found")
 
 DB_NAME = "CAEManufacturingKQLDB"
+
+# Read config from Lakehouse config file
+lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
+if lh and (not AGENT_PROJECT_ENDPOINT or not AGENT_ID):
+    try:
+        cfg_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"
+        cfg = json.loads(notebookutils.fs.head(cfg_path, 10000))
+        if not AGENT_PROJECT_ENDPOINT:
+            AGENT_PROJECT_ENDPOINT = cfg.get("FOUNDRY_AGENT_PROJECT_ENDPOINT", "")
+        if not AGENT_ID:
+            AGENT_ID = cfg.get("FOUNDRY_AGENT_ID", "")
+        if not TEAMS_WEBHOOK_URL:
+            TEAMS_WEBHOOK_URL = cfg.get("TEAMS_WEBHOOK_URL", "")
+        print(f"Agent: {'configured' if AGENT_ID else 'not configured'}")
+        print(f"Teams: {'configured' if TEAMS_WEBHOOK_URL else 'not configured'}")
+    except Exception as e:
+        print(f"Config file not found — agent/Teams not configured: {e}")
 
 def kql_query(query):
     """Run a KQL query and return results as list of dicts."""
