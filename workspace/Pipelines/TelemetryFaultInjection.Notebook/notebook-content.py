@@ -47,14 +47,9 @@ TARGET_MACHINE = "CNC-003"      # Machine to inject faults on
 INTERVAL = 60                   # Seconds between batches
 DURATION_MIN = 6.0              # Total fault injection duration in minutes
 
-# EventStream connection string — replaced at deploy time by fabric-cicd
-# via workspace/parameter.yml (generated from .deploy-secrets.json).
-# If the placeholder survives a deploy, the auto-discovery block below will
-# still try to locate the connection string from the Eventstream definition.
-EVENTSTREAM_CONNECTION_STRING = "<<TELEMETRY_EVENTSTREAM_CONNECTION_STRING>>"
+# EventStream config — read from Lakehouse config file at runtime
 EVENTSTREAM_NAME = "TelemetryEventStream"
-if EVENTSTREAM_CONNECTION_STRING.startswith("<<"):
-    EVENTSTREAM_CONNECTION_STRING = ""
+CONFIG_KEY = "TELEMETRY_EVENTSTREAM_CONNECTION_STRING"
 
 # METADATA ********************
 
@@ -93,31 +88,22 @@ sensor_defs = [row.asDict() for row in
     .filter(f"machine_id = '{TARGET_MACHINE}'").collect()]
 print(f"{len(sensor_defs)} sensors loaded for {TARGET_MACHINE}")
 
-# Auto-discover EventStream connection string if not set
-if not EVENTSTREAM_CONNECTION_STRING:
-    es = next((i for i in items_list if i.get("displayName") == EVENTSTREAM_NAME and i.get("type") == "Eventstream"), None)
-    if es:
-        es_def_resp = requests.get(
-            f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventstreams/{es['id']}/definition",
-            headers=headers
+# Read EventStream connection string from Lakehouse config file
+CONFIG_PATH = f"{BASE}/config/connections.json"
+try:
+    config = json.loads(notebookutils.fs.head(CONFIG_PATH, 10000))
+    EVENTSTREAM_CONNECTION_STRING = config.get(CONFIG_KEY, "")
+    if EVENTSTREAM_CONNECTION_STRING:
+        print(f"Loaded connection string from config ({CONFIG_KEY})")
+    else:
+        raise RuntimeError(
+            f"{CONFIG_KEY} is empty in {CONFIG_PATH}. "
+            f"Open '{EVENTSTREAM_NAME}' in Fabric UI → Custom Endpoint source → "
+            f"copy the Event Hub connection string into the config file."
         )
-        if es_def_resp.status_code == 200:
-            for part in es_def_resp.json().get("definition", {}).get("parts", []):
-                if part["path"] == "eventstream.json":
-                    es_json = json.loads(base64.b64decode(part["payload"]).decode("utf-8"))
-                    for src in es_json.get("sources", []):
-                        conn = src.get("properties", {}).get("connectionString", "")
-                        if conn:
-                            EVENTSTREAM_CONNECTION_STRING = conn
-                            print(f"Auto-discovered EventStream connection string")
-                            break
-                    break
-
-if not EVENTSTREAM_CONNECTION_STRING:
+except FileNotFoundError:
     raise RuntimeError(
-        f"EventStream connection string not found. "
-        f"Open '{EVENTSTREAM_NAME}' in Fabric UI → Custom Endpoint source → "
-        f"copy the Event Hub connection string into EVENTSTREAM_CONNECTION_STRING."
+        f"Config file not found: {CONFIG_PATH}. Run PostDeploymentConfig first."
     )
 
 # Fault profile: spindle bearing failure on CNC mill.

@@ -136,7 +136,59 @@ else:
 
 # CELL ********************
 
-# Step 3 - Create KQL Database with schema via Fabric API
+# Step 3 - Create connections config file (if it doesn't exist)
+# Stores EventStream and SQL DB connection strings in the Lakehouse.
+# This file persists across CI/CD deployments — fill in values once.
+import json
+
+CONFIG_PATH = f"{BASE}/config/connections.json"
+
+config_exists = False
+try:
+    raw = notebookutils.fs.head(CONFIG_PATH, 10000)
+    config_exists = True
+    print(f"Config file exists: {CONFIG_PATH}")
+    print("  Connection strings preserved — not overwriting.")
+    config = json.loads(raw)
+    for k, v in config.items():
+        status = "SET" if v else "EMPTY — needs to be filled in"
+        print(f"    {k}: {status}")
+except Exception:
+    pass
+
+if not config_exists:
+    print(f"Creating config file: {CONFIG_PATH}")
+    config = {
+        "TELEMETRY_EVENTSTREAM_CONNECTION_STRING": "",
+        "CLOCKIN_EVENTSTREAM_CONNECTION_STRING": "",
+        "SQL_JDBC_CONNECTION_STRING": SQL_JDBC_CONNECTION_STRING,
+    }
+    notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
+    print("  Created with SQL connection string pre-filled.")
+    print("")
+    print("  ACTION REQUIRED: Edit the config file with EventStream connection strings.")
+    print("  1. Open each EventStream in Fabric UI → Custom Endpoint source → Details pane")
+    print("  2. Copy the Event Hub connection string (SAS Key Authentication tab)")
+    print("  3. Edit the config file in Lakehouse > Files > config > connections.json")
+    print("     Or run this in a notebook cell:")
+    print("")
+    print(f'     config_path = "{CONFIG_PATH}"')
+    print('     import json')
+    print('     config = json.loads(notebookutils.fs.head(config_path, 10000))')
+    print('     config["TELEMETRY_EVENTSTREAM_CONNECTION_STRING"] = "Endpoint=sb://..."')
+    print('     config["CLOCKIN_EVENTSTREAM_CONNECTION_STRING"] = "Endpoint=sb://..."')
+    print('     notebookutils.fs.put(config_path, json.dumps(config, indent=2), overwrite=True)')
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 4 - Create KQL Database with schema via Fabric API
 import base64, json, time
 
 # Find the Eventhouse
@@ -264,7 +316,7 @@ else:
 
 # CELL ********************
 
-# Step 4 - Create EventStreams with Custom Endpoint source → Eventhouse destination
+# Step 5 - Create EventStreams with Custom Endpoint source → Eventhouse destination
 import base64, json, time
 
 ES_SETUP_OK = False
@@ -417,7 +469,7 @@ else:
 
 # CELL ********************
 
-# Step 5 - Drop ALL existing SQL tables and schemas, then recreate fresh
+# Step 6 - Drop ALL existing SQL tables and schemas, then recreate fresh
 import pyodbc
 
 TOKEN_SQL = notebookutils.credentials.getToken("https://database.windows.net/")
@@ -475,7 +527,7 @@ for schema in ['hr', 'erp', 'plm', 'mes', 'telemetry']:
 
 # CELL ********************
 
-# Step 6 - Create SQL tables (PK columns are NOT NULL, everything else nullable)
+# Step 7 - Create SQL tables (PK columns are NOT NULL, everything else nullable)
 DDL = [
     # --- hr schema ---
     """CREATE TABLE hr.employees (
@@ -647,7 +699,7 @@ print("\nAll tables created.")
 
 # CELL ********************
 
-# Step 7 - Bulk insert all data
+# Step 8 - Bulk insert all data
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
 
@@ -715,7 +767,7 @@ print("\nAll data loaded.")
 
 # CELL ********************
 
-# Step 8 - Add primary keys and foreign keys
+# Step 9 - Add primary keys and foreign keys
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 conn.autocommit = True
 cursor = conn.cursor()
@@ -799,7 +851,7 @@ print(f"\n{ok}/{len(CONSTRAINTS)} constraints added.")
 
 # CELL ********************
 
-# Step 9 - Verify
+# Step 10 - Verify
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 cursor = conn.cursor()
 
@@ -845,7 +897,7 @@ print("\nSQL data verified.")
 
 # CELL ********************
 
-# Step 10 - Create or update Semantic Model with DirectLake + relationships
+# Step 11 - Create or update Semantic Model with DirectLake + relationships
 import base64
 
 SM_NAME = "CAEManufacturing"
@@ -1126,7 +1178,7 @@ relationship 'Jobs to Projects'
 
 # CELL ********************
 
-# Step 11 - (Optional) Create Fabric Ontology by invoking CreateOntology notebook
+# Step 12 - (Optional) Create Fabric Ontology by invoking CreateOntology notebook
 ONTOLOGY_SETUP_OK = False
 ONTOLOGY_SKIPPED  = not create_ontology
 
@@ -1151,7 +1203,7 @@ else:
 
 # CELL ********************
 
-# Step 12 - Summary
+# Step 13 - Summary
 print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
