@@ -143,6 +143,17 @@ import json
 
 CONFIG_PATH = f"{BASE}/config/connections.json"
 
+def _write_config(path, cfg):
+    """Write config JSON using OneLake DFS API (reliable, creates parent dirs)."""
+    storage_token = notebookutils.credentials.getToken("https://storage.azure.com")
+    sh = {"Authorization": f"Bearer {storage_token}"}
+    # Convert abfss path to OneLake DFS URL
+    onelake_url = path.replace(f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/", f"https://onelake.dfs.fabric.microsoft.com/{WORKSPACE_ID}/")
+    data = json.dumps(cfg, indent=2).encode("utf-8")
+    requests.put(f"{onelake_url}?resource=file", headers=sh)
+    requests.patch(f"{onelake_url}?action=append&position=0", headers={**sh, "Content-Type": "application/octet-stream"}, data=data)
+    requests.patch(f"{onelake_url}?action=flush&position={len(data)}", headers=sh)
+
 try:
     raw = notebookutils.fs.head(CONFIG_PATH, 10000)
     config = json.loads(raw)
@@ -164,7 +175,7 @@ try:
     # Update config with current SQL connection (in case it was set in the config cell)
     if SQL_JDBC_CONNECTION_STRING and SQL_JDBC_CONNECTION_STRING != config.get("SQL_JDBC_CONNECTION_STRING"):
         config["SQL_JDBC_CONNECTION_STRING"] = SQL_JDBC_CONNECTION_STRING
-        notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
+        _write_config(CONFIG_PATH, config)
         print("    Updated SQL connection in config file")
 
     # Ensure all expected keys exist (add new ones if missing from older config files)
@@ -181,7 +192,7 @@ try:
     if empty_keys:
         print(f"\n  Empty keys (fill in before using those features): {', '.join(empty_keys)}")
     if updated:
-        notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
+        _write_config(CONFIG_PATH, config)
         print("  Added missing keys to config file")
 except Exception:
     print(f"WARNING: Config file not found: {CONFIG_PATH}")
@@ -195,7 +206,7 @@ except Exception:
         "FOUNDRY_AGENT_ID": "",
         "TEAMS_WEBHOOK_URL": "",
     }
-    notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
+    _write_config(CONFIG_PATH, config)
     print("  Created. Fill in connection strings before running pipelines.")
 
 # METADATA ********************

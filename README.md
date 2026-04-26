@@ -265,10 +265,15 @@ if lh:
     # Create connections config file (if it doesn't exist)
     import json
     config_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"
-    try:
-        notebookutils.fs.head(config_path, 100)
+    onelake_file = f"https://onelake.dfs.fabric.microsoft.com/{WORKSPACE_ID}/{lh['id']}/Files/config/connections.json"
+    storage_token = notebookutils.credentials.getToken("https://storage.azure.com")
+    storage_headers = {"Authorization": f"Bearer {storage_token}"}
+
+    # Check if file exists
+    check_resp = requests.head(onelake_file, headers=storage_headers)
+    if check_resp.status_code == 200:
         print("Config file exists — preserving connection strings")
-    except:
+    else:
         config = {
             "SQL_JDBC_CONNECTION_STRING": "",
             "TELEMETRY_EVENTSTREAM_CONNECTION_STRING": "",
@@ -277,8 +282,14 @@ if lh:
             "FOUNDRY_AGENT_ID": "",
             "TEAMS_WEBHOOK_URL": "",
         }
-        notebookutils.fs.put(config_path, json.dumps(config, indent=2), overwrite=True)
+        config_bytes = json.dumps(config, indent=2).encode("utf-8")
+        # Create file via OneLake DFS API (auto-creates parent directories)
+        requests.put(f"{onelake_file}?resource=file", headers=storage_headers)
+        requests.patch(f"{onelake_file}?action=append&position=0",
+                      headers={**storage_headers, "Content-Type": "application/octet-stream"}, data=config_bytes)
+        requests.patch(f"{onelake_file}?action=flush&position={len(config_bytes)}", headers=storage_headers)
         print("Created config/connections.json — fill in connection strings before running PostDeploymentConfig")
+        print(f"  Edit in Lakehouse > Files > config > connections.json")
 
 shutil.rmtree(clone_dir, ignore_errors=True)
 ```
