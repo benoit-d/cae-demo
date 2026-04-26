@@ -45,6 +45,7 @@ ALERT_THRESHOLD = 50.0    # Minimum confidence % to write to AnomalyDetection
 AGENT_PROJECT_ENDPOINT = ""
 AGENT_ID = ""
 TEAMS_WEBHOOK_URL = ""
+print(f"AnomalyDetection config: baseline={BASELINE_WINDOW}, scoring={SCORING_WINDOW}, threshold={ALERT_THRESHOLD}%")
 
 # METADATA ********************
 

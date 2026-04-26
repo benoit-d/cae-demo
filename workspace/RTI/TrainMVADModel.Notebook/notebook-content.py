@@ -58,6 +58,7 @@ SLIDING_WINDOW = 200
 
 # MLflow registered model name
 MODEL_NAME = "cnc_bearing_mvad_model"
+print(f"MVAD config: machines={CNC_MACHINES}, window={SLIDING_WINDOW}, model={MODEL_NAME}")
 
 # METADATA ********************
 

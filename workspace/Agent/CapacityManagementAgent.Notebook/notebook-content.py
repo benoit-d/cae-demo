@@ -33,6 +33,7 @@
 # SQL connection is read from the Lakehouse config file (set by PostDeploymentConfig).
 # Override here only if needed.
 SQL_JDBC_CONNECTION_STRING = ""
+print("CapacityManagementAgent ready")
 
 # METADATA ********************
 

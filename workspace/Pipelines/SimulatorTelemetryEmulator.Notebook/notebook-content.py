@@ -37,6 +37,7 @@
 # Configuration
 EVENTSTREAM_NAME = "TelemetryEventStream"
 CONFIG_KEY = "TELEMETRY_EVENTSTREAM_CONNECTION_STRING"
+print(f"Target: {EVENTSTREAM_NAME}")
 
 # METADATA ********************
 

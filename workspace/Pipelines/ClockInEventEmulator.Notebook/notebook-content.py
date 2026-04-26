@@ -36,6 +36,7 @@
 # Configuration
 EVENTSTREAM_NAME = "ClockInEventStream"
 CONFIG_KEY = "CLOCKIN_EVENTSTREAM_CONNECTION_STRING"
+print(f"Target: {EVENTSTREAM_NAME}")
 
 # METADATA ********************
 

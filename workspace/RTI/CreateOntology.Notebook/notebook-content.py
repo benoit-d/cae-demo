@@ -65,6 +65,7 @@ SQL_DATABASE_NAME    = "CAEManufacturing_SQLDB"
 LAKEHOUSE_NAME       = "CAEManufacturing_LH"
 EVENTHOUSE_NAME      = "CAEManufacturingEH"
 KQL_DATABASE_NAME    = "CAEManufacturingKQLDB"
+print(f"Ontology: {ONTOLOGY_NAME}")
 
 # METADATA ********************
 

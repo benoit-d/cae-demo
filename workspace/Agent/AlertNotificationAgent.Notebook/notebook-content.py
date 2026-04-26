@@ -51,6 +51,7 @@ KQL_URI = ""
 
 # Minimum confidence to send notification (avoid noise)
 MIN_CONFIDENCE = 70.0
+print(f"AlertNotificationAgent config: min_confidence={MIN_CONFIDENCE}")
 
 # METADATA ********************
 

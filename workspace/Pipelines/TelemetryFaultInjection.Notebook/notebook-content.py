@@ -50,6 +50,7 @@ DURATION_MIN = 6.0              # Total fault injection duration in minutes
 # EventStream config — read from Lakehouse config file at runtime
 EVENTSTREAM_NAME = "TelemetryEventStream"
 CONFIG_KEY = "TELEMETRY_EVENTSTREAM_CONNECTION_STRING"
+print(f"Fault injection: {TARGET_MACHINE}, {DURATION_MIN} min, interval {INTERVAL}s")
 
 # METADATA ********************
 
