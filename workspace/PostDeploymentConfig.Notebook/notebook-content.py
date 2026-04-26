@@ -41,22 +41,6 @@
 
 # CELL ********************
 
-# === CONFIGURATION ===
-# All connection strings are read from config/connections.json in the Lakehouse.
-# Set them there before running this notebook (see README Step 3).
-
-# Optional: create the Fabric Ontology (preview). Requires Ontology preview enabled on the capacity.
-create_ontology = True
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
 # Step 1 - Parse config and discover Lakehouse
 import os, re, requests, struct
 import notebookutils
@@ -179,6 +163,7 @@ except Exception:
         "FOUNDRY_AGENT_PROJECT_ENDPOINT": "",
         "FOUNDRY_AGENT_ID": "",
         "TEAMS_WEBHOOK_URL": "",
+        "CREATE_ONTOLOGY": "true",
     }
     _write_config(CONFIG_PATH, config)
     print("  Created. Fill in SQL_JDBC_CONNECTION_STRING before re-running.")
@@ -186,7 +171,7 @@ except Exception:
 # Ensure all expected keys exist (add new ones if missing from older config files)
 all_keys = ["SQL_JDBC_CONNECTION_STRING", "TELEMETRY_EVENTSTREAM_CONNECTION_STRING",
             "CLOCKIN_EVENTSTREAM_CONNECTION_STRING", "FOUNDRY_AGENT_PROJECT_ENDPOINT",
-            "FOUNDRY_AGENT_ID", "TEAMS_WEBHOOK_URL"]
+            "FOUNDRY_AGENT_ID", "TEAMS_WEBHOOK_URL", "CREATE_ONTOLOGY"]
 updated = False
 for k in all_keys:
     if k not in config:
@@ -1246,6 +1231,7 @@ relationship 'Jobs to Projects'
 
 # Step 12 - (Optional) Create Fabric Ontology by invoking CreateOntology notebook
 ONTOLOGY_SETUP_OK = False
+create_ontology = str(config.get("CREATE_ONTOLOGY", "true")).lower() == "true"
 ONTOLOGY_SKIPPED  = not create_ontology
 
 if create_ontology:
@@ -1258,7 +1244,7 @@ if create_ontology:
         print(f"CreateOntology failed (non-fatal): {e}")
         ONTOLOGY_SETUP_OK = False
 else:
-    print("Ontology creation skipped (set create_ontology = True to enable).")
+    print("Ontology creation skipped (set CREATE_ONTOLOGY = true in connections.json to enable).")
 
 # METADATA ********************
 
@@ -1290,7 +1276,7 @@ if 'SM_SETUP_OK' in dir() and SM_SETUP_OK:
     print(f"\nSemantic Model: {SM_NAME}")
     print("  8 tables (DirectLake) + 8 relationships")
 if 'ONTOLOGY_SKIPPED' in dir() and ONTOLOGY_SKIPPED:
-    print("\nOntology: skipped (create_ontology = False)")
+    print("\nOntology: skipped (CREATE_ONTOLOGY = false in connections.json)")
 elif 'ONTOLOGY_SETUP_OK' in dir() and ONTOLOGY_SETUP_OK:
     print("\nOntology: CAEManufacturingOntology (8 entities, 8 relationships, 3 timeseries bindings)")
 print("\nNext: Open GetStarted notebook.")

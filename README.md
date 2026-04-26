@@ -237,7 +237,8 @@ Open the Lakehouse (`CAEManufacturing_LH`) in the Fabric UI. Navigate to **Files
   "CLOCKIN_EVENTSTREAM_CONNECTION_STRING": "",
   "FOUNDRY_AGENT_PROJECT_ENDPOINT": "",
   "FOUNDRY_AGENT_ID": "",
-  "TEAMS_WEBHOOK_URL": ""
+  "TEAMS_WEBHOOK_URL": "",
+  "CREATE_ONTOLOGY": "true"
 }
 ```
 
@@ -307,7 +308,7 @@ The **PostDeploymentConfig** notebook automatically creates a `CAEManufacturing`
 
 ### 5b. Fabric Ontology (preview — optional)
 
-The **CreateOntology** notebook (in `workspace/RTI/`) builds a `CAEManufacturingOntology` Fabric Ontology item via the REST API. It is invoked automatically by PostDeploymentConfig as **Step 10** when `create_ontology = True` (default) in its config cell — set it to `False` if your capacity does not have the Ontology preview enabled.
+The **CreateOntology** notebook (in `workspace/RTI/`) builds a `CAEManufacturingOntology` Fabric Ontology item via the REST API. It is invoked automatically by PostDeploymentConfig as **Step 12** when `CREATE_ONTOLOGY` is `"true"` in `connections.json` — set it to `"false"` if your capacity does not have the Ontology preview enabled.
 
 **Entity types (8):** `Machine`, `Employee`, `ProductionLine`, `Project`, `Simulator`, `Task`, `MaintenanceHistory`, `MachineJob` — all bound (NonTimeSeries) directly to the **Fabric SQL Database** (`CAEManufacturing_SQLDB`, `erp` schema). Verified: the Ontology data-binding API accepts a `SQLDatabase` item directly as `sourceType: "LakehouseTable"` with `sourceSchema: "erp"` — no intermediate lakehouse shortcut required.
 
