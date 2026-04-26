@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Environment",
+    "displayName": "CAEManufacturing_Env",
+    "description": "Pre-installed libraries for CAE Manufacturing demo (azure-eventhub, fabric-cicd, gitpython)"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b3f7e2a1-9c4d-4a8b-b6e5-1d2f3a4b5c6d"
+  }
+}

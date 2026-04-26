@@ -1,0 +1,6 @@
+dependencies:
+  - pip:
+      - azure-eventhub>=5.11.0
+      - fabric-cicd>=1.0.0
+      - gitpython>=3.1.0
+      - pip>=26.0

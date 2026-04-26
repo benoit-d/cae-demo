@@ -166,6 +166,7 @@ cae-demo/
 │   ├── PostDeploymentConfig.Notebook/   # Creates SQL tables, loads data, KQL DB
 │   ├── Data/
 │   │   └── CAEManufacturing_LH.Lakehouse/       # Staging Lakehouse
+│   ├── CAEManufacturing_Env.Environment/         # Spark 2.0 + azure-eventhub, fabric-cicd
 │   ├── RTI/                                      # Real-Time Intelligence
 │   │   ├── CAEManufacturingEH.Eventhouse/        # Telemetry store
 │   │   ├── AnomalyDetection.Notebook/            # ML Z-score anomaly scoring
@@ -207,6 +208,7 @@ In a Fabric notebook, run these cells:
 
 ```python
 # Cell 1
+%pip install --upgrade pip
 %pip install -q fabric-cicd azure-identity gitpython
 
 # Cell 2

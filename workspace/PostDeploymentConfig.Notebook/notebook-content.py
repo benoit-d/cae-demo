@@ -119,7 +119,7 @@ else:
 # This ensures all notebooks use the environment with azure-eventhub pre-installed
 env_item = next((i for i in items if i.get("displayName") == "CAEManufacturing_Env" and i.get("type") == "Environment"), None)
 if env_item:
-    env_body = {"environment": {"name": "CAEManufacturing_Env", "runtimeVersion": "1.3"}}
+    env_body = {"environment": {"name": "CAEManufacturing_Env", "runtimeVersion": "2.0"}}
     env_resp = requests.patch(
         f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/spark/settings",
         json=env_body, headers=headers,
