@@ -110,7 +110,33 @@ else:
 
 # CELL ********************
 
-# Step 2 - Create KQL Database with schema via Fabric API
+# Step 2 - Set workspace default environment (CAEManufacturing_Env)
+# This ensures all notebooks use the environment with azure-eventhub pre-installed
+env_item = next((i for i in items if i.get("displayName") == "CAEManufacturing_Env" and i.get("type") == "Environment"), None)
+if env_item:
+    env_body = {"environment": {"name": "CAEManufacturing_Env", "runtimeVersion": "1.3"}}
+    env_resp = requests.patch(
+        f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/spark/settings",
+        json=env_body, headers=headers,
+    )
+    if env_resp.status_code == 200:
+        print(f"Workspace default environment set: CAEManufacturing_Env ({env_item['id']})")
+    else:
+        print(f"Warning: Could not set default environment ({env_resp.status_code}): {env_resp.text[:200]}")
+else:
+    print("WARNING: CAEManufacturing_Env not found. Notebooks may need manual environment selection.")
+    print("  Create it: New Item > Environment > add 'azure-eventhub' as a PyPI library > Publish")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Step 3 - Create KQL Database with schema via Fabric API
 import base64, json, time
 
 # Find the Eventhouse
@@ -238,7 +264,7 @@ else:
 
 # CELL ********************
 
-# Step 3 - Create EventStreams with Custom Endpoint source → Eventhouse destination
+# Step 4 - Create EventStreams with Custom Endpoint source → Eventhouse destination
 import base64, json, time
 
 ES_SETUP_OK = False
@@ -391,7 +417,7 @@ else:
 
 # CELL ********************
 
-# Step 4 - Drop ALL existing SQL tables and schemas, then recreate fresh
+# Step 5 - Drop ALL existing SQL tables and schemas, then recreate fresh
 import pyodbc
 
 TOKEN_SQL = notebookutils.credentials.getToken("https://database.windows.net/")
@@ -449,7 +475,7 @@ for schema in ['hr', 'erp', 'plm', 'mes', 'telemetry']:
 
 # CELL ********************
 
-# Step 5 - Create SQL tables (PK columns are NOT NULL, everything else nullable)
+# Step 6 - Create SQL tables (PK columns are NOT NULL, everything else nullable)
 DDL = [
     # --- hr schema ---
     """CREATE TABLE hr.employees (
@@ -621,7 +647,7 @@ print("\nAll tables created.")
 
 # CELL ********************
 
-# Step 6 - Bulk insert all data
+# Step 7 - Bulk insert all data
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
 
@@ -689,7 +715,7 @@ print("\nAll data loaded.")
 
 # CELL ********************
 
-# Step 7 - Add primary keys and foreign keys
+# Step 8 - Add primary keys and foreign keys
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 conn.autocommit = True
 cursor = conn.cursor()
@@ -773,7 +799,7 @@ print(f"\n{ok}/{len(CONSTRAINTS)} constraints added.")
 
 # CELL ********************
 
-# Step 8 - Verify
+# Step 9 - Verify
 conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 cursor = conn.cursor()
 
@@ -819,7 +845,7 @@ print("\nSQL data verified.")
 
 # CELL ********************
 
-# Step 9 - Create or update Semantic Model with DirectLake + relationships
+# Step 10 - Create or update Semantic Model with DirectLake + relationships
 import base64
 
 SM_NAME = "CAEManufacturing"
@@ -1100,7 +1126,7 @@ relationship 'Jobs to Projects'
 
 # CELL ********************
 
-# Step 10 - (Optional) Create Fabric Ontology by invoking CreateOntology notebook
+# Step 11 - (Optional) Create Fabric Ontology by invoking CreateOntology notebook
 ONTOLOGY_SETUP_OK = False
 ONTOLOGY_SKIPPED  = not create_ontology
 
@@ -1125,7 +1151,7 @@ else:
 
 # CELL ********************
 
-# Step 11 - Summary
+# Step 12 - Summary
 print("\n" + "=" * 50)
 print("  POST-DEPLOYMENT COMPLETE")
 print("=" * 50)
