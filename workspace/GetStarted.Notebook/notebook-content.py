@@ -48,16 +48,17 @@
 # - Lakehouse, Eventhouse, Eventstreams, Data Pipelines (1-min schedule), Activator shell, all Notebooks
 # 
 # **Run once manually:**
-# 1. **PostDeploymentConfig** - paste JDBC string, Run All (creates KQL DB + hr/erp/plm schemas + 18 SQL tables)
-# 2. **Paste Eventstream connection strings** into simulator notebook config cells
+# 1. **Configure `connections.json`** - Open Lakehouse > Files > config > connections.json, paste your SQL JDBC connection string
+# 2. **PostDeploymentConfig** - Run All (creates KQL DB + hr/erp/plm schemas + 24 SQL tables + EventStreams)
+# 3. **Paste EventStream connection strings** into `connections.json` (TELEMETRY + CLOCKIN keys)
 # 
 # **Configure in Fabric UI:**
-# 3. **Configure Activator** - MachineHealthActivator monitors MachineHealthAlerts() function
-# 4. **Create Real-Time Dashboard** - use queries from data/kql/dashboard_spec.json
+# 4. **Configure Activator** - MachineHealthActivator monitors MachineHealthAlerts() function
+# 5. **Create Real-Time Dashboard** - use queries from data/kql/dashboard_spec.json
 # 
 # **Demo:**
-# 5. **Inject fault** - run Simulation/TelemetryFaultInjection manually
-# 6. **Power BI Gantt** - connect to SQL Database plm.tasks + plm.projects
+# 6. **Inject fault** - run Simulation/TelemetryFaultInjection manually
+# 7. **Power BI Gantt** - connect to SQL Database plm.tasks + plm.projects
 # 
 # ## Anomaly Detection (10 rules)
 # 

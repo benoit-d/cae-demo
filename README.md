@@ -308,9 +308,22 @@ Copy the **JDBC connection string** from SQL Database > Settings > Connection st
 
 ![JDBC Connection String](docs/screenshots/02-sql-jdbc-connection-string.png)
 
-### 3. Run PostDeploymentConfig
+### 3. Configure connections.json
 
-Open the deployed `PostDeploymentConfig` notebook. A default JDBC connection string is pre-configured — just Run All. To use a different SQL Database, paste your JDBC connection string in the config cell before running.
+Open the Lakehouse (`CAEManufacturing_LH`) in the Fabric UI. Navigate to **Files > config > connections.json** and paste your JDBC connection string:
+
+```json
+{
+  "SQL_JDBC_CONNECTION_STRING": "jdbc:sqlserver://your-server.database.fabric.microsoft.com:1433;database=...",
+  "TELEMETRY_EVENTSTREAM_CONNECTION_STRING": "",
+  "CLOCKIN_EVENTSTREAM_CONNECTION_STRING": "",
+  "FOUNDRY_AGENT_PROJECT_ENDPOINT": "",
+  "FOUNDRY_AGENT_ID": "",
+  "TEAMS_WEBHOOK_URL": ""
+}
+```
+
+Then open the `PostDeploymentConfig` notebook and **Run All**.
 
 ![PostDeploymentConfig](docs/screenshots/03-postdeployment-run-all.png)
 
@@ -327,9 +340,11 @@ The **PostDeploymentConfig** notebook automatically:
 **After PostDeploymentConfig runs**, open each EventStream in the Fabric UI:
 1. Click on the Custom Endpoint source node
 2. Copy the **Event Hub connection string** from the Details pane (SAS Key Authentication tab)
-3. Paste it into the `EVENTSTREAM_CONNECTION_STRING` parameter in the corresponding emulator notebook
+3. Paste the connection strings into `config/connections.json` in the Lakehouse:
+   - **TelemetryEventStream** → `TELEMETRY_EVENTSTREAM_CONNECTION_STRING`
+   - **ClockInEventStream** → `CLOCKIN_EVENTSTREAM_CONNECTION_STRING`
 
-The emulator notebooks (`SimulatorTelemetryEmulator`, `ClockInEventEmulator`, `TelemetryFaultInjection`) send events via the Azure Event Hub SDK to the EventStream, which routes them to the Eventhouse automatically.
+The emulator notebooks (`SimulatorTelemetryEmulator`, `ClockInEventEmulator`, `TelemetryFaultInjection`) read their connection strings from `connections.json` and send events via the Azure Event Hub SDK to the EventStream, which routes them to the Eventhouse automatically.
 
 After the KQL tables are created, deploy the **16 health scoring functions** by running the commands in `scripts/kql/machine_health_monitoring.kql` in the KQL Database query editor. These functions provide composite anomaly scores for every machine type:
 
@@ -429,8 +444,8 @@ When a sensor reading arrives with `alert_level = Critical`, the Activator trigg
 3. Calls the **Foundry agent** for AI root-cause analysis and recommendations
 4. Sends a **Teams Adaptive Card** with alert details + AI analysis
 
-To enable Teams notifications, set `TEAMS_WEBHOOK_URL` in the AnomalyDetection notebook config cell.
-To enable AI root-cause analysis, set `FOUNDRY_AGENT_ENDPOINT` in the same config cell.
+To enable Teams notifications, set `TEAMS_WEBHOOK_URL` in `config/connections.json` in the Lakehouse.
+To enable AI root-cause analysis, set `FOUNDRY_AGENT_PROJECT_ENDPOINT` and `FOUNDRY_AGENT_ID` in the same config file.
 
 ### 8. Demo
 

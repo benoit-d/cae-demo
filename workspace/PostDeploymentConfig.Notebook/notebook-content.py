@@ -28,7 +28,7 @@
 # ## Prerequisites
 # 1. SolutionInstaller has run (Lakehouse has CSVs in Files/)
 # 2. A Fabric SQL Database exists in the workspace
-# 3. Paste the JDBC connection string in the config cell below
+# 3. Paste the JDBC connection string in `config/connections.json` (Lakehouse > Files > config)
 # 
 # **Run All to configure.**
 
@@ -43,12 +43,16 @@
 
 # === CONFIGURATION ===
 SQL_JDBC_CONNECTION_STRING = ""
-# Leave empty to auto-discover from the config file or use the default below.
-# On a fresh workspace, paste your JDBC connection string here for the first run.
-_DEFAULT_JDBC = "jdbc:sqlserver://glhdjewslwruzpuscihr6nmsre-urbryfqunkhuxapla4hqtangbe.database.fabric.microsoft.com:1433;database={CAEManufacturing_SQLDB-6c31cad3-74a3-4eae-91f3-e2a4ed845e7e};encrypt=true;trustServerCertificate=false;authentication=ActiveDirectoryInteractive"
+# Leave empty to auto-discover from config/connections.json in the Lakehouse.
+# On a fresh workspace, set the JDBC string in connections.json (preferred)
+# or paste it here for a quick first run.
+_DEFAULT_JDBC = ""
 if not SQL_JDBC_CONNECTION_STRING:
     SQL_JDBC_CONNECTION_STRING = _DEFAULT_JDBC
-    print(f"Using default JDBC connection string")
+if SQL_JDBC_CONNECTION_STRING:
+    print(f"Using JDBC from config cell")
+else:
+    print(f"No JDBC in config cell — will read from connections.json")
 
 # Optional: create the Fabric Ontology (preview). Requires Ontology preview enabled on the capacity.
 create_ontology = True
@@ -162,8 +166,8 @@ try:
         status = "SET" if v else "EMPTY"
         print(f"    {k}: {status}")
 
-    # Use SQL connection from config if available (and not already set)
-    if config.get("SQL_JDBC_CONNECTION_STRING") and SQL_JDBC_CONNECTION_STRING == _DEFAULT_JDBC:
+    # Use SQL connection from config if available (and not already set in config cell)
+    if config.get("SQL_JDBC_CONNECTION_STRING") and not SQL_JDBC_CONNECTION_STRING:
         SQL_JDBC_CONNECTION_STRING = config["SQL_JDBC_CONNECTION_STRING"]
         sm = re.search(r'sqlserver://([^:;]+)', SQL_JDBC_CONNECTION_STRING)
         dm = re.search(r'database=\{?([^};]+)\}?', SQL_JDBC_CONNECTION_STRING)
