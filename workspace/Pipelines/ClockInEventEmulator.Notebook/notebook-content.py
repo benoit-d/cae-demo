@@ -6,7 +6,12 @@
 # META   "kernel_info": {
 # META     "name": "synapse_pyspark"
 # META   },
-# META   "dependencies": {}
+# META   "dependencies": {
+# META     "environment": {
+# META       "environmentId": "94300b2e-c8c6-4807-8f2f-7de502f4349c",
+# META       "workspaceId": "00000000-0000-0000-0000-000000000000"
+# META     }
+# META   }
 # META }
 
 # MARKDOWN ********************
@@ -28,22 +33,12 @@
 
 # CELL ********************
 
-import subprocess, sys
-subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "azure-eventhub"])
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
 # Configuration — EventStream connection string from the Custom Endpoint source.
 # Leave empty to auto-discover from workspace items.
-EVENTSTREAM_CONNECTION_STRING = ""
+EVENTSTREAM_CONNECTION_STRING = "<<CLOCKIN_EVENTSTREAM_CONNECTION_STRING>>"
 EVENTSTREAM_NAME = "ClockInEventStream"
+if EVENTSTREAM_CONNECTION_STRING.startswith("<<"):
+    EVENTSTREAM_CONNECTION_STRING = ""
 
 # METADATA ********************
 

@@ -22,3 +22,7 @@ deployed_faultinj.ipynb
 _deploy_notebooks.py
 fabric_cicd.error.log
 faultinj_instance.txt
+
+# Deploy secrets (values injected by fabric-cicd find_replace at deploy time)
+.deploy-secrets.json
+workspace/parameter.yml

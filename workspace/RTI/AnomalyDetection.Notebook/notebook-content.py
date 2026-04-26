@@ -41,8 +41,13 @@ SCORING_WINDOW = "5m"     # Recent window to score
 ALERT_THRESHOLD = 50.0    # Minimum confidence % to write to AnomalyDetection
 
 # Azure AI Foundry Agent — root-cause analysis + Teams notification
-AGENT_PROJECT_ENDPOINT = "https://demo-foundry-sweden.services.ai.azure.com/api/projects/proj-demo"
-AGENT_ID = "CAE-Manufacturing-Copilot:2"
+# Replaced at deploy time by fabric-cicd via workspace/parameter.yml.
+AGENT_PROJECT_ENDPOINT = "<<FOUNDRY_AGENT_PROJECT_ENDPOINT>>"
+AGENT_ID = "<<FOUNDRY_AGENT_ID>>"
+if AGENT_PROJECT_ENDPOINT.startswith("<<"):
+    AGENT_PROJECT_ENDPOINT = ""
+if AGENT_ID.startswith("<<"):
+    AGENT_ID = ""
 
 # Teams Incoming Webhook URL — fallback if agent is not configured
 TEAMS_WEBHOOK_URL = ""  # e.g. "https://outlook.office.com/webhook/..."
@@ -151,6 +156,53 @@ print(f"Streaming policy: {status2}")
 # Retention: keep 30 days of anomaly alerts
 status3, _ = kql_mgmt(".alter table AnomalyDetection policy retention softdelete = 30d recoverability = enabled")
 print(f"Retention policy: {status3}")
+
+# Step 1b: Ensure AnomalyAlerts table + auto-projection from AnomalyDetection
+# AnomalyAlerts mirrors AnomalyDetection but uses `scored_at` as the timestamp column
+# (consumed by CriticalAnomalyAlerts() and AlertNotificationAgent).
+alerts_cmd = """
+.create-merge table AnomalyAlerts (
+    scored_at: datetime,
+    machine_id: string,
+    anomaly_type: string,
+    anomaly_confidence_pct: real,
+    estimated_rul_hours: int,
+    top_deviating_sensors: string,
+    composite_score: real,
+    description: string,
+    severity: string
+)
+"""
+s, _ = kql_mgmt(alerts_cmd)
+print(f"AnomalyAlerts table: {s}")
+
+s, _ = kql_mgmt(".alter table AnomalyAlerts policy streamingingestion enable")
+print(f"AnomalyAlerts streaming policy: {s}")
+
+s, _ = kql_mgmt(".alter table AnomalyAlerts policy retention softdelete = 30d recoverability = enabled")
+print(f"AnomalyAlerts retention policy: {s}")
+
+projection_fn = """
+.create-or-alter function with (folder="Health", docstring="Project AnomalyDetection rows into AnomalyAlerts schema") ProjectAnomalyDetectionToAlerts() {
+    AnomalyDetection
+    | project
+        scored_at = timestamp,
+        machine_id,
+        anomaly_type,
+        anomaly_confidence_pct,
+        estimated_rul_hours,
+        top_deviating_sensors,
+        composite_score,
+        description,
+        severity
+}
+"""
+s, _ = kql_mgmt(projection_fn)
+print(f"ProjectAnomalyDetectionToAlerts function: {s}")
+
+update_policy = '.alter table AnomalyAlerts policy update @\'[{"IsEnabled": true, "Source": "AnomalyDetection", "Query": "ProjectAnomalyDetectionToAlerts()", "IsTransactional": false, "PropagateIngestionProperties": false}]\''
+s, _ = kql_mgmt(update_policy)
+print(f"AnomalyAlerts update policy: {s}")
 
 # METADATA ********************
 

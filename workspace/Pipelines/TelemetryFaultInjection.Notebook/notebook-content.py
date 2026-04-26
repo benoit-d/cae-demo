@@ -5,6 +5,12 @@
 # META {
 # META   "kernel_info": {
 # META     "name": "synapse_pyspark"
+# META   },
+# META   "dependencies": {
+# META     "environment": {
+# META       "environmentId": "94300b2e-c8c6-4807-8f2f-7de502f4349c",
+# META       "workspaceId": "00000000-0000-0000-0000-000000000000"
+# META     }
 # META   }
 # META }
 
@@ -36,28 +42,19 @@
 
 # CELL ********************
 
-import subprocess, sys
-subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "azure-eventhub"])
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
 # === CONFIGURATION ===
 TARGET_MACHINE = "CNC-003"      # Machine to inject faults on
 INTERVAL = 60                   # Seconds between batches
 DURATION_MIN = 6.0              # Total fault injection duration in minutes
 
-# EventStream connection string from the Custom Endpoint source.
-# Must be set manually after fabric-cicd redeploys since EventStream endpoints
-# are rotated. Copy from TelemetryEventStream → Custom Endpoint source in UI.
-EVENTSTREAM_CONNECTION_STRING = ""
+# EventStream connection string — replaced at deploy time by fabric-cicd
+# via workspace/parameter.yml (generated from .deploy-secrets.json).
+# If the placeholder survives a deploy, the auto-discovery block below will
+# still try to locate the connection string from the Eventstream definition.
+EVENTSTREAM_CONNECTION_STRING = "<<TELEMETRY_EVENTSTREAM_CONNECTION_STRING>>"
 EVENTSTREAM_NAME = "TelemetryEventStream"
+if EVENTSTREAM_CONNECTION_STRING.startswith("<<"):
+    EVENTSTREAM_CONNECTION_STRING = ""
 
 # METADATA ********************
 

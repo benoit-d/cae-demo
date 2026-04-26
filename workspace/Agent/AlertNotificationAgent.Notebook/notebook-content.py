@@ -42,11 +42,18 @@
 
 # === CONFIGURATION ===
 # Azure AI Foundry Agent — root-cause analysis + Teams notification
-AGENT_PROJECT_ENDPOINT = "https://demo-foundry-sweden.services.ai.azure.com/api/projects/proj-demo"
-AGENT_ID = "CAE-Manufacturing-Copilot:2"
+# Replaced at deploy time by fabric-cicd via workspace/parameter.yml.
+AGENT_PROJECT_ENDPOINT = "<<FOUNDRY_AGENT_PROJECT_ENDPOINT>>"
+AGENT_ID = "<<FOUNDRY_AGENT_ID>>"
+if AGENT_PROJECT_ENDPOINT.startswith("<<"):
+    AGENT_PROJECT_ENDPOINT = ""
+if AGENT_ID.startswith("<<"):
+    AGENT_ID = ""
 
 # Teams Incoming Webhook URL — fallback if agent is not configured
-TEAMS_WEBHOOK_URL = ""  # e.g. "https://outlook.office.com/webhook/..."
+TEAMS_WEBHOOK_URL = "<<TEAMS_WEBHOOK_URL>>"
+if TEAMS_WEBHOOK_URL.startswith("<<"):
+    TEAMS_WEBHOOK_URL = ""
 
 # KQL URI — leave empty to auto-discover
 KQL_URI = ""
