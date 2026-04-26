@@ -371,36 +371,40 @@ Adds cross-sensor correlation modeling to detect subtle multi-sensor anomalies t
 
 **Architecture:** Spark notebook trains a `MultivariateAnomalyDetector` model → MLflow registry → KQL stored function loads model via Python plugin for real-time prediction.
 
-#### Prerequisites (manual UI steps)
+#### What's automated
 
-1. **Enable OneLake availability** on the Eventhouse: Open `CAEManufacturingEH` → Database details pane → Toggle **OneLake availability** to **On**
-2. **Enable Python plugin** on the Eventhouse: Open `CAEManufacturingEH` → Plugins → Toggle **Python language extension** to **On** → Select **Python 3.11.7 DL (preview)** → Done
-3. **Publish the Environment**: After the next deployment, the `CAEManufacturing_Env` environment includes `time-series-anomaly-detector==0.3.9`. Open the environment → Home tab → **Publish**
+- **OneLake availability** — enabled automatically by PostDeploymentConfig (Step 4b)
+- **Environment** — `time-series-anomaly-detector==0.3.9` is included in `CAEManufacturing_Env` and auto-published by PostDeploymentConfig (Step 2)
+- **KQL function deployment** — the `TrainMVADModel` notebook automatically deploys all 3 KQL prediction functions with the trained model URI (no manual copy-paste)
 
-#### Train the model
+#### Manual prerequisite (cannot be automated via API)
 
-1. Open the `TrainMVADModel` notebook (in `workspace/RTI/`)
-2. Attach the `CAEManufacturing_Env` environment
-3. **Run All** — the notebook:
+1. **Enable Python 3.11.7 DL plugin** on the Eventhouse:
+   - Open `CAEManufacturingEH` → Plugins (from the ribbon) → Toggle **Python language extension** to **On** → Select **Python 3.11.7 DL (preview)** → Done
+
+   ![Enable Python 3.11.7 DL Plugin](docs/screenshots/09-enable-python-plugin.png)
+
+#### Train and deploy the model
+
+1. Ensure several days of normal telemetry have accumulated (~400+ samples minimum, ideally 2+ days at 1-min intervals × 4 CNC machines)
+2. Open the `TrainMVADModel` notebook (in `workspace/RTI/`)
+3. Attach the `CAEManufacturing_Env` environment
+4. **Run All** — the notebook:
    - Reads `MachineTelemetry` from OneLake for CNC-001/002/003/005
-   - Filters to normal data only (`alert_level = "Normal"`)
-   - Pivots to wide format (4 sensors: Spindle Vibration, Spindle Temperature, Coolant Flow Rate, Power Consumption)
+   - Filters to normal data only, pivots to wide format (4 sensors)
    - Trains a `MultivariateAnomalyDetector` with sliding window = 200 (~3.3 hours)
    - Registers the model in MLflow as `cnc_bearing_mvad_model`
-4. **Copy the ABFSS URI** from the last cell output
+   - **Deploys 3 KQL functions automatically** (`predict_fabric_mvad_fl`, `predict_cnc_mvad`, `ingest_mvad_anomalies`)
 
-> **Note:** You need several days of normal telemetry data before training. At 1-min intervals × 4 CNC machines, aim for at least 400 samples (~7 hours minimum, ideally 2+ days).
+#### KQL functions deployed
 
-#### Deploy the KQL prediction function
+| Function | Purpose |
+|---|---|
+| `predict_fabric_mvad_fl()` | Generic MVAD prediction helper (Microsoft tutorial pattern) |
+| `predict_cnc_mvad()` | CNC-specific wrapper — pivots telemetry, invokes trained model |
+| `ingest_mvad_anomalies()` | Writes detected anomalies to `AnomalyDetection` table (`anomaly_type = "MVAD"`) |
 
-1. Open `scripts/kql/mvad_prediction.kql`
-2. Replace `<MODEL_ABFSS_URI>` with the ABFSS path from the training notebook
-3. Run all `.create-or-alter function` commands in the KQL Database query editor
-
-This creates three functions:
-- `predict_fabric_mvad_fl()` — generic MVAD prediction helper (from the Microsoft tutorial)
-- `predict_cnc_mvad()` — CNC-specific wrapper that pivots telemetry and invokes the model
-- `ingest_mvad_anomalies()` — writes detected anomalies to the `AnomalyDetection` table with `anomaly_type = "MVAD"`
+> The `scripts/kql/mvad_prediction.kql` file contains the same functions for reference/manual deployment if needed.
 
 #### Test it
 

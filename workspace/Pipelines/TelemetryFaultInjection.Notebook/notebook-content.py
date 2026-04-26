@@ -76,7 +76,7 @@ if not WORKSPACE_ID:
 headers = {"Authorization": f"Bearer {TOKEN}"}
 resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=headers)
 items_list = resp.json().get("value", [])
-lh = next((i for i in items_list if i.get("displayName") == "CAEManufacturing_LH"), None)
+lh = next((i for i in items_list if i.get("displayName") == "CAEManufacturing_LH" and i.get("type") == "Lakehouse"), None)
 if not lh:
     raise RuntimeError("Lakehouse not found (needed to read staged CSVs)")
 

@@ -90,7 +90,7 @@ if not KQL_URI:
 DB_NAME = "CAEManufacturingKQLDB"
 
 # Read config from Lakehouse config file
-lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
+lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH" and i.get("type") == "Lakehouse"), None)
 if lh and (not AGENT_PROJECT_ENDPOINT or not AGENT_ID):
     try:
         cfg_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"

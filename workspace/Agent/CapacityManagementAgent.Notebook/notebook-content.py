@@ -61,7 +61,7 @@ if not SQL_JDBC_CONNECTION_STRING:
             pass
     fab_headers = {"Authorization": f"Bearer {TOKEN_FABRIC}"}
     items_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=fab_headers)
-    lh = next((i for i in items_resp.json().get("value", []) if i.get("displayName") == "CAEManufacturing_LH"), None)
+    lh = next((i for i in items_resp.json().get("value", []) if i.get("displayName") == "CAEManufacturing_LH" and i.get("type") == "Lakehouse"), None)
     if lh:
         config_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"
         try:

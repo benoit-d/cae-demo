@@ -47,7 +47,7 @@ publish_all_items(ws)
 headers = {"Authorization": f"Bearer {TOKEN}"}
 resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=headers)
 items = resp.json().get("value", [])
-lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
+lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH" and i.get("type") == "Lakehouse"), None)
 if lh:
     for folder in ["erp", "hr", "telemetry", "plm", "mes"]:
         src = os.path.join(data_dir, folder)

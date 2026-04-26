@@ -401,10 +401,191 @@ print("=" * 80)
 print(f"Model name:    {MODEL_NAME}")
 print(f"Version:       {latest.version}")
 print(f"ABFSS URI:     {model_abfss}")
-print()
-print("Copy the ABFSS URI above into the KQL prediction function:")
-print("  scripts/kql/mvad_prediction.kql → replace <MODEL_ABFSS_URI>")
 print("=" * 80)
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# MARKDOWN ********************
+
+# ## Step 7 — Deploy KQL prediction functions
+# 
+# Automatically deploys the three MVAD KQL functions to the Eventhouse,
+# substituting the trained model's ABFSS URI into `predict_cnc_mvad()`.
+# 
+# **Prerequisite:** Python 3.11.7 DL plugin must be enabled on the Eventhouse
+# (Eventhouse → Plugins → Python language extension → On → Python 3.11.7 DL).
+
+# METADATA ********************
+
+# META {
+# META   "language": "markdown",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# Deploy KQL stored functions for MVAD prediction
+TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
+
+def kql_mgmt(command):
+    """Run a KQL management command against the Eventhouse."""
+    resp = requests.post(
+        f"{KQL_URI}/v1/rest/mgmt",
+        headers={"Authorization": f"Bearer {TOKEN_KQL}", "Content-Type": "application/json"},
+        json={"db": DB_NAME, "csl": command}
+    )
+    return resp.status_code, resp.text[:300]
+
+# Function 1: predict_fabric_mvad_fl — generic MVAD helper (from Microsoft tutorial)
+fn1 = """
+.create-or-alter function with (folder = "Packages\\\\ML", docstring = "Predict MVAD model in Microsoft Fabric")
+predict_fabric_mvad_fl(samples:(*), features_cols:dynamic, artifacts_uri:string, trim_result:bool=false)
+{
+    let s = artifacts_uri;
+    let artifacts = bag_pack(
+        'MLmodel', strcat(s, '/MLmodel;impersonate'),
+        'conda.yaml', strcat(s, '/conda.yaml;impersonate'),
+        'requirements.txt', strcat(s, '/requirements.txt;impersonate'),
+        'python_env.yaml', strcat(s, '/python_env.yaml;impersonate'),
+        'python_model.pkl', strcat(s, '/python_model.pkl;impersonate')
+    );
+    let kwargs = bag_pack('features_cols', features_cols, 'trim_result', trim_result);
+    let code = ```if 1:
+        import os
+        import shutil
+        import mlflow
+        model_dir = 'C:/Temp/mvad_model'
+        model_data_dir = model_dir + '/data'
+        os.mkdir(model_dir)
+        shutil.move('C:/Temp/MLmodel', model_dir)
+        shutil.move('C:/Temp/conda.yaml', model_dir)
+        shutil.move('C:/Temp/requirements.txt', model_dir)
+        shutil.move('C:/Temp/python_env.yaml', model_dir)
+        shutil.move('C:/Temp/python_model.pkl', model_dir)
+        features_cols = kargs["features_cols"]
+        trim_result = kargs["trim_result"]
+        test_data = df[features_cols]
+        model = mlflow.pyfunc.load_model(model_dir)
+        predictions = model.predict(test_data)
+        predict_result = pd.DataFrame(predictions)
+        samples_offset = len(df) - len(predict_result)
+        if trim_result:
+            result = df[samples_offset:]
+            result.iloc[:,-4:] = predict_result.iloc[:, 1:]
+        else:
+            result = df
+            result.iloc[samples_offset:,-4:] = predict_result.iloc[:, 1:]
+        ```;
+    samples
+    | evaluate python(typeof(*), code, kwargs, external_artifacts=artifacts)
+}
+"""
+
+s1, m1 = kql_mgmt(fn1)
+print(f"predict_fabric_mvad_fl: {s1}")
+
+# Function 2: predict_cnc_mvad — CNC-specific wrapper with model URI baked in
+fn2 = f"""
+.create-or-alter function with (folder = "Health\\\\MVAD", docstring = "Predict CNC mill multivariate anomalies using trained MVAD model")
+predict_cnc_mvad(lookback_minutes:int = 400)
+{{
+    let sliding_window = 200;
+    let prefix_score_len = sliding_window / 2 + min_of(sliding_window / 2, 200) - 1;
+    let cnc_machines = dynamic(["CNC-001", "CNC-002", "CNC-003", "CNC-005"]);
+    let feature_sensors = dynamic(["Spindle Vibration", "Spindle Temperature", "Coolant Flow Rate", "Power Consumption"]);
+    let model_uri = "{model_abfss}";
+    MachineTelemetry
+    | where timestamp > ago(totimespan(strcat(tostring(lookback_minutes), "m")))
+    | where machine_id in (cnc_machines)
+    | where sensor_name in (feature_sensors)
+    | summarize value = avg(value) by timestamp, machine_id, sensor_name
+    | evaluate pivot(sensor_name, take_any(value))
+    | project
+        timestamp,
+        machine_id,
+        Spindle_Vibration = column_ifexists("Spindle Vibration", real(null)),
+        Spindle_Temperature = column_ifexists("Spindle Temperature", real(null)),
+        Coolant_Flow_Rate = column_ifexists("Coolant Flow Rate", real(null)),
+        Power_Consumption = column_ifexists("Power Consumption", real(null))
+    | where isnotnull(Spindle_Vibration) and isnotnull(Spindle_Temperature)
+        and isnotnull(Coolant_Flow_Rate) and isnotnull(Power_Consumption)
+    | order by machine_id asc, timestamp asc
+    | extend is_anomaly = bool(false), score = real(null), severity = real(null), interpretation = dynamic(null)
+    | invoke predict_fabric_mvad_fl(
+        pack_array("Spindle_Vibration", "Spindle_Temperature", "Coolant_Flow_Rate", "Power_Consumption"),
+        model_uri,
+        trim_result=true
+    )
+}}
+"""
+
+s2, m2 = kql_mgmt(fn2)
+print(f"predict_cnc_mvad: {s2}")
+
+# Function 3: ingest_mvad_anomalies — writes MVAD results to AnomalyDetection table
+fn3 = """
+.create-or-alter function with (folder = "Health\\\\MVAD", docstring = "Insert MVAD anomalies into AnomalyDetection table")
+ingest_mvad_anomalies()
+{
+    predict_cnc_mvad(400)
+    | where is_anomaly == true
+    | summarize
+        top_sensors = strcat_delim(", ",
+            iff(isnotnull(Spindle_Vibration), strcat("Spindle Vibration: ", round(Spindle_Vibration, 4)), ""),
+            iff(isnotnull(Spindle_Temperature), strcat("Spindle Temperature: ", round(Spindle_Temperature, 1)), ""),
+            iff(isnotnull(Coolant_Flow_Rate), strcat("Coolant Flow Rate: ", round(Coolant_Flow_Rate, 1)), ""),
+            iff(isnotnull(Power_Consumption), strcat("Power Consumption: ", round(Power_Consumption, 1)), "")
+        ),
+        avg_score = avg(score),
+        max_severity = max(severity)
+        by timestamp, machine_id
+    | extend
+        anomaly_type = "MVAD",
+        anomaly_confidence_pct = round(min_of(avg_score * 100.0, 99.9), 1),
+        estimated_rul_hours = case(
+            max_severity > 0.8, 4,
+            max_severity > 0.6, 24,
+            max_severity > 0.4, 72,
+            max_severity > 0.2, 168,
+            720
+        ),
+        composite_score = round(avg_score, 4),
+        description = strcat("MVAD multivariate anomaly detected on ", machine_id),
+        severity = case(
+            max_severity > 0.8, "Critical",
+            max_severity > 0.6, "High",
+            max_severity > 0.4, "Medium",
+            "Low"
+        )
+    | project
+        timestamp,
+        machine_id,
+        anomaly_type,
+        anomaly_confidence_pct,
+        estimated_rul_hours,
+        top_deviating_sensors = top_sensors,
+        composite_score,
+        description,
+        severity
+}
+"""
+
+s3, m3 = kql_mgmt(fn3)
+print(f"ingest_mvad_anomalies: {s3}")
+
+if all(s == 200 for s in [s1, s2, s3]):
+    print("\nAll 3 MVAD KQL functions deployed successfully!")
+    print("Test with: predict_cnc_mvad(400) | where is_anomaly == true | take 10")
+else:
+    print(f"\nSome functions failed. Check the Python 3.11.7 DL plugin is enabled on the Eventhouse.")
+    if s1 != 200: print(f"  predict_fabric_mvad_fl error: {m1}")
+    if s2 != 200: print(f"  predict_cnc_mvad error: {m2}")
+    if s3 != 200: print(f"  ingest_mvad_anomalies error: {m3}")
 
 # METADATA ********************
 
@@ -417,13 +598,24 @@ print("=" * 80)
 
 # ## Done
 # 
-# **Next steps:**
-# 1. Copy the ABFSS URI printed above
-# 2. Open `scripts/kql/mvad_prediction.kql` in the KQL Database query editor
-# 3. Replace `<MODEL_ABFSS_URI>` with the copied URI
-# 4. Run the `.create-or-alter function` commands to register the KQL prediction function
-# 5. Ensure **Python 3.11.7 DL** plugin is enabled on the Eventhouse (Plugins pane)
-# 6. Test with the sample prediction query at the bottom of the KQL script
+# The MVAD model is trained and KQL prediction functions are deployed.
+# 
+# **Remaining manual step:**
+# - Ensure **Python 3.11.7 DL** plugin is enabled on the Eventhouse
+#   (Eventhouse → Plugins → Python language extension → On → Python 3.11.7 DL)
+# 
+# **Test queries** (run in KQL Database query editor):
+# ```kql
+# // Detect anomalies on recent CNC data
+# predict_cnc_mvad(400)
+# | where is_anomaly == true
+# | order by timestamp desc
+# | take 50
+# 
+# // Ingest MVAD anomalies into AnomalyDetection table
+# .set-or-append AnomalyDetection <|
+#     ingest_mvad_anomalies()
+# ```
 
 # METADATA ********************
 

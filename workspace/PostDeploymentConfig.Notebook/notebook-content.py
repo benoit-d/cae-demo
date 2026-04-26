@@ -74,7 +74,7 @@ headers = {"Authorization": f"Bearer {TOKEN_FABRIC}"}
 resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=headers)
 items = resp.json().get("value", [])
 
-lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH"), None)
+lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH" and i.get("type") == "Lakehouse"), None)
 if not lh:
     raise RuntimeError("CAEManufacturing_LH not found. Run SolutionInstaller first.")
 
@@ -104,6 +104,33 @@ if env_item:
         print(f"Workspace default environment set: CAEManufacturing_Env ({env_item['id']})")
     else:
         print(f"Warning: Could not set default environment ({env_resp.status_code}): {env_resp.text[:200]}")
+
+    # Publish the environment (applies any library changes from environment.yml)
+    pub_resp = requests.post(
+        f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/environments/{env_item['id']}/staging/publish",
+        headers=headers,
+    )
+    if pub_resp.status_code in (200, 202):
+        print(f"Environment publish triggered (may take a few minutes)")
+        # Poll for completion if LRO
+        if "Location" in pub_resp.headers:
+            poll_url = pub_resp.headers["Location"]
+            for _ in range(30):
+                poll_r = requests.get(poll_url, headers=headers)
+                ps = poll_r.json().get("status", "").lower()
+                if ps not in ("running", "notstarted"):
+                    print(f"  Environment publish: {ps}")
+                    break
+                time.sleep(10)
+            else:
+                print("  Environment publish still running — will complete in background")
+        else:
+            print("  Environment published.")
+    elif pub_resp.status_code == 409:
+        print("Environment already up-to-date (no pending changes to publish)")
+    else:
+        print(f"Warning: Environment publish returned {pub_resp.status_code}: {pub_resp.text[:200]}")
+        print("  You may need to publish manually: open Environment > Home > Publish")
 else:
     print("WARNING: CAEManufacturing_Env not found. Notebooks may need manual environment selection.")
     print("  Create it: New Item > Environment > add 'azure-eventhub' as a PyPI library > Publish")
@@ -318,6 +345,33 @@ else:
         else:
             print(f"  Failed: {resp.text[:200]}")
             KQL_SETUP_OK = False
+
+    # Step 4b - Enable OneLake availability on the KQL Database
+    # Required for MVAD training notebook to read MachineTelemetry via ABFSS/OneLake path
+    if KQL_SETUP_OK and eh:
+        try:
+            TOKEN_KQL = notebookutils.credentials.getToken("https://kusto.kusto.windows.net")
+            eh_props = requests.get(
+                f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventhouses/{eh['id']}",
+                headers=headers,
+            ).json()
+            kql_uri = eh_props.get("properties", {}).get("queryServiceUri", "")
+            if kql_uri:
+                mgmt_resp = requests.post(
+                    f"{kql_uri}/v1/rest/mgmt",
+                    headers={"Authorization": f"Bearer {TOKEN_KQL}", "Content-Type": "application/json"},
+                    json={"db": "CAEManufacturingKQLDB", "csl": ".alter database ['CAEManufacturingKQLDB'] policy onelake_availability enable"}
+                )
+                if mgmt_resp.status_code == 200:
+                    print("OneLake availability enabled on CAEManufacturingKQLDB")
+                else:
+                    print(f"Warning: OneLake availability command returned {mgmt_resp.status_code}: {mgmt_resp.text[:200]}")
+                    print("  Enable manually: Eventhouse > Database details > OneLake availability > On")
+            else:
+                print("Warning: Could not discover Eventhouse query URI for OneLake availability")
+        except Exception as e:
+            print(f"Warning: Could not enable OneLake availability: {e}")
+            print("  Enable manually: Eventhouse > Database details > OneLake availability > On")
 
 # METADATA ********************
 
