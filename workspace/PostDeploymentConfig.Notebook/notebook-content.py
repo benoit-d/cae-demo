@@ -137,48 +137,51 @@ else:
 
 # CELL ********************
 
-# Step 3 - Create connections config file (if it doesn't exist)
-# Stores EventStream and SQL DB connection strings in the Lakehouse.
-# This file persists across CI/CD deployments — fill in values once.
+# Step 3 - Read and validate connections config file
+# Created by SolutionInstaller (Cell 3). Persists across CI/CD deployments.
 import json
 
 CONFIG_PATH = f"{BASE}/config/connections.json"
 
-config_exists = False
 try:
     raw = notebookutils.fs.head(CONFIG_PATH, 10000)
-    config_exists = True
-    print(f"Config file exists: {CONFIG_PATH}")
-    print("  Connection strings preserved — not overwriting.")
     config = json.loads(raw)
+    print(f"Config file: {CONFIG_PATH}")
     for k, v in config.items():
-        status = "SET" if v else "EMPTY — needs to be filled in"
+        status = "SET" if v else "EMPTY"
         print(f"    {k}: {status}")
-except Exception:
-    pass
 
-if not config_exists:
-    print(f"Creating config file: {CONFIG_PATH}")
+    # Use SQL connection from config if available (and not already set)
+    if config.get("SQL_JDBC_CONNECTION_STRING") and SQL_JDBC_CONNECTION_STRING == _DEFAULT_JDBC:
+        SQL_JDBC_CONNECTION_STRING = config["SQL_JDBC_CONNECTION_STRING"]
+        sm = re.search(r'sqlserver://([^:;]+)', SQL_JDBC_CONNECTION_STRING)
+        dm = re.search(r'database=\{?([^};]+)\}?', SQL_JDBC_CONNECTION_STRING)
+        if sm and dm:
+            SQL_ENDPOINT = sm.group(1)
+            SQL_DBNAME = dm.group(1)
+            print(f"    Using SQL connection from config file")
+
+    # Update config with current SQL connection (in case it was set in the config cell)
+    if SQL_JDBC_CONNECTION_STRING and SQL_JDBC_CONNECTION_STRING != config.get("SQL_JDBC_CONNECTION_STRING"):
+        config["SQL_JDBC_CONNECTION_STRING"] = SQL_JDBC_CONNECTION_STRING
+        notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
+        print("    Updated SQL connection in config file")
+
+    empty_keys = [k for k, v in config.items() if not v and "EVENTSTREAM" in k]
+    if empty_keys:
+        print(f"\n  ACTION REQUIRED: Fill in EventStream connection strings in the config file.")
+        print("  Open each EventStream in Fabric UI → Custom Endpoint → Details → SAS Key Authentication")
+except Exception:
+    print(f"WARNING: Config file not found: {CONFIG_PATH}")
+    print("  Run SolutionInstaller first (Cell 3 creates it).")
+    print("  Creating a default config file now...")
     config = {
+        "SQL_JDBC_CONNECTION_STRING": SQL_JDBC_CONNECTION_STRING,
         "TELEMETRY_EVENTSTREAM_CONNECTION_STRING": "",
         "CLOCKIN_EVENTSTREAM_CONNECTION_STRING": "",
-        "SQL_JDBC_CONNECTION_STRING": SQL_JDBC_CONNECTION_STRING,
     }
     notebookutils.fs.put(CONFIG_PATH, json.dumps(config, indent=2), overwrite=True)
-    print("  Created with SQL connection string pre-filled.")
-    print("")
-    print("  ACTION REQUIRED: Edit the config file with EventStream connection strings.")
-    print("  1. Open each EventStream in Fabric UI → Custom Endpoint source → Details pane")
-    print("  2. Copy the Event Hub connection string (SAS Key Authentication tab)")
-    print("  3. Edit the config file in Lakehouse > Files > config > connections.json")
-    print("     Or run this in a notebook cell:")
-    print("")
-    print(f'     config_path = "{CONFIG_PATH}"')
-    print('     import json')
-    print('     config = json.loads(notebookutils.fs.head(config_path, 10000))')
-    print('     config["TELEMETRY_EVENTSTREAM_CONNECTION_STRING"] = "Endpoint=sb://..."')
-    print('     config["CLOCKIN_EVENTSTREAM_CONNECTION_STRING"] = "Endpoint=sb://..."')
-    print('     notebookutils.fs.put(config_path, json.dumps(config, indent=2), overwrite=True)')
+    print("  Created. Fill in EventStream connection strings before running pipelines.")
 
 # METADATA ********************
 

@@ -262,6 +262,21 @@ if lh:
             dest = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/scripts/kql/{os.path.basename(f)}"
             notebookutils.fs.cp(f"file://{f}", dest)
 
+    # Create connections config file (if it doesn't exist)
+    import json
+    config_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/config/connections.json"
+    try:
+        notebookutils.fs.head(config_path, 100)
+        print("Config file exists — preserving connection strings")
+    except:
+        config = {
+            "SQL_JDBC_CONNECTION_STRING": "",
+            "TELEMETRY_EVENTSTREAM_CONNECTION_STRING": "",
+            "CLOCKIN_EVENTSTREAM_CONNECTION_STRING": "",
+        }
+        notebookutils.fs.put(config_path, json.dumps(config, indent=2), overwrite=True)
+        print("Created config/connections.json — fill in connection strings before running PostDeploymentConfig")
+
 shutil.rmtree(clone_dir, ignore_errors=True)
 ```
 
