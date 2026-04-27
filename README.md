@@ -160,7 +160,8 @@ Each project has **13 tasks** with finish-to-start dependencies, skill requireme
 ```
 cae-demo/
 ├── deploy/
-│   └── SolutionInstaller.ipynb          # Import into Fabric → Run All
+│   ├── SolutionInstaller.ipynb          # Import into Fabric → Run All
+│   └── solution_installer_cells.py      # Copy-paste version of installer cells
 ├── workspace/                           # Published by fabric-cicd
 │   ├── Setup/
 │   │   ├── GetStarted.Notebook/             # Guided walkthrough
@@ -187,9 +188,9 @@ cae-demo/
 │   └── telemetry/    # sensor_definitions.csv (107 sensors × 20 machines)
 └── scripts/          # Local Python tools + KQL scripts
     ├── kql/                        # KQL health scoring functions (16 functions)
-│   │   ├── machine_health_monitoring.kql   # All functions + table definitions
-│   │   ├── anomaly_scoring.kql             # Confidence + RUL estimation
-│   │   ├── mvad_prediction.kql             # MVAD prediction functions (Phase 2)
+    │   ├── machine_health_monitoring.kql   # All functions + table definitions
+    │   ├── anomaly_scoring.kql             # Confidence + RUL estimation
+    │   ├── mvad_prediction.kql             # MVAD prediction functions
     │   └── dashboard_spec.json             # Real-time dashboard spec
     ├── generate_project_data.py    # Regenerate 8 projects with scheduling constraints
     ├── telemetry_normal.py         # Standalone telemetry generator
@@ -260,7 +261,7 @@ The **PostDeploymentConfig** notebook automatically:
    - **TelemetryEventStream** → `TELEMETRY_EVENTSTREAM_CONNECTION_STRING`
    - **ClockInEventStream** → `CLOCKIN_EVENTSTREAM_CONNECTION_STRING`
 
-The emulator notebooks (`SimulatorTelemetryEmulator`, `ClockInEventEmulator`, `TelemetryFaultInjection`) read their connection strings from `connections.json` and send events via the Azure Event Hub SDK to the EventStream, which routes them to the Eventhouse automatically.
+The **DataEmulator** notebook reads connection strings from `connections.json` and sends events via the Azure Event Hub SDK to the EventStreams, which route them to the Eventhouse automatically.
 
 After the KQL tables are created, deploy the **16 health scoring functions** by running the commands in `scripts/kql/machine_health_monitoring.kql` in the KQL Database query editor. These functions provide composite anomaly scores for every machine type:
 
@@ -385,7 +386,7 @@ Adds cross-sensor correlation modeling to detect subtle multi-sensor anomalies t
 #### Train and deploy the model
 
 1. Ensure several days of normal telemetry have accumulated (~400+ samples minimum, ideally 2+ days at 1-min intervals × 4 CNC machines)
-2. Open the `TrainMVADModel` notebook (in `workspace/RTI/`)
+2. Open the `TrainMVADModel` notebook (in `workspace/ML/`)
 3. Attach the `CAEManufacturing_Env` environment
 4. **Run All** — the notebook:
    - Reads `MachineTelemetry` from OneLake for CNC-001/002/003/005
