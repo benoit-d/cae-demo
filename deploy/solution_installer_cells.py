@@ -79,6 +79,7 @@ if lh:
             "FOUNDRY_AGENT_ID": "",
             "TEAMS_WEBHOOK_URL": "",
             "CREATE_ONTOLOGY": "true",
+            "FAULT_INJECTION": "false",
         }
         config_bytes = json.dumps(config, indent=2).encode("utf-8")
         requests.put(f"{onelake_file}?resource=file", headers=storage_headers)

@@ -174,9 +174,8 @@ cae-demo/
 │   │   ├── CreateOntology.Notebook/              # Fabric Ontology builder (preview)
 │   │   ├── TelemetryEventStream*                 # Created by PostDeploymentConfig (API)
 │   │   └── ClockInEventStream*                   # Created by PostDeploymentConfig (API)
-│   ├── Pipelines/                                # Emulators + fault injection
-│   │   ├── DataEmulator.Notebook/                # Telemetry + clock-in emitter (loop)
-│   │   └── TelemetryFaultInjection.Notebook/     # Manual — CNC-003 bearing failure demo
+│   ├── Pipelines/                                # Emulators
+│   │   └── DataEmulator.Notebook/                # Telemetry + clock-in + fault injection
 │   └── Agent/
 │       ├── CapacityManagementAgent.Notebook/     # AI agent querying SQL DB + KQL
 │       └── AlertNotificationAgent.Notebook/      # Teams webhook + Foundry agent
@@ -235,7 +234,8 @@ Open the Lakehouse (`CAEManufacturing_LH`) in the Fabric UI. Navigate to **Files
   "FOUNDRY_AGENT_PROJECT_ENDPOINT": "",
   "FOUNDRY_AGENT_ID": "",
   "TEAMS_WEBHOOK_URL": "",
-  "CREATE_ONTOLOGY": "true"
+  "CREATE_ONTOLOGY": "true",
+  "FAULT_INJECTION": "false"
 }
 ```
 
@@ -428,8 +428,8 @@ MVAD results are written to the same `AnomalyDetection` table with `anomaly_type
 
 ### 9. Demo
 
-1. **Start telemetry**: Open `SimulatorTelemetryEmulator` and Run All — it loops for 8 hours, sending sensor data from all 20 machines every minute to TelemetryEventStream → Eventhouse. Open `ClockInEventEmulator` the same way for workforce events.
-2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-003 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)
+1. **Start telemetry**: Open `DataEmulator` and Run All — it loops for 8 hours, sending sensor data from all 20 machines + workforce clock-in events every minute
+2. **Inject a fault**: Open `connections.json` in the Lakehouse and set `"FAULT_INJECTION": "true"` — the next emitter cycle starts a 10-minute CNC-003 spindle bearing failure (vibration ↑, temperature ↑, coolant ↓, power ↑). It auto-resets to `"false"` when done.
 3. **Watch detection**: The 16 KQL health scoring functions produce composite scores in real-time. `CNC_BearingWearScore` will climb from ~0.2 to 0.99 as the fault progresses
 4. **Activator fires**: When `alert_level` becomes `Critical`, the Activator triggers the `AnomalyDetection` notebook automatically
 5. **ML scoring**: The notebook computes Z-score baselines and writes alerts to `AnomalyDetection` with confidence %, RUL estimate, and severity

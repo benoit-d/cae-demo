@@ -164,6 +164,7 @@ except Exception:
         "FOUNDRY_AGENT_ID": "",
         "TEAMS_WEBHOOK_URL": "",
         "CREATE_ONTOLOGY": "true",
+        "FAULT_INJECTION": "false",
     }
     _write_config(CONFIG_PATH, config)
     print("  Created. Fill in SQL_JDBC_CONNECTION_STRING before re-running.")
@@ -171,7 +172,7 @@ except Exception:
 # Ensure all expected keys exist (add new ones if missing from older config files)
 all_keys = ["SQL_JDBC_CONNECTION_STRING", "TELEMETRY_EVENTSTREAM_CONNECTION_STRING",
             "CLOCKIN_EVENTSTREAM_CONNECTION_STRING", "FOUNDRY_AGENT_PROJECT_ENDPOINT",
-            "FOUNDRY_AGENT_ID", "TEAMS_WEBHOOK_URL", "CREATE_ONTOLOGY"]
+            "FOUNDRY_AGENT_ID", "TEAMS_WEBHOOK_URL", "CREATE_ONTOLOGY", "FAULT_INJECTION"]
 updated = False
 for k in all_keys:
     if k not in config:
