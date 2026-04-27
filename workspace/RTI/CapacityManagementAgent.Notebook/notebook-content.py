@@ -30,9 +30,7 @@
 # CELL ********************
 
 # === CONFIGURATION ===
-# SQL connection is read from the Lakehouse config file (set by PostDeploymentConfig).
-# Override here only if needed.
-SQL_JDBC_CONNECTION_STRING = ""
+# SQL connection read from Lakehouse config/connections.json at startup.
 print("CapacityManagementAgent ready")
 
 # METADATA ********************
@@ -51,30 +49,27 @@ import pyodbc
 TOKEN_FABRIC = notebookutils.credentials.getToken("https://api.fabric.microsoft.com")
 TOKEN_SQL = notebookutils.credentials.getToken("https://database.windows.net/")
 
-# Read SQL connection from Lakehouse config file if not set
-if not SQL_JDBC_CONNECTION_STRING:
-    WORKSPACE_ID = os.environ.get("TRIDENT_WORKSPACE_ID", "")
-    if not WORKSPACE_ID:
-        try:
-            ctx = notebookutils.runtime.context
-            WORKSPACE_ID = ctx.get("currentWorkspaceId", "") or ctx.get("workspaceId", "")
-        except Exception:
-            pass
-    fab_headers = {"Authorization": f"Bearer {TOKEN_FABRIC}"}
-    items_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=fab_headers)
-    lh = next((i for i in items_resp.json().get("value", []) if i.get("displayName") == "CAEManufacturing_LH" and i.get("type") == "Lakehouse"), None)
-    if lh:
-        config_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"
-        try:
-            config = json.loads(notebookutils.fs.head(config_path, 10000))
-            SQL_JDBC_CONNECTION_STRING = config.get("SQL_JDBC_CONNECTION_STRING", "")
-            if SQL_JDBC_CONNECTION_STRING:
-                print(f"Loaded SQL connection from config file")
-        except Exception:
-            pass
+# Read SQL connection from Lakehouse config file
+WORKSPACE_ID = os.environ.get("TRIDENT_WORKSPACE_ID", "")
+if not WORKSPACE_ID:
+    try:
+        ctx = notebookutils.runtime.context
+        WORKSPACE_ID = ctx.get("currentWorkspaceId", "") or ctx.get("workspaceId", "")
+    except Exception:
+        pass
+fab_headers = {"Authorization": f"Bearer {TOKEN_FABRIC}"}
+items_resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=fab_headers)
+lh = next((i for i in items_resp.json().get("value", []) if i.get("displayName") == "CAEManufacturing_LH" and i.get("type") == "Lakehouse"), None)
+if not lh:
+    raise RuntimeError("Lakehouse not found")
+config_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"
+config = json.loads(notebookutils.fs.head(config_path, 10000))
+SQL_JDBC_CONNECTION_STRING = config.get("SQL_JDBC_CONNECTION_STRING", "")
 
 if not SQL_JDBC_CONNECTION_STRING:
-    raise RuntimeError("SQL_JDBC_CONNECTION_STRING not found. Run PostDeploymentConfig first (creates config file).")
+    raise RuntimeError("SQL_JDBC_CONNECTION_STRING not found. Run PostDeploymentConfig first.")
+
+print(f"Loaded SQL connection from config file")
 
 sm = re.search(r'sqlserver://([^:;]+)', SQL_JDBC_CONNECTION_STRING)
 dm = re.search(r'database=\{?([^};]+)\}?', SQL_JDBC_CONNECTION_STRING)

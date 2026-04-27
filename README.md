@@ -162,23 +162,23 @@ cae-demo/
 ├── deploy/
 │   └── SolutionInstaller.ipynb          # Import into Fabric → Run All
 ├── workspace/                           # Published by fabric-cicd
-│   ├── GetStarted.Notebook/             # Guided walkthrough
-│   ├── PostDeploymentConfig.Notebook/   # Creates SQL tables, loads data, KQL DB
+│   ├── Setup/
+│   │   ├── GetStarted.Notebook/             # Guided walkthrough
+│   │   ├── PostDeploymentConfig.Notebook/   # Creates SQL tables, loads data, KQL DB
+│   │   └── CAEManufacturing_Env.Environment/ # Spark 2.0 + azure-eventhub
 │   ├── Data/
-│   │   └── CAEManufacturing_LH.Lakehouse/       # Staging Lakehouse
-│   ├── CAEManufacturing_Env.Environment/         # Spark 2.0 + azure-eventhub, fabric-cicd
-│   ├── RTI/                                      # Real-Time Intelligence
-│   │   ├── CAEManufacturingEH.Eventhouse/        # Telemetry store
-│   │   ├── AnomalyDetection.Notebook/            # ML Z-score anomaly scoring
-│   │   ├── TrainMVADModel.Notebook/              # Train multivariate anomaly detection model
-│   │   ├── CreateOntology.Notebook/              # Fabric Ontology builder (preview)
-│   │   ├── TelemetryEventStream*                 # Created by PostDeploymentConfig (API)
-│   │   └── ClockInEventStream*                   # Created by PostDeploymentConfig (API)
-│   ├── Pipelines/                                # Emulators
-│   │   └── DataEmulator.Notebook/                # Telemetry + clock-in + fault injection
-│   └── Agent/
-│       ├── CapacityManagementAgent.Notebook/     # AI agent querying SQL DB + KQL
-│       └── AlertNotificationAgent.Notebook/      # Teams webhook + Foundry agent
+│   │   └── CAEManufacturing_LH.Lakehouse/   # Staging Lakehouse
+│   ├── RTI/                                  # Real-Time Intelligence
+│   │   ├── CAEManufacturingEH.Eventhouse/   # Telemetry store
+│   │   ├── DataEmulator.Notebook/           # Telemetry + clock-in + fault injection (loop)
+│   │   ├── AnomalyDetection.Notebook/       # ML Z-score anomaly scoring
+│   │   ├── AlertNotificationAgent.Notebook/ # Teams webhook + Foundry agent
+│   │   ├── CapacityManagementAgent.Notebook/# AI agent querying SQL DB + KQL
+│   │   ├── CreateOntology.Notebook/         # Fabric Ontology builder (preview)
+│   │   ├── TelemetryEventStream*            # Created by PostDeploymentConfig (API)
+│   │   └── ClockInEventStream*              # Created by PostDeploymentConfig (API)
+│   └── ML/
+│       └── TrainMVADModel.Notebook/         # Train multivariate anomaly detection model
 ├── data/
 │   ├── erp/          # production lines, machines, inventory, purchase orders, maintenance
 │   ├── hr/           # employees, skills, schedules, restrictions, time off, contractors

@@ -41,17 +41,10 @@
 # CELL ********************
 
 # === CONFIGURATION ===
-# All config read from Lakehouse config/connections.json (set once, persists across CI/CD).
-AGENT_PROJECT_ENDPOINT = ""
-AGENT_ID = ""
-TEAMS_WEBHOOK_URL = ""
-
-# KQL URI — leave empty to auto-discover
-KQL_URI = ""
-
+# All config read from Lakehouse config/connections.json at startup.
 # Minimum confidence to send notification (avoid noise)
 MIN_CONFIDENCE = 70.0
-print(f"AlertNotificationAgent config: min_confidence={MIN_CONFIDENCE}")
+print(f"AlertNotificationAgent: min_confidence={MIN_CONFIDENCE}")
 
 # METADATA ********************
 
@@ -82,8 +75,9 @@ fab_headers = {"Authorization": f"Bearer {TOKEN_FABRIC}"}
 resp = requests.get(f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/items", headers=fab_headers)
 items = resp.json().get("value", [])
 
-if not KQL_URI:
-    eh = next((i for i in items if i.get("displayName") == "CAEManufacturingEH"), None)
+# Auto-discover KQL URI from Eventhouse
+KQL_URI = ""
+eh = next((i for i in items if i.get("displayName") == "CAEManufacturingEH"), None)
     if eh:
         eh_props = requests.get(
             f"https://api.fabric.microsoft.com/v1/workspaces/{WORKSPACE_ID}/eventhouses/{eh['id']}",
@@ -98,20 +92,15 @@ DB_NAME = "CAEManufacturingKQLDB"
 
 # Read config from Lakehouse config file
 lh = next((i for i in items if i.get("displayName") == "CAEManufacturing_LH" and i.get("type") == "Lakehouse"), None)
-if lh and (not AGENT_PROJECT_ENDPOINT or not AGENT_ID):
-    try:
-        cfg_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"
-        cfg = json.loads(notebookutils.fs.head(cfg_path, 10000))
-        if not AGENT_PROJECT_ENDPOINT:
-            AGENT_PROJECT_ENDPOINT = cfg.get("FOUNDRY_AGENT_PROJECT_ENDPOINT", "")
-        if not AGENT_ID:
-            AGENT_ID = cfg.get("FOUNDRY_AGENT_ID", "")
-        if not TEAMS_WEBHOOK_URL:
-            TEAMS_WEBHOOK_URL = cfg.get("TEAMS_WEBHOOK_URL", "")
-        print(f"Agent: {'configured' if AGENT_ID else 'not configured'}")
-        print(f"Teams: {'configured' if TEAMS_WEBHOOK_URL else 'not configured'}")
-    except Exception as e:
-        print(f"Config file not found — agent/Teams not configured: {e}")
+if not lh:
+    raise RuntimeError("Lakehouse not found")
+cfg_path = f"abfss://{WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/{lh['id']}/Files/config/connections.json"
+cfg = json.loads(notebookutils.fs.head(cfg_path, 10000))
+AGENT_PROJECT_ENDPOINT = cfg.get("FOUNDRY_AGENT_PROJECT_ENDPOINT", "")
+AGENT_ID = cfg.get("FOUNDRY_AGENT_ID", "")
+TEAMS_WEBHOOK_URL = cfg.get("TEAMS_WEBHOOK_URL", "")
+print(f"Agent: {'configured' if AGENT_ID else 'not configured'}")
+print(f"Teams: {'configured' if TEAMS_WEBHOOK_URL else 'not configured'}")
 
 def kql_query(query):
     """Run a KQL query and return results as list of dicts."""

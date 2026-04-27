@@ -57,7 +57,8 @@
 # 5. **Create Real-Time Dashboard** - use queries from data/kql/dashboard_spec.json
 # 
 # **Demo:**
-# 6. **Inject fault** - run Simulation/TelemetryFaultInjection manually
+# 6. **Start DataEmulator** - Run All (loops: telemetry + clock-in every minute)
+# 7. **Inject fault** - set FAULT_INJECTION=true in connections.json (auto-resets after 10 min)
 # 7. **Power BI Gantt** - connect to SQL Database plm.tasks + plm.projects
 # 
 # ## Anomaly Detection (10 rules)
