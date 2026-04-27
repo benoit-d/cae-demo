@@ -16,13 +16,14 @@
 
 # MARKDOWN ********************
 
-# # Clock-In Events - Single Batch
+# # Clock-In Events Emulator
 # 
-# Generates ONE batch of workforce events (badge in/out, task start/complete)
+# Generates workforce events (badge in/out, task start/complete)
 # and sends them to the **ClockInEventStream** via its Event Hub-compatible
 # custom endpoint. The EventStream routes data to the Eventhouse KQL Database.
 # 
-# **Designed to be called by ClockInPipeline** (or run manually for demos).
+# **Run manually or via pipeline.** Loops for `DURATION_HOURS` sending one batch
+# every `INTERVAL_SEC` seconds (default: 1 batch/minute for 8 hours).
 
 # METADATA ********************
 
@@ -36,7 +37,9 @@
 # Configuration
 EVENTSTREAM_NAME = "ClockInEventStream"
 CONFIG_KEY = "CLOCKIN_EVENTSTREAM_CONNECTION_STRING"
-print(f"Target: {EVENTSTREAM_NAME}")
+INTERVAL_SEC = 60        # Seconds between batches
+DURATION_HOURS = 8       # How long to run (0 = single batch, then exit)
+print(f"Target: {EVENTSTREAM_NAME}, interval={INTERVAL_SEC}s, duration={DURATION_HOURS}h")
 
 # METADATA ********************
 
@@ -47,7 +50,7 @@ print(f"Target: {EVENTSTREAM_NAME}")
 
 # CELL ********************
 
-import json, random, os, requests, base64
+import json, random, time, os, requests, base64
 from datetime import datetime, timezone
 import notebookutils
 
@@ -121,35 +124,50 @@ def mk(etype, emp, **kw):
         "details": kw.get("details", ""),
     }
 
-# Randomly pick a few events per batch (not a full day each time)
-events = []
-
-# 2-3 random badge events
-for w in random.sample(workers, min(3, len(workers))):
-    events.append(mk(random.choice(["badge_in", "badge_out"]), w, details="Shift event"))
-
-# 1-2 task events for in-progress tasks
-for t in random.sample(in_progress, min(2, len(in_progress))):
-    e = next((w for w in workers if w["email"] == t["Resource_Login"]), None)
-    p = proj_map.get(t["Parent_Project_ID"], {})
-    if e:
-        etype = random.choice(["task_start", "task_complete"])
-        events.append(mk(etype, e,
-            project_id=t["Parent_Project_ID"], task_id=t["Task_ID"],
-            simulator_id=p.get("Simulator_ID", ""),
-            details=f"{etype}: {t['Task_Name']}"))
-
-# Send to EventStream via Event Hub SDK
+# Send clock-in events in a loop (or single batch if DURATION_HOURS == 0)
 from azure.eventhub import EventHubProducerClient, EventData
 
 producer = EventHubProducerClient.from_connection_string(EVENTSTREAM_CONNECTION_STRING)
-with producer:
-    batch = producer.create_batch()
-    for ev in events:
-        batch.add(EventData(json.dumps(ev)))
-    producer.send_batch(batch)
+end_time = time.time() + DURATION_HOURS * 3600 if DURATION_HOURS > 0 else 0
+batch_count = 0
 
-print(f"Sent {len(events)} clock-in events to {EVENTSTREAM_NAME}")
+try:
+    while True:
+        events = []
+        # 2-3 random badge events
+        for w in random.sample(workers, min(3, len(workers))):
+            events.append(mk(random.choice(["badge_in", "badge_out"]), w, details="Shift event"))
+        # 1-2 task events for in-progress tasks
+        for t in random.sample(in_progress, min(2, len(in_progress))):
+            e = next((w for w in workers if w["email"] == t["Resource_Login"]), None)
+            p = proj_map.get(t["Parent_Project_ID"], {})
+            if e:
+                etype = random.choice(["task_start", "task_complete"])
+                events.append(mk(etype, e,
+                    project_id=t["Parent_Project_ID"], task_id=t["Task_ID"],
+                    simulator_id=p.get("Simulator_ID", ""),
+                    details=f"{etype}: {t['Task_Name']}"))
+
+        with producer:
+            batch = producer.create_batch()
+            for ev in events:
+                batch.add(EventData(json.dumps(ev)))
+            producer.send_batch(batch)
+        batch_count += 1
+        print(f"[{batch_count}] Sent {len(events)} clock-in events")
+
+        if DURATION_HOURS == 0:
+            break
+        if time.time() >= end_time:
+            print(f"Duration reached ({DURATION_HOURS}h). Stopping.")
+            break
+        time.sleep(INTERVAL_SEC)
+except KeyboardInterrupt:
+    print(f"Stopped after {batch_count} batches.")
+finally:
+    producer.close()
+
+print(f"Done. {batch_count} batches sent to {EVENTSTREAM_NAME}.")
 
 # METADATA ********************
 

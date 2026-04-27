@@ -16,14 +16,15 @@
 
 # MARKDOWN ********************
 
-# # Simulator Telemetry - Single Batch
+# # Simulator Telemetry Emulator
 # 
-# Generates ONE batch of normal sensor readings for all machines and sends them
+# Generates normal sensor readings for all 20 machines and sends them
 # to the **TelemetryEventStream** via its Event Hub-compatible custom endpoint.
 # The EventStream routes data to the Eventhouse KQL Database automatically.
 # 
-# **Called by TelemetryPipeline on a 1-minute schedule.**
-# Sends one batch and exits — no loop or sleep.
+# **Run manually or via pipeline.** Loops for `DURATION_HOURS` sending one batch
+# every `INTERVAL_SEC` seconds (default: 1 batch/minute for 8 hours).
+# One Spark session start, no per-batch overhead.
 
 # METADATA ********************
 
@@ -37,7 +38,9 @@
 # Configuration
 EVENTSTREAM_NAME = "TelemetryEventStream"
 CONFIG_KEY = "TELEMETRY_EVENTSTREAM_CONNECTION_STRING"
-print(f"Target: {EVENTSTREAM_NAME}")
+INTERVAL_SEC = 60        # Seconds between batches
+DURATION_HOURS = 8       # How long to run (0 = single batch, then exit)
+print(f"Target: {EVENTSTREAM_NAME}, interval={INTERVAL_SEC}s, duration={DURATION_HOURS}h")
 
 # METADATA ********************
 
@@ -105,43 +108,56 @@ except FileNotFoundError:
 
 # CELL ********************
 
-# Generate ONE batch of normal readings
-ts = datetime.now(timezone.utc).isoformat()
-epoch = time.time()
-events = []
-
-for s in sensor_defs:
-    nmin, nmax = float(s["normal_min"]), float(s["normal_max"])
-    mid = (nmin + nmax) / 2
-    amp = (nmax - nmin) / 2
-    period = 120 + hash(s["sensor_id"]) % 180
-    phase = hash(s["sensor_id"]) % 1000 / 1000 * 2 * math.pi
-    val = mid + amp * 0.5 * math.sin(2 * math.pi * epoch / period + phase)
-    val += random.gauss(0, amp * 0.05)
-
-    events.append({
-        "timestamp": ts,
-        "machine_id": s["machine_id"],
-        "sensor_id": s["sensor_id"],
-        "sensor_category": s["sensor_category"],
-        "sensor_name": s["sensor_name"],
-        "value": round(val, 4),
-        "unit": s["unit"],
-        "alert_level": "Normal",
-        "is_anomaly": False,
-    })
-
-# Send to EventStream via Event Hub SDK
+# Send telemetry in a loop (or single batch if DURATION_HOURS == 0)
 from azure.eventhub import EventHubProducerClient, EventData
 
-producer = EventHubProducerClient.from_connection_string(EVENTSTREAM_CONNECTION_STRING)
-with producer:
-    batch = producer.create_batch()
-    for e in events:
-        batch.add(EventData(json.dumps(e)))
-    producer.send_batch(batch)
+def generate_batch(sensor_defs):
+    ts = datetime.now(timezone.utc).isoformat()
+    epoch = time.time()
+    events = []
+    for s in sensor_defs:
+        nmin, nmax = float(s["normal_min"]), float(s["normal_max"])
+        mid = (nmin + nmax) / 2
+        amp = (nmax - nmin) / 2
+        period = 120 + hash(s["sensor_id"]) % 180
+        phase = hash(s["sensor_id"]) % 1000 / 1000 * 2 * math.pi
+        val = mid + amp * 0.5 * math.sin(2 * math.pi * epoch / period + phase)
+        val += random.gauss(0, amp * 0.05)
+        events.append({
+            "timestamp": ts, "machine_id": s["machine_id"],
+            "sensor_id": s["sensor_id"], "sensor_category": s["sensor_category"],
+            "sensor_name": s["sensor_name"], "value": round(val, 4),
+            "unit": s["unit"], "alert_level": "Normal", "is_anomaly": False,
+        })
+    return events, ts
 
-print(f"Sent {len(events)} telemetry events to {EVENTSTREAM_NAME} at {ts}")
+producer = EventHubProducerClient.from_connection_string(EVENTSTREAM_CONNECTION_STRING)
+end_time = time.time() + DURATION_HOURS * 3600 if DURATION_HOURS > 0 else 0
+batch_count = 0
+
+try:
+    while True:
+        events, ts = generate_batch(sensor_defs)
+        with producer:
+            eb = producer.create_batch()
+            for e in events:
+                eb.add(EventData(json.dumps(e)))
+            producer.send_batch(eb)
+        batch_count += 1
+        print(f"[{batch_count}] Sent {len(events)} events at {ts}")
+
+        if DURATION_HOURS == 0:
+            break  # Single batch mode
+        if time.time() >= end_time:
+            print(f"Duration reached ({DURATION_HOURS}h). Stopping.")
+            break
+        time.sleep(INTERVAL_SEC)
+except KeyboardInterrupt:
+    print(f"Stopped after {batch_count} batches.")
+finally:
+    producer.close()
+
+print(f"Done. {batch_count} batches sent to {EVENTSTREAM_NAME}.")
 
 # METADATA ********************
 

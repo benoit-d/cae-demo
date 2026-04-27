@@ -431,7 +431,7 @@ MVAD results are written to the same `AnomalyDetection` table with `anomaly_type
 
 ### 9. Demo
 
-1. **Start telemetry**: TelemetryPipeline runs every 1 min, sending sensor data from all 20 machines to TelemetryEventStream → Eventhouse
+1. **Start telemetry**: Open `SimulatorTelemetryEmulator` and Run All — it loops for 8 hours, sending sensor data from all 20 machines every minute to TelemetryEventStream → Eventhouse. Open `ClockInEventEmulator` the same way for workforce events.
 2. **Inject a fault**: Run `TelemetryFaultInjection` manually — it simulates a CNC-003 spindle bearing failure over 10 minutes (vibration ↑, temperature ↑, coolant ↓, power ↑)
 3. **Watch detection**: The 16 KQL health scoring functions produce composite scores in real-time. `CNC_BearingWearScore` will climb from ~0.2 to 0.99 as the fault progresses
 4. **Activator fires**: When `alert_level` becomes `Critical`, the Activator triggers the `AnomalyDetection` notebook automatically
