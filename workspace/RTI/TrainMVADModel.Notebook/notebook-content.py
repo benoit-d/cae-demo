@@ -328,7 +328,7 @@ print("Training complete.")
 # CELL ********************
 
 # Predict on training data as a sanity check
-predictions = model.predict(train_df)
+predictions = model.predict(None, train_df)
 pred_df = pd.DataFrame(predictions)
 anomaly_count = pred_df["is_anomaly"].sum() if "is_anomaly" in pred_df.columns else 0
 print(f"Anomalies detected on training data: {anomaly_count} / {len(pred_df)} "
