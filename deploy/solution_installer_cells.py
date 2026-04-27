@@ -39,7 +39,6 @@ ws = FabricWorkspace(workspace_id=WORKSPACE_ID, repository_directory=workspace_d
         "Eventhouse",
         "KQLDatabase", "KQLDashboard", "KQLQueryset",
         "SQLDatabase",
-        "DataPipeline",
     ], token_credential=_Cred())
 publish_all_items(ws)
 

@@ -174,11 +174,8 @@ cae-demo/
 │   │   ├── CreateOntology.Notebook/              # Fabric Ontology builder (preview)
 │   │   ├── TelemetryEventStream*                 # Created by PostDeploymentConfig (API)
 │   │   └── ClockInEventStream*                   # Created by PostDeploymentConfig (API)
-│   ├── Pipelines/                                # Scheduled data pipelines
-│   │   ├── TelemetryPipeline.DataPipeline/       # 1-min telemetry ingestion
-│   │   ├── ClockInPipeline.DataPipeline/         # 1-min clock-in ingestion
-│   │   ├── SimulatorTelemetryEmulator.Notebook/  # Single-shot telemetry emitter
-│   │   ├── ClockInEventEmulator.Notebook/        # Single-shot clock-in emitter
+│   ├── Pipelines/                                # Emulators + fault injection
+│   │   ├── DataEmulator.Notebook/                # Telemetry + clock-in emitter (loop)
 │   │   └── TelemetryFaultInjection.Notebook/     # Manual — CNC-003 bearing failure demo
 │   └── Agent/
 │       ├── CapacityManagementAgent.Notebook/     # AI agent querying SQL DB + KQL
@@ -465,7 +462,7 @@ Run `python scripts/validate_data.py` to verify.
 | SQL Database for all reference/project tables | CRUD for write-back (schedule updates, task completions), DirectQuery for Power BI, agent-friendly |
 | Eventhouse for telemetry + events + anomaly alerts | Sub-second queries on time-series data, native KQL, real-time scoring functions |
 | Lakehouse as staging only | CSVs upload there during deployment, then get loaded into SQL DB |
-| Single-shot notebooks for data pipelines | No long-running Spark executors; pipeline calls notebook every 1 min |
+| Single long-running emulator notebook | One Spark session for both telemetry + clock-in; avoids 1-min pipeline overhead |
 | EventStream → Activator → ML notebook | Activator detects threshold breach in real-time, triggers ML for deep analysis + Foundry agent for AI reasoning |
 | Constraints added after bulk insert | Avoids FK ordering issues during initial data load |
 | Semantic model created via REST API with TMDL | fabric-cicd doesn't pass `format=TMDL`; REST API supports full DirectLake TMDL definitions including relationships |

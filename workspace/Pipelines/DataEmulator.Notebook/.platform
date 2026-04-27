@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
     "type": "Notebook",
-    "displayName": "ClockInEventEmulator"
+    "displayName": "DataEmulator"
   },
   "config": {
     "type": "Notebook",
     "version": "2.0",
-    "logicalId": "b52dae9a-250d-4855-8771-7c722a220186"
+    "logicalId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
   }
 }

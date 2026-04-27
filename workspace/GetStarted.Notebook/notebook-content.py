@@ -26,9 +26,9 @@
 # 
 # | Source | Mechanism | Destination |
 # |---|---|---|
-# | Telemetry (normal) | Data Pipeline (1 min) calls notebook | Eventstream to KQL DB |
+# | Telemetry (normal) | DataEmulator notebook (loop) | Eventstream to KQL DB |
 # | Telemetry (fault) | Manual notebook during demo | Eventstream to KQL DB |
-# | Clock-in events | Data Pipeline (1 min) calls notebook | Eventstream to KQL DB |
+# | Clock-in events | DataEmulator notebook (loop) | Eventstream to KQL DB |
 # | Schedule changes | Agent / manual | SQL Database UPDATE |
 # | Anomaly detection | KQL materialized views | Composite scores per machine |
 # | Alerts | Activator on MachineHealthAlerts() | Teams / Power Automate |
@@ -45,7 +45,7 @@
 # ## Setup Steps (after running SolutionInstaller)
 # 
 # **Automated by fabric-cicd** (deployed automatically):
-# - Lakehouse, Eventhouse, Eventstreams, Data Pipelines (1-min schedule), Activator shell, all Notebooks
+# - Lakehouse, Eventhouse, Eventstreams, Activator shell, all Notebooks
 # 
 # **Run once manually:**
 # 1. **Configure `connections.json`** - Open Lakehouse > Files > config > connections.json, paste your SQL JDBC connection string
